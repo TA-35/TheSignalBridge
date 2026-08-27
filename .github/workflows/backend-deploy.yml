@@ -1,0 +1,28 @@
+name: Backend deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-deploy.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: pytest
+
+      # TODO: deploy to EC2 once the instance and SSH deploy key exist.
+      # - name: Deploy to EC2
+      #   run: |
+      #     ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+      #       "cd /opt/read-the-room && git pull && backend/.venv/bin/pip install -r backend/requirements.txt && sudo systemctl restart backend"
