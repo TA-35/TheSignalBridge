@@ -36,3 +36,36 @@
   --radius-md: 12px;
   --radius-sm: 9px;
 }
+
+/* Comfort settings. Applied via data-* on <html>. */
+
+:root[data-typeface='hyperlegible'] {
+  --font-sans: 'Atkinson Hyperlegible', system-ui, sans-serif;
+}
+
+:root[data-contrast='soft'] {
+  --color-text: #4a453e;
+  --color-text-muted: #7a7166;
+  --color-border: #ece7dc;
+  --color-border-soft: #f1ede4;
+  --color-border-strong: #e6e0d3;
+}
+
+:root[data-contrast='high'] {
+  --color-bg: #ffffff;
+  --color-frame: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-soft: #F7F5F0;
+
+  --color-text: #000000;
+  --color-text-muted: #262218;
+  --color-text-faint: #4a4436;
+
+  --color-border: #8f8368;
+  --color-border-soft: #a89d84;
+  --color-border-strong: #4a4235;
+}
+
+:root[data-calm='true'] {
+  filter: grayscale(1);
+}

@@ -2,15 +2,16 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
-// Nav items grow as each feature area ships (decode, study, library, settings, home).
 const navItems = [
+  { to: '/', label: 'Home' },
   { to: '/decode', label: 'Review' },
   { to: '/study', label: 'Study' },
   { to: '/library', label: 'Library' },
+  { to: '/settings', label: 'Settings' },
 ]
 
 const route = useRoute()
-const isActive = (to: string) => computed(() => route.path.startsWith(to))
+const isActive = (to: string) => computed(() => (to === '/' ? route.path === '/' : route.path.startsWith(to)))
 </script>
 
 <template>
@@ -97,6 +98,8 @@ const isActive = (to: string) => computed(() => route.path.startsWith(to))
   font-size: 14.5px;
   font-weight: 400;
   color: var(--color-text-muted);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .nav-item--active {
@@ -136,6 +139,13 @@ const isActive = (to: string) => computed(() => route.path.startsWith(to))
     border-right: none;
     border-bottom: 1px solid var(--color-border-soft);
     padding: 10px 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .nav::-webkit-scrollbar {
+    display: none;
   }
 
   .main {

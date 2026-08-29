@@ -3,7 +3,11 @@ import { createRouter, createWebHistory } from 'vue-router'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/', redirect: '/decode' },
+    {
+      path: '/',
+      name: 'home',
+      component: () => import('@/views/HomeView.vue'),
+    },
     {
       path: '/decode',
       name: 'decode',
@@ -23,6 +27,11 @@ const router = createRouter({
       path: '/library',
       name: 'library',
       component: () => import('@/views/LibraryView.vue'),
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: () => import('@/views/SettingsView.vue'),
     },
   ],
 })
