@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { computed, reactive } from 'vue'
 import { decodeMessage } from '@/services/decodeService'
+import { findLocalPatternMatch } from '@/services/localPatterns'
+import { getPatterns } from '@/services/patternsService'
+import { useCardsStore } from '@/stores/cards'
 import { ELEMENT_LABELS, NOT_SPECIFIED, type DecodeResult, type ElementKey } from '@/types/decode'
+import type { Pattern, SavedCard } from '@/types/pattern'
+
+const cardsStore = useCardsStore()
 
 const SAMPLE =
   "Hi,\n\nWhen you get a chance, could you take a look at the Q3 deck and tighten up the numbers section? Would be great to have it before the leadership sync.\n\nAlso, loop in whoever owns the pricing slide if that's easier.\n\nThanks!"
@@ -12,6 +18,9 @@ const state = reactive({
   loading: false,
   result: null as DecodeResult | null,
   checked: new Set<ElementKey>(),
+  matchedPattern: null as Pattern | null,
+  savedCard: null as SavedCard | null,
+  showSaved: false,
 })
 
 const isMeaningful = (text: string) => text.length >= 12 && /[a-z]{3,}/i.test(text) && /\s/.test(text)
@@ -30,6 +39,17 @@ async function review() {
   try {
     state.result = await decodeMessage(text)
     state.checked = new Set()
+    state.matchedPattern = null
+    if (state.result.category) {
+      const patterns = await getPatterns()
+      const candidates = patterns.filter((p) => p.category === state.result!.category)
+      // Prefer the specific pattern the wording actually points to. Only
+      // fall back to "the one candidate in this category" when there's no
+      // ambiguity to begin with — never guess between several.
+      const specific = findLocalPatternMatch(text)
+      state.matchedPattern =
+        candidates.find((p) => p.id === specific?.id) ?? (candidates.length === 1 ? (candidates[0] ?? null) : null)
+    }
   } finally {
     state.loading = false
   }
@@ -40,6 +60,15 @@ function reset() {
   state.error = ''
   state.result = null
   state.checked = new Set()
+  state.matchedPattern = null
+  state.showSaved = false
+}
+
+// F7: explicit, opt-in save — nothing is stored until this is clicked.
+function makeFlashcard() {
+  if (!state.matchedPattern) return
+  state.savedCard = cardsStore.save(state.matchedPattern)
+  state.showSaved = true
 }
 
 function loadSample() {
@@ -178,12 +207,52 @@ const checkedPrompts = computed(() => {
             </div>
           </div>
 
+          <div v-if="!state.matchedPattern" class="notice">
+            <span class="notice-dot" />
+            <div>
+              <strong>No flashcard for this one yet</strong>
+              <span>
+                Nothing in the pattern library matches this message, so there's nothing to save here.
+                <RouterLink to="/library">Browse the library</RouterLink> to see what is covered so far.
+              </span>
+            </div>
+          </div>
+
           <div class="actions">
+            <button
+              v-if="state.matchedPattern"
+              type="button"
+              class="btn btn--primary"
+              @click="makeFlashcard"
+            >
+              Make it a Flashcard
+            </button>
             <button type="button" class="btn btn--secondary" @click="reset">Start a new message</button>
           </div>
+          <span v-if="state.matchedPattern" class="disclaimer">
+            Leaving without saving discards this pattern. That's fine — nothing is kept unless you say so.
+          </span>
         </div>
       </div>
     </template>
+
+    <div v-if="state.showSaved" class="modal-backdrop" @click="state.showSaved = false">
+      <div class="modal" @click.stop>
+        <div class="modal__title">
+          <span class="modal__dot" />
+          <strong>Flashcard created</strong>
+        </div>
+        <div class="modal__card">
+          <strong>{{ state.savedCard?.name }}</strong>
+          <span>{{ state.savedCard?.implies }}</span>
+        </div>
+        <p class="modal__note">It's in your Study section whenever you want it.</p>
+        <div class="actions">
+          <RouterLink to="/study" class="btn btn--primary">View in Study</RouterLink>
+          <button type="button" class="btn btn--secondary" @click="state.showSaved = false">Keep reading</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -587,5 +656,115 @@ const checkedPrompts = computed(() => {
   font-size: 14px;
   line-height: 1.55;
   color: #4a453e;
+}
+
+.disclaimer {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--color-text-faint);
+}
+
+.notice {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border-soft);
+}
+
+.notice-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--color-text-faint);
+  margin-top: 7px;
+  flex: 0 0 7px;
+}
+
+.notice strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  display: block;
+}
+
+.notice span {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(58, 55, 51, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 40;
+}
+
+.modal {
+  width: 100%;
+  max-width: 430px;
+  background: var(--color-frame);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 16px;
+  padding: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 18px 44px rgba(58, 55, 51, 0.16);
+}
+
+.modal__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal__title strong {
+  font-family: var(--font-serif);
+  font-size: 21px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.modal__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--color-primary);
+}
+
+.modal__card {
+  border: 1px solid var(--color-border-soft);
+  border-radius: 12px;
+  background: var(--color-surface-soft);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal__card strong {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.modal__card span {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+.modal__note {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--color-text-muted);
 }
 </style>

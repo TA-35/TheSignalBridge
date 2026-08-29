@@ -3,7 +3,11 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 // Nav items grow as each feature area ships (decode, study, library, settings, home).
-const navItems = [{ to: '/decode', label: 'Review' }]
+const navItems = [
+  { to: '/decode', label: 'Review' },
+  { to: '/study', label: 'Study' },
+  { to: '/library', label: 'Library' },
+]
 
 const route = useRoute()
 const isActive = (to: string) => computed(() => route.path.startsWith(to))

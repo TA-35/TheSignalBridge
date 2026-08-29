@@ -9,6 +9,21 @@ const router = createRouter({
       name: 'decode',
       component: () => import('@/views/DecodeView.vue'),
     },
+    {
+      path: '/study',
+      name: 'study',
+      component: () => import('@/views/StudyView.vue'),
+    },
+    {
+      path: '/study/:id',
+      name: 'card-review',
+      component: () => import('@/views/CardReviewView.vue'),
+    },
+    {
+      path: '/library',
+      name: 'library',
+      component: () => import('@/views/LibraryView.vue'),
+    },
   ],
 })
 
