@@ -1,0 +1,26 @@
+# Environment
+.env
+.env.local
+*.env
+!.env.example
+
+# Python (backend)
+backend/.venv/
+backend/venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+
+# Node (frontend has its own .gitignore; this covers other locations)
+node_modules/
+dist/
+dist-ssr/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+

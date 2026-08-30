@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+  html, body { margin:0; padding:0; background:#F4F1EA; }
+  * { box-sizing: border-box; }
+  a { color:#4F7A69; text-decoration: none; }
+  a:hover { color:#3E6153; }
+  textarea, button, input { font-family: inherit; }
+  ::selection { background:#E8F0EC; }
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #F4F1EA; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #33302B; display: flex; flex-direction: column; align-items: center; padding: 18px 18px 48px; gap: 14px; position: absolute; left: 24px; top: 11px">
+
+  <div style="width:100%; max-width:1240px; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:0 4px">
+    <div style="display:flex; align-items:baseline; gap:10px">
+      <span style="font-family: 'Source Serif 4', Georgia, serif; font-size: 28px; font-weight: 600; letter-spacing: -0.01em">ReadTheRoom</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px">
+      <div style="display:flex; gap:2px; padding:3px; background:#EAE5DB; border-radius:999px">
+        <button onClick="{{ setDesktop }}" style="{{ tabDesktopStyle }}">Desktop</button>
+        <button onClick="{{ setMobile }}" style="{{ tabMobileStyle }}">Mobile</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="width:{{ frameWidth }}; max-width:100%; display:flex; background:#FDFBF7; border:1px solid #E4DED3; border-radius:{{ frameRadius }}; overflow:hidden; min-height:760px; box-shadow:0 1px 2px rgba(58,55,51,0.04)">
+
+    <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+      <nav style="width:236px; flex:0 0 236px; border-right:1px solid #EDE8DF; background:#FAF7F1; padding:26px 16px; display:flex; flex-direction:column; gap:4px">
+        <sc-for list="{{ navItems }}" as="item" hint-placeholder-count="5">
+          <button onClick="{{ item.go }}" style="{{ item.style }}">
+            <span style="width:6px; height:6px; border-radius:999px; background:{{ item.dot }}; flex:0 0 6px"></span>
+            <span>{{ item.label }}</span>
+          </button>
+        </sc-for>
+      </nav>
+    </sc-if>
+
+    <div style="flex:1; min-width:0; display:flex; flex-direction:column">
+      <main style="flex:1; padding:{{ mainPad }}; overflow:hidden">
+
+        <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+          <div style="max-width:640px; display:flex; flex-direction:column; gap:26px; padding-top:12px">
+            <div style="display:flex; flex-direction:column; gap:14px">
+              
+              <h1 style="font-family: 'Source Serif 4', Georgia, serif; font-size: {{ h1Size }}; line-height: 1.14; font-weight: 500; letter-spacing: -0.02em; margin: 0; color: #33302B; text-wrap: pretty; width: 514px; height: 95px">Read the room <br>without re-reading the email</h1>
+              <p style="margin:0; font-size:16.5px; line-height:1.62; color:#6B6259; max-width:520px; text-wrap:pretty">Paste a message<br>Take a second look, then decide what comes next</p>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:10px">
+              <button onClick="{{ goInput }}" style="padding:13px 22px; border-radius:10px; border:1px solid #45705F; background:#4F7A69; color:#FDFBF7; font-size:15px; font-weight:500; cursor:pointer" style-hover="background:#456C5C">Review a message</button>
+              <button onClick="{{ goStudy }}" style="padding:13px 20px; border-radius:10px; border:1px solid #DED7CB; background:#FDFBF7; color:#4A453E; font-size:15px; font-weight:500; cursor:pointer" style-hover="background:#F6F2EA">Open Study</button>
+            </div>
+            <div style="display:grid; grid-template-columns:{{ homeCols }}; gap:1px; background:#EDE8DF; border:1px solid #EDE8DF; border-radius:12px; overflow:hidden; margin-top:6px">
+              <div style="background:#FAF7F1; padding:18px 18px 20px; display:flex; flex-direction:column; gap:7px">
+                
+                <strong style="font-size:14.5px; font-weight:600; color:#33302B">See what’s clear</strong>
+                <span style="font-size:13.5px; line-height:1.55; color:#6B6259">Find the details already in the message.</span>
+              </div>
+              <div style="background:#FAF7F1; padding:18px 18px 20px; display:flex; flex-direction:column; gap:7px">
+                
+                <strong style="font-size:14.5px; font-weight:600; color:#33302B">Notice what’s missing</strong>
+                <span style="font-size:13.5px; line-height:1.55; color:#6B6259">Spot anything you may want to clarify.</span>
+              </div>
+              <div style="background:#FAF7F1; padding:18px 18px 20px; display:flex; flex-direction:column; gap:7px">
+                
+                <strong style="font-size:14.5px; font-weight:600; color:#33302B">Keep what’s useful</strong>
+                <span style="font-size:13.5px; line-height:1.55; color:#6B6259">Save a pattern you’d like to revisit.</span>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isInput }}">
+          <div style="max-width:720px; display:flex; flex-direction:column; gap:18px">
+            <div style="display:flex; flex-direction:column; gap:8px">
+              <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:27px; font-weight:500; letter-spacing:-0.015em; margin:0">Paste the message</h2>
+              <p style="margin:0; font-size:14.5px; line-height:1.6; color:#6B6259">An email, a Slack message, a note from your manager...</p>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px">
+              <textarea onChange="{{ onMessage }}" value="{{ message }}" placeholder="Hi, when you get a chance, could you take a look at…" spellcheck="false" style="width:100%; min-height:262px; resize:vertical; padding:18px 18px; border-radius:12px; border:1px solid {{ inputBorder }}; background:#FFFDF9; font-size:15.5px; line-height:1.68; color:#33302B; outline:none" style-focus="border-color:#4F7A69"></textarea>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap">
+                
+                <button onClick="{{ loadSample }}" style="background:none; border:none; padding:0; font-size:13.5px; color:#4F7A69; cursor:pointer; text-decoration:underline; text-underline-offset:3px">Use a sample message</button>
+              </div>
+            </div>
+            <sc-if value="{{ hasError }}">
+              <div style="display:flex; gap:12px; padding:14px 16px; border-radius:10px; background:#F5F0E9; border:1px solid #E6DDD0">
+                <span style="width:7px; height:7px; border-radius:999px; background:#9C8874; margin-top:7px; flex:0 0 7px"></span>
+                <div style="display:flex; flex-direction:column; gap:3px">
+                  <strong style="font-size:14px; font-weight:600; color:#6B5C4D">Please enter an actual message</strong>
+                  <span style="font-size:13.5px; line-height:1.55; color:#8A7C6C">{{ errorHint }}</span>
+                </div>
+              </div>
+            </sc-if>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; padding-top:2px">
+              <button onClick="{{ review }}" style="padding:13px 22px; border-radius:10px; border:1px solid #45705F; background:#4F7A69; color:#FDFBF7; font-size:15px; font-weight:500; cursor:pointer" style-hover="background:#456C5C">Review Message</button>
+              <button onClick="{{ reset }}" style="padding:13px 20px; border-radius:10px; border:1px solid #DED7CB; background:#FDFBF7; color:#4A453E; font-size:15px; font-weight:500; cursor:pointer" style-hover="background:#F6F2EA">Reset</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isResults }}">
+          <div style="display:flex; flex-direction:column; gap:20px; height:100%">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap">
+              <div style="display:flex; flex-direction:column; gap:6px">
+                <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:26px; font-weight:500; letter-spacing:-0.015em; margin:0">Here's what the message says</h2>
+                <p style="margin:0; font-size:14px; line-height:1.55; color:#6B6259">What’s stated stays visible. What’s unclear stays open.</p>
+              </div>
+              <button onClick="{{ goInput }}" style="background:none; border:1px solid #DED7CB; border-radius:8px; padding:8px 14px; font-size:13.5px; color:#4A453E; cursor:pointer" style-hover="background:#F6F2EA">Edit message</button>
+            </div>
+
+            <div style="display:grid; grid-template-columns:{{ resultCols }}; gap:20px; align-items:start">
+              <div style="border:1px solid #EDE8DF; border-radius:12px; background:#FAF7F1; padding:18px; display:flex; flex-direction:column; gap:12px">
+                
+                <p style="margin:0; font-size:14.5px; line-height:1.72; color:#5C564D; white-space:pre-wrap; text-wrap:pretty">{{ message }}</p>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:16px">
+                <div style="border:1px solid #DDE8E2; border-radius:12px; background:#FFFDF9; overflow:hidden">
+                  <div style="padding:15px 18px; background:#EDF3F0; display:flex; align-items:center; gap:9px">
+                    <span style="width:7px; height:7px; border-radius:999px; background:#4F7A69"></span>
+                    <strong style="font-size:14.5px; font-weight:600; color:#33302B">What's covered</strong>
+                  </div>
+                  <div style="display:flex; flex-direction:column">
+                    <sc-for list="{{ covered }}" as="row" hint-placeholder-count="4">
+                      <div style="display:grid; grid-template-columns:132px 1fr; gap:14px; padding:13px 18px; border-top:1px solid #F0EBE2">
+                        <span style="font-size:13px; color:#8F8778; padding-top:1px">{{ row.label }}</span>
+                        <span style="font-size:14.5px; line-height:1.55; color:{{ row.color }}">{{ row.value }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+
+                <div style="border:1px solid #E6DDD0; border-radius:12px; background:#FFFDF9; overflow:hidden">
+                  <div style="padding:15px 18px; background:#F5F0E9; display:flex; align-items:center; justify-content:space-between; gap:10px">
+                    <div style="display:flex; align-items:center; gap:9px">
+                      <span style="width:7px; height:7px; border-radius:999px; background:#9C8874"></span>
+                      <strong style="font-size:14.5px; font-weight:600; color:#33302B">What's missing</strong>
+                    </div>
+                    <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; color:#A08D7A">tick what matters to you</span>
+                  </div>
+                  <div style="display:flex; flex-direction:column">
+                    <sc-for list="{{ missing }}" as="gap" hint-placeholder-count="3">
+                      <button onClick="{{ gap.toggle }}" style="{{ gap.style }}">
+                        <span style="{{ gap.boxStyle }}">
+                          <sc-if value="{{ gap.checked }}" hint-placeholder-val="{{ false }}">
+                            <span style="width:9px; height:9px; border-radius:2px; background:#4F7A69; display:block"></span>
+                          </sc-if>
+                        </span>
+                        <span style="display:flex; flex-direction:column; gap:4px">
+                          <strong style="font-size:14.5px; font-weight:600; color:#33302B">{{ gap.label }}</strong>
+                          <span style="font-size:13.5px; line-height:1.55; color:#6B6259">{{ gap.desc }}</span>
+                        </span>
+                      </button>
+                    </sc-for>
+                  </div>
+                </div>
+
+                <sc-if value="{{ hasChecked }}" hint-placeholder-val="{{ false }}">
+                  <div style="border:1px solid #E4DED3; border-radius:12px; background:#FAF7F1; padding:18px; display:flex; flex-direction:column; gap:14px">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap">
+                      <strong style="font-size:14.5px; font-weight:600; color:#33302B">Before you reply, confirm</strong>
+                      <button onClick="{{ copyAll }}" style="background:#FDFBF7; border:1px solid #DED7CB; border-radius:8px; padding:7px 13px; font-size:13px; color:#4A453E; cursor:pointer" style-hover="background:#F2EDE4">{{ copyLabel }}</button>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:12px">
+                      <sc-for list="{{ questions }}" as="q" hint-placeholder-count="2">
+                        <div style="display:flex; flex-direction:column; gap:6px; padding-left:14px; border-left:2px solid #DDE8E2">
+                          <span style="font-size:14px; line-height:1.55; color:#4A453E">{{ q.question }}</span>
+                          <span style="font-family:'IBM Plex Mono', monospace; font-size:12.5px; line-height:1.6; color:#6B6259">“{{ q.phrasing }}”</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <div style="display:flex; gap:10px; flex-wrap:wrap; padding-top:2px">
+                  <button onClick="{{ makeFlashcard }}" style="padding:12px 20px; border-radius:10px; border:1px solid #45705F; background:#4F7A69; color:#FDFBF7; font-size:14.5px; font-weight:500; cursor:pointer" style-hover="background:#456C5C">Make it a Flashcard</button>
+                  <button onClick="{{ startNew }}" style="padding:12px 18px; border-radius:10px; border:1px solid #DED7CB; background:#FDFBF7; color:#4A453E; font-size:14.5px; cursor:pointer" style-hover="background:#F6F2EA">Start a new message</button>
+                </div>
+                <span style="font-size:12.5px; line-height:1.55; color:#8F8778">Leaving without saving discards this pattern. That's fine — nothing is kept unless you say so.</span>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isStudy }}">
+          <div style="display:flex; flex-direction:column; gap:20px">
+            <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap">
+              <div style="display:flex; flex-direction:column; gap:6px">
+                <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:26px; font-weight:500; letter-spacing:-0.015em; margin:0">Study</h2>
+                <p style="margin:0; font-size:14px; line-height:1.55; color:#6B6259">Explore whatever you feel like.</p>
+              </div>
+              <div style="display:flex; gap:2px; padding:3px; background:#EFEAE1; border-radius:999px">
+                <button onClick="{{ setList }}" style="{{ listTabStyle }}">List</button>
+                <button onClick="{{ setDeck }}" style="{{ deckTabStyle }}">Deck</button>
+              </div>
+            </div>
+
+            <sc-if value="{{ noCards }}" hint-placeholder-val="{{ false }}">
+              <div style="border:1px solid #EDE8DF; border-radius:14px; background:#FAF7F1; padding:44px 28px; display:flex; flex-direction:column; align-items:center; gap:16px; text-align:center">
+                <svg width="132" height="84" viewBox="0 0 132 84" aria-hidden="true"><defs><pattern id="rtr-stripe" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><rect width="4" height="8" fill="#EBE5DA"></rect></pattern></defs><rect x="0.5" y="0.5" width="131" height="83" rx="10" fill="url(#rtr-stripe)" stroke="#E0D9CD"></rect></svg>
+                <div style="display:flex; flex-direction:column; gap:6px">
+                  <strong style="font-family:'Source Serif 4', Georgia, serif; font-size:19px; font-weight:500; color:#33302B">Nothing saved yet</strong>
+                  <span style="font-size:14px; line-height:1.6; color:#6B6259; max-width:340px">Cards appear here when you choose to keep a pattern after reviewing a message.</span>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center">
+                  <button onClick="{{ goInput }}" style="padding:11px 18px; border-radius:9px; border:1px solid #45705F; background:#4F7A69; color:#FDFBF7; font-size:14px; cursor:pointer">Review a message</button>
+                  <button onClick="{{ goLibrary }}" style="padding:11px 18px; border-radius:9px; border:1px solid #DED7CB; background:#FDFBF7; color:#4A453E; font-size:14px; cursor:pointer">Browse the pattern library</button>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ showListView }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex; flex-direction:column; gap:10px">
+                <sc-for list="{{ cards }}" as="card" hint-placeholder-count="3">
+                  <button onClick="{{ card.open }}" style="text-align:left; display:grid; grid-template-columns:1fr auto; gap:16px; align-items:center; padding:18px 20px; border:1px solid #EDE8DF; border-radius:12px; background:#FFFDF9; cursor:pointer" style-hover="border-color:#DDD5C7; background:#FAF7F1">
+                    <span style="display:flex; flex-direction:column; gap:6px; min-width:0">
+                      <strong style="font-size:15.5px; font-weight:600; color:#33302B">{{ card.name }}</strong>
+                      <span style="font-size:13.5px; line-height:1.55; color:#6B6259">{{ card.implies }}</span>
+                      <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; color:#8F8778">{{ card.meta }}</span>
+                    </span>
+                    <span style="font-size:13px; color:#4F7A69; white-space:nowrap">Explore →</span>
+                  </button>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ showDeckView }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; flex-direction:column; align-items:center; gap:22px; padding:16px 0 8px">
+                <div style="position:relative; width:100%; max-width:460px; height:250px">
+                  <div style="position:absolute; inset:22px 12px 0 12px; border:1px solid #EDE8DF; border-radius:14px; background:#F6F2EA"></div>
+                  <div style="position:absolute; inset:11px 6px 0 6px; border:1px solid #E8E2D7; border-radius:14px; background:#FAF7F1"></div>
+                  <button onClick="{{ openTop }}" style="position:absolute; inset:0 0 22px 0; border:1px solid #E0D9CD; border-radius:14px; background:#FFFDF9; padding:26px; display:flex; flex-direction:column; justify-content:space-between; align-items:flex-start; text-align:left; cursor:pointer" style-hover="border-color:#C9C0B0">
+                    
+                    <strong style="font-family:'Source Serif 4', Georgia, serif; font-size:23px; font-weight:500; line-height:1.25; color:#33302B; text-wrap:pretty">{{ topName }}</strong>
+                    <span style="font-size:13.5px; color:#6B6259">Tap to open · {{ topMeta }}</span>
+                  </button>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center">
+                  <button onClick="{{ shuffleDeck }}" style="padding:10px 16px; border-radius:9px; border:1px solid #DED7CB; background:#FDFBF7; color:#4A453E; font-size:13.5px; cursor:pointer" style-hover="background:#F6F2EA">Next card</button>
+                  <span style="font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:#8F8778">{{ deckCount }} in the pile</span>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isReview }}">
+          <div style="display:flex; flex-direction:column; gap:20px; align-items:center">
+            <div style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px">
+              <button onClick="{{ goStudy }}" style="background:none; border:none; padding:0; font-size:13.5px; color:#4F7A69; cursor:pointer">← Back to Study</button>
+              <span style="font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:#8F8778">{{ reviewPos }}</span>
+            </div>
+
+            <div style="width:100%; max-width:560px; border:1px solid #E0D9CD; border-radius:16px; background:#FFFDF9; padding:30px; display:flex; flex-direction:column; gap:18px">
+              <span style="font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:0.09em; color:#8F8778">{{ current.tag }}</span>
+              <strong style="font-family:'Source Serif 4', Georgia, serif; font-size:{{ cardTitleSize }}; font-weight:500; line-height:1.22; letter-spacing:-0.015em; color:#33302B; text-wrap:pretty">{{ current.name }}</strong>
+              <span style="font-size:15px; line-height:1.66; color:#6B6259; font-style:italic">“{{ current.phrase }}”</span>
+
+              <div style="display:grid; grid-template-rows:{{ revealRows }}; transition:{{ revealTransition }}">
+                <div style="min-height:0; overflow:hidden">
+                  <div style="opacity:{{ revealOpacity }}; transition:{{ revealOpacityTransition }}; display:flex; flex-direction:column; gap:18px; padding-top:18px; border-top:1px solid #EDE8DF">
+                    <div style="display:flex; flex-direction:column; gap:7px">
+                      <span style="font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:0.09em; color:#8CA79A">What this phrasing usually implies</span>
+                      <span style="font-size:15px; line-height:1.66; color:#33302B; text-wrap:pretty">{{ current.implies }}</span>
+                    </div>
+                    <div style="height:1px; background:#E5EDE9"></div>
+                    <div style="display:flex; flex-direction:column; gap:7px">
+                      <span style="font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:0.09em; color:#8CA79A">Why it tends to get misread</span>
+                      <span style="font-size:15px; line-height:1.66; color:#33302B; text-wrap:pretty">{{ current.misread }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              
+            </div>
+
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:center">
+              <button onClick="{{ prevCard }}" style="padding:11px 16px; border-radius:9px; border:1px solid #DED7CB; background:#FDFBF7; color:#4A453E; font-size:13.5px; cursor:pointer" style-hover="background:#F6F2EA">Previous</button>
+              <button onClick="{{ flip }}" style="width:200px; padding:12px 24px; border-radius:9px; border:1px solid #45705F; background:#4F7A69; color:#FDFBF7; font-size:14.5px; font-weight:500; cursor:pointer; text-align:center" style-hover="background:#456C5C">{{ flipLabel }}</button>
+              <button onClick="{{ nextCard }}" style="padding:11px 16px; border-radius:9px; border:1px solid #DED7CB; background:#FDFBF7; color:#4A453E; font-size:13.5px; cursor:pointer" style-hover="background:#F6F2EA">Next</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isLibrary }}">
+          <div style="display:flex; flex-direction:column; gap:20px">
+            <div style="display:flex; flex-direction:column; gap:6px">
+              <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:26px; font-weight:500; letter-spacing:-0.015em; margin:0">Pattern library</h2>
+              <p style="margin:0; font-size:14px; line-height:1.55; color:#6B6259">Common workplace phrasings. Add any of them to your own cards.</p>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap">
+              <sc-for list="{{ libTags }}" as="tag" hint-placeholder-count="4">
+                <button onClick="{{ tag.pick }}" style="{{ tag.style }}">{{ tag.label }}</button>
+              </sc-for>
+            </div>
+            <div style="display:grid; grid-template-columns:{{ libCols }}; gap:12px">
+              <sc-for list="{{ libraryItems }}" as="item" hint-placeholder-count="4">
+                <div style="border:1px solid #EDE8DF; border-radius:12px; background:#FFFDF9; padding:18px; display:flex; flex-direction:column; gap:10px">
+                  <span style="font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:0.08em; color:#8F8778">{{ item.tag }}</span>
+                  <strong style="font-size:15.5px; font-weight:600; color:#33302B">{{ item.name }}</strong>
+                  <span style="font-size:13.5px; line-height:1.6; color:#6B6259">{{ item.implies }}</span>
+                  <div style="margin-top:auto; padding-top:6px; display:flex; align-items:center; justify-content:space-between; gap:10px">
+                    <button onClick="{{ item.add }}" style="{{ item.addStyle }}">{{ item.addLabel }}</button>
+                    <button onClick="{{ item.open }}" style="background:none; border:none; padding:0; font-size:13px; color:#4F7A69; cursor:pointer">Explore →</button>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isSettings }}">
+          <div style="max-width:620px; display:flex; flex-direction:column; gap:22px">
+            <div style="display:flex; flex-direction:column; gap:6px">
+              <h2 style="font-family:'Source Serif 4', Georgia, serif; font-size:26px; font-weight:500; letter-spacing:-0.015em; margin:0">Comfort settings</h2>
+              <p style="margin:0; font-size:14px; line-height:1.55; color:#6B6259">Set the room to your liking. Changes apply straight away.</p>
+            </div>
+            <div style="border:1px solid #EDE8DF; border-radius:12px; background:#FFFDF9; overflow:hidden; display:flex; flex-direction:column">
+              <div style="padding:18px 20px; display:flex; flex-direction:column; gap:12px">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px">
+                  <strong style="font-size:14.5px; font-weight:600">Text size</strong>
+                  
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap">
+                  <sc-for list="{{ sizeOptions }}" as="opt" hint-placeholder-count="3">
+                    <button onClick="{{ opt.pick }}" style="{{ opt.style }}">{{ opt.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+              <sc-for list="{{ toggles }}" as="t" hint-placeholder-count="4">
+                <div style="padding:16px 20px; border-top:1px solid #F0EBE2; display:flex; align-items:center; justify-content:space-between; gap:16px">
+                  <span style="display:flex; flex-direction:column; gap:4px">
+                    <strong style="font-size:14.5px; font-weight:600; color:#33302B">{{ t.label }}</strong>
+                    <span style="font-size:13px; line-height:1.55; color:#6B6259">{{ t.desc }}</span>
+                  </span>
+                  <button onClick="{{ t.toggle }}" style="{{ t.trackStyle }}">
+                    <span style="{{ t.knobStyle }}"></span>
+                  </button>
+                </div>
+              </sc-for>
+            </div>
+            <button onClick="{{ clearData }}" style="align-self:flex-start; padding:11px 18px; border-radius:9px; border:1px solid #E6DDD0; background:#FDFBF7; color:#6B5C4D; font-size:13.5px; cursor:pointer" style-hover="background:#F5F0E9">Clear all my saved cards</button>
+          </div>
+        </sc-if>
+
+      </main>
+
+      <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+        <nav style="border-top:1px solid #EDE8DF; background:#FAF7F1; padding:9px 8px 12px; display:grid; grid-template-columns:repeat(5, 1fr); gap:2px">
+          <sc-for list="{{ navItems }}" as="item" hint-placeholder-count="5">
+            <button onClick="{{ item.go }}" style="{{ item.mobileStyle }}">
+              <span style="width:5px; height:5px; border-radius:999px; background:{{ item.dot }}"></span>
+              <span style="font-size:11px">{{ item.label }}</span>
+            </button>
+          </sc-for>
+        </nav>
+      </sc-if>
+    </div>
+  </div>
+
+  <sc-if value="{{ showSaved }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ dismissSaved }}" style="position:fixed; inset:0; background:rgba(58,55,51,0.28); display:flex; align-items:center; justify-content:center; padding:24px; z-index:40">
+      <div onClick="{{ stopClick }}" style="width:100%; max-width:430px; background:#FDFBF7; border:1px solid #E0D9CD; border-radius:16px; padding:26px; display:flex; flex-direction:column; gap:16px; box-shadow:0 18px 44px rgba(58,55,51,0.16)">
+        <div style="display:flex; align-items:center; gap:10px">
+          <span style="width:9px; height:9px; border-radius:999px; background:#4F7A69"></span>
+          <strong style="font-family:'Source Serif 4', Georgia, serif; font-size:21px; font-weight:500; color:#33302B">Flashcard created</strong>
+        </div>
+        <div style="border:1px solid #EDE8DF; border-radius:12px; background:#FAF7F1; padding:16px; display:flex; flex-direction:column; gap:8px">
+          <strong style="font-size:15px; font-weight:600; color:#33302B">{{ savedName }}</strong>
+          <span style="font-size:13.5px; line-height:1.6; color:#6B6259">{{ savedImplies }}</span>
+        </div>
+        <p style="margin:0; font-size:13.5px; line-height:1.6; color:#6B6259">It's in your Study section whenever you want it. No reminders will chase you.</p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+          <button onClick="{{ goStudy }}" style="padding:11px 18px; border-radius:9px; border:1px solid #45705F; background:#4F7A69; color:#FDFBF7; font-size:14px; cursor:pointer">View in Study</button>
+          <button onClick="{{ dismissSaved }}" style="padding:11px 18px; border-radius:9px; border:1px solid #DED7CB; background:#FDFBF7; color:#4A453E; font-size:14px; cursor:pointer">Keep reading</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1320,&quot;height&quot;:900}}">
+const SAMPLE = "Hi,\n\nWhen you get a chance, could you take a look at the Q3 deck and tighten up the numbers section? Would be great to have it before the leadership sync.\n\nAlso, loop in whoever owns the pricing slide if that's easier.\n\nThanks!";
+
+const LIB = [
+  { id:'l1', tag:'Softened request', name:'"When you get a chance"', phrase:'When you get a chance, could you take a look at this?',
+    implies:'It is a request with a real deadline attached somewhere else in the thread — the softener is politeness, not optionality.',
+    misread:'Read literally, it sounds like "whenever, no rush". The urgency lives in context the sender assumed you shared.',
+    source:'Brown & Levinson, Politeness: Some Universals in Language Usage (1987) — negative-politeness hedging' },
+  { id:'l2', tag:'Vague deadline', name:'"Before the sync"', phrase:'Would be great to have it before the leadership sync.',
+    implies:'A deadline anchored to an event, not a time. The sender assumes you know when that event is.',
+    misread:'Event anchors feel precise to the sender and unknowable to the reader, so the gap goes unnoticed by both.',
+    source:'Clark, Using Language (1996) — common-ground assumptions in reference' },
+  { id:'l3', tag:'Unassigned owner', name:'"Loop in whoever owns it"', phrase:"Loop in whoever owns the pricing slide if that's easier.",
+    implies:'Ownership is being handed to you to figure out — the sender does not know either.',
+    misread:'It reads as an instruction you should already be able to follow, when it is actually an open question.',
+    source:'Open corpus: Enron Email Corpus — delegation phrasing patterns' },
+  { id:'l4', tag:'Feedback framing', name:'"Just a few small tweaks"', phrase:'Just a few small tweaks and we are good.',
+    implies:'The scope is unspecified and usually larger than "small" suggests; "just" minimises to keep the tone light.',
+    misread:'Minimisers set an expectation of a 10-minute job, so the real effort feels like your failure rather than a scoping gap.',
+    source:'Leech, Principles of Pragmatics (1983) — the understatement maxim' },
+  { id:'l5', tag:'Softened request', name:'"No pressure, but…"', phrase:'No pressure, but it would help to have this today.',
+    implies:'There is pressure. The disclaimer is protecting the relationship, not removing the deadline.',
+    misread:'Explicit denials of urgency are taken at face value, especially when you prefer to read words as written.',
+    source:'Grice, Logic and Conversation (1975) — implicature over literal content' },
+  { id:'l6', tag:'Vague deadline', name:'"EOD" / "sometime this week"', phrase:'Can you get it to me EOD?',
+    implies:'A specific hour in the sender\u2019s timezone and working day, rarely in yours.',
+    misread:'Shorthand deadlines look exact, so few people ask which clock they refer to.',
+    source:'Open corpus: Avocado Research Email Collection — temporal shorthand' }
+];
+
+const AGO = ['opened 2 days ago','opened 9 days ago','opened 3 weeks ago','not opened yet'];
+
+class Component extends DCLogic {
+  state = {
+    viewport: 'desktop', route: 'home', message: '', error: '', analysis: null,
+    checked: [], copied: false, studyView: 'list', flipped: false, cardIndex: 0,
+    cards: [
+      { ...LIB[1], meta: AGO[2], days: 21 },
+      { ...LIB[0], meta: AGO[0], days: 2 },
+      { ...LIB[3], meta: AGO[1], days: 9 }
+    ],
+    showSaved: false, savedCard: null, libTag: 'All', size: 'Default',
+    softer: true, calm: true, showOriginal: true
+  };
+
+  go = (route) => () => this.setState({ route, error: '', showSaved: false });
+
+  analyze(text) {
+    const t = text.toLowerCase();
+    const find = (res) => { for (const r of res) { const m = text.match(r); if (m) return m[0].trim(); } return null; };
+    const time = find([/\b(?:at|by)\s\d{1,2}(?::\d{2})?\s?(?:am|pm)\b/i, /\b(?:today|tomorrow|monday|tuesday|wednesday|thursday|friday)\b/i]);
+    const task = find([/(?:take a look at|review|look at|draft|prepare|fix|update|tighten up)[^.?!\n]*/i]);
+    const deadline = find([/\bbefore [^.,?!\n]*/i, /\bby (?:eod|end of day|friday|monday|tomorrow)[^.,?!\n]*/i, /\bthis week\b/i]);
+    const who = find([/\bfor (?:the )?(?:leadership|client|team|board)[^.,?!\n]*/i]);
+
+    const covered = [
+      { label: 'Time', value: time || 'Not specified' },
+      { label: 'Task-To-Do', value: task || 'Not specified' },
+      { label: 'Deadline', value: deadline || 'Not specified' },
+      { label: 'For whom', value: who || 'Not specified' }
+    ];
+
+    const gaps = [];
+    if (!time) gaps.push({ id:'time', label:'No time given', desc:'The message never states a time of day.', question:'What time do you need it by?', phrasing:'Happy to do this — what time works as a cut-off?' });
+    if (!deadline) gaps.push({ id:'deadline', label:'No deadline given', desc:'Nothing in the message says when this is due.', question:'When is this actually due?', phrasing:'To plan my week: is there a date you need this by?' });
+    if (deadline) gaps.push({ id:'anchor', label:'Deadline is an event, not a date', desc:'"' + deadline + '" assumes you know when that happens.', question:'When is that event, in date and time?', phrasing:'Quick check — when is that scheduled, so I can work back from it?' });
+    if (!who) gaps.push({ id:'who', label:'Audience unclear', desc:'The message does not say who will read or receive this.', question:'Who is the audience for this?', phrasing:'Who will be seeing this? It changes how much detail I include.' });
+    if (/\b(loop in|whoever|someone|if that's easier|if thats easier)\b/i.test(t)) gaps.push({ id:'owner', label:'Owner left to you to find', desc:'You are asked to involve someone the message does not name.', question:'Who exactly should I contact?', phrasing:'Do you know who owns that part, or should I ask around?' });
+    gaps.push({ id:'priority', label:'Priority against your other work', desc:'The message does not say what this should come before or after.', question:'Where does this sit against my current work?', phrasing:'Should this come before the work I have in flight this week?' });
+    gaps.push({ id:'format', label:'Expected form of the reply', desc:'It is not stated whether a note, a doc, or a call is wanted.', question:'How would you like this delivered?', phrasing:'Would a short written summary work, or do you want to talk it through?' });
+
+    let pattern = LIB.find(p => t.includes('when you get a chance')) || (deadline && LIB[1]) || LIB[3];
+    return { covered, gaps, pattern };
+  }
+
+  review = () => {
+    const text = (this.state.message || '').trim();
+    const meaningful = text.length >= 12 && /[a-z]{3,}/i.test(text) && /\s/.test(text);
+    if (!meaningful) {
+      this.setState({ error: text.length ? 'That input looks like stray characters. Paste the message text itself and try again.' : 'The box is empty. Paste a message and we will go through it together.' });
+      return;
+    }
+    this.setState({ analysis: this.analyze(text), route: 'results', error: '', checked: [], copied: false });
+  };
+
+  reset = () => this.setState({ message: '', analysis: null, error: '', checked: [], copied: false });
+  loadSample = () => this.setState({ message: SAMPLE, error: '' });
+
+  makeFlashcard = () => {
+    const p = this.state.analysis && this.state.analysis.pattern; if (!p) return;
+    if (this.state.cards.some(c => c.id === p.id)) { this.setState({ showSaved: true, savedCard: p }); return; }
+    this.setState(s => ({ cards: [{ ...p, meta: AGO[3], days: 0 }, ...s.cards], showSaved: true, savedCard: p }));
+  };
+
+  addFromLibrary = (item) => () => {
+    if (this.state.cards.some(c => c.id === item.id)) return;
+    this.setState(s => ({ cards: [{ ...item, meta: AGO[3], days: 0 }, ...s.cards], showSaved: true, savedCard: item }));
+  };
+
+  openCard = (i) => () => this.setState({ route: 'review', cardIndex: i, flipped: false });
+
+  step(d) {
+    const n = this.state.cards.length; if (!n) return;
+    this.setState(s => ({ cardIndex: (s.cardIndex + d + n) % n, flipped: false }));
+  }
+
+  copyAll = () => {
+    const qs = this.checkedGaps().map(g => g.phrasing).join('\n');
+    if (navigator.clipboard) navigator.clipboard.writeText(qs).catch(() => {});
+    this.setState({ copied: true });
+    setTimeout(() => this.setState({ copied: false }), 1800);
+  };
+
+  checkedGaps() {
+    const a = this.state.analysis; if (!a) return [];
+    return a.gaps.filter(g => this.state.checked.includes(g.id));
+  }
+
+  pill(active) {
+    return 'padding:7px 15px; border-radius:999px; border:none; cursor:pointer; font-size:13px; font-weight:500; font-family:inherit; background:' +
+      (active ? '#FDFBF7' : 'transparent') + '; color:' + (active ? '#33302B' : '#8F8778') +
+      (active ? '; box-shadow:0 1px 2px rgba(58,55,51,0.08)' : '');
+  }
+
+  renderVals() {
+    const s = this.state;
+    const isDesktop = s.viewport === 'desktop';
+    const scale = s.size === 'Large' ? 1.12 : s.size === 'Largest' ? 1.24 : 1;
+    const a = s.analysis;
+
+    const routes = [['home','Home'],['input','Review'],['study','Study'],['library','Library'],['settings','Settings']];
+    const navItems = routes.map(([id, label]) => {
+      const on = s.route === id || (id === 'input' && s.route === 'results') || (id === 'study' && s.route === 'review');
+      return {
+        label, dot: on ? '#4F7A69' : '#DAD3C6', go: this.go(id),
+        style: 'display:flex; align-items:center; gap:10px; text-align:left; padding:10px 12px; border-radius:9px; border:none; cursor:pointer; font-family:inherit; font-size:' + (14.5 * scale).toFixed(1) + 'px; font-weight:' + (on ? 600 : 400) + '; background:' + (on ? '#EDF3F0' : 'transparent') + '; color:' + (on ? '#2F5A4B' : '#6B6259'),
+        mobileStyle: 'display:flex; flex-direction:column; align-items:center; gap:5px; padding:8px 4px; border:none; border-radius:8px; cursor:pointer; font-family:inherit; background:' + (on ? '#EDF3F0' : 'transparent') + '; color:' + (on ? '#2F5A4B' : '#6B6259')
+      };
+    });
+
+    const cards = s.cards.slice().sort((x, y) => y.days - x.days).map((c, i) => ({
+      ...c, open: this.openCard(s.cards.indexOf(c)),
+      implies: c.implies.length > 118 ? c.implies.slice(0, 116) + '…' : c.implies
+    }));
+
+    const tags = ['All', 'Softened request', 'Vague deadline', 'Unassigned owner', 'Feedback framing'];
+    const libraryItems = LIB.filter(i => s.libTag === 'All' || i.tag === s.libTag).map(i => {
+      const saved = s.cards.some(c => c.id === i.id);
+      return {
+        ...i, add: this.addFromLibrary(i), addLabel: saved ? 'Saved' : 'Add to my cards',
+        addStyle: 'padding:8px 13px; border-radius:8px; font-size:12.5px; font-family:inherit; cursor:' + (saved ? 'default' : 'pointer') + '; border:1px solid ' + (saved ? '#DDE8E2' : '#DED7CB') + '; background:' + (saved ? '#EDF3F0' : '#FDFBF7') + '; color:' + (saved ? '#2F5A4B' : '#4A453E'),
+        open: () => { const idx = s.cards.findIndex(c => c.id === i.id); if (idx >= 0) this.setState({ route:'review', cardIndex: idx, flipped: false }); else this.setState(st => ({ cards:[{ ...i, meta: AGO[3], days: 0 }, ...st.cards], route:'review', cardIndex: 0, flipped: false })); }
+      };
+    });
+
+    const current = s.cards[s.cardIndex] || LIB[0];
+    const toggleDefs = [
+      ['softer', 'Softer contrast', 'Lowers edge contrast across surfaces and text.'],
+      ['calm', 'Reduce motion', 'Card flips and transitions become near-instant.'],
+      ['showOriginal', 'Always show the original message', 'Keeps the source text beside every result.']
+    ];
+
+    return {
+      isDesktop, isMobile: !isDesktop,
+      setDesktop: () => this.setState({ viewport: 'desktop' }),
+      setMobile: () => this.setState({ viewport: 'mobile' }),
+      tabDesktopStyle: this.pill(isDesktop), tabMobileStyle: this.pill(!isDesktop),
+      frameWidth: isDesktop ? '1240px' : '412px',
+      frameRadius: isDesktop ? '16px' : '26px',
+      mainPad: isDesktop ? '32px 36px 40px' : '22px 18px 28px',
+      h1Size: isDesktop ? '42px' : '31px',
+      homeCols: isDesktop ? 'repeat(3, 1fr)' : '1fr',
+      resultCols: isDesktop ? 'minmax(280px, 0.85fr) 1.15fr' : '1fr',
+      libCols: isDesktop ? 'repeat(2, 1fr)' : '1fr',
+      cardTitleSize: isDesktop ? '28px' : '23px',
+
+      navItems,
+      isHome: s.route === 'home', isInput: s.route === 'input', isResults: s.route === 'results',
+      isStudy: s.route === 'study', isReview: s.route === 'review', isLibrary: s.route === 'library',
+      isSettings: s.route === 'settings',
+      goHome: this.go('home'), goInput: this.go('input'), goStudy: this.go('study'), goLibrary: this.go('library'),
+
+      message: s.message, charCount: s.message.length,
+      onMessage: (e) => this.setState({ message: e.target.value, error: '' }),
+      hasError: !!s.error, errorHint: s.error, inputBorder: s.error ? '#D8C9B8' : '#E4DED3',
+      review: this.review, reset: this.reset, loadSample: this.loadSample,
+
+      covered: a ? a.covered.map(r => ({ ...r, color: r.value === 'Not specified' ? '#8F8778' : '#33302B' })) : [],
+      missing: a ? a.gaps.map(g => {
+        const on = s.checked.includes(g.id);
+        return {
+          ...g, checked: on,
+          toggle: () => this.setState(st => ({ checked: on ? st.checked.filter(x => x !== g.id) : [...st.checked, g.id] })),
+          style: 'display:flex; gap:13px; align-items:flex-start; text-align:left; width:100%; padding:14px 18px; border:none; border-top:1px solid #F0EBE2; cursor:pointer; font-family:inherit; background:' + (on ? '#F7FAF8' : 'transparent'),
+          boxStyle: 'width:18px; height:18px; flex:0 0 18px; margin-top:2px; border-radius:5px; display:flex; align-items:center; justify-content:center; border:1px solid ' + (on ? '#4F7A69' : '#D6CEC0') + '; background:' + (on ? '#EDF3F0' : '#FFFDF9')
+        };
+      }) : [],
+      hasChecked: this.checkedGaps().length > 0,
+      questions: this.checkedGaps(),
+      copyAll: this.copyAll, copyLabel: s.copied ? 'Copied' : 'Copy all phrasings',
+      makeFlashcard: this.makeFlashcard,
+      startNew: () => this.setState({ route: 'home', analysis: null, message: '', checked: [] }),
+
+      cards, noCards: s.cards.length === 0,
+      showListView: s.cards.length > 0 && s.studyView === 'list',
+      showDeckView: s.cards.length > 0 && s.studyView === 'deck',
+      setList: () => this.setState({ studyView: 'list' }), setDeck: () => this.setState({ studyView: 'deck' }),
+      listTabStyle: this.pill(s.studyView === 'list'), deckTabStyle: this.pill(s.studyView === 'deck'),
+      topName: cards.length ? cards[0].name : '', topMeta: cards.length ? cards[0].meta : '',
+      deckCount: s.cards.length,
+      openTop: () => this.setState({ route: 'review', cardIndex: s.cards.indexOf(s.cards.slice().sort((x,y)=>y.days-x.days)[0]), flipped: false }),
+      shuffleDeck: () => this.setState(st => ({ cards: [...st.cards.slice(1), st.cards[0]] })),
+
+      current, reviewPos: 'card ' + (s.cardIndex + 1) + ' of ' + s.cards.length,
+      flip: () => this.setState(st => ({ flipped: !st.flipped })),
+      revealRows: s.flipped ? '1fr' : '0fr',
+      revealTransition: 'grid-template-rows ' + (s.calm ? '300ms' : '1300ms') + ' ease-out',
+      revealOpacity: s.flipped ? 1 : 0,
+      revealOpacityTransition: 'opacity ' + (s.calm ? '240ms' : '1100ms') + ' ease-out ' + (s.calm ? '0ms' : (s.flipped ? '270ms' : '0ms')),
+      revealHint: s.flipped ? 'Keep what feels useful.' : 'Reveal when you\'re ready.',
+      flipLabel: s.flipped ? 'That\'s enough for now' : 'Explore this idea\n',
+      prevCard: () => this.step(-1), nextCard: () => this.step(1),
+
+      libTags: tags.map(t => ({
+        label: t, pick: () => this.setState({ libTag: t }),
+        style: 'padding:8px 14px; border-radius:999px; font-size:13px; font-family:inherit; cursor:pointer; border:1px solid ' + (s.libTag === t ? '#C7D8D0' : '#E4DED3') + '; background:' + (s.libTag === t ? '#EDF3F0' : '#FDFBF7') + '; color:' + (s.libTag === t ? '#2F5A4B' : '#6B6259')
+      })),
+      libraryItems,
+
+      textSizeLabel: s.size, sizeOptions: ['Default','Large','Largest'].map(o => ({
+        label: o, pick: () => this.setState({ size: o }),
+        style: 'padding:9px 16px; border-radius:9px; font-size:13.5px; font-family:inherit; cursor:pointer; border:1px solid ' + (s.size === o ? '#C7D8D0' : '#E4DED3') + '; background:' + (s.size === o ? '#EDF3F0' : '#FDFBF7') + '; color:' + (s.size === o ? '#2F5A4B' : '#6B6259')
+      })),
+      toggles: toggleDefs.map(([key, label, desc]) => {
+        const on = !!s[key];
+        return {
+          label, desc, toggle: () => this.setState({ [key]: !on }),
+          trackStyle: 'width:46px; height:26px; flex:0 0 46px; border-radius:999px; border:1px solid ' + (on ? '#45705F' : '#DED7CB') + '; background:' + (on ? '#4F7A69' : '#F0EBE2') + '; cursor:pointer; padding:2px; display:flex; justify-content:' + (on ? 'flex-end' : 'flex-start'),
+          knobStyle: 'width:20px; height:20px; border-radius:999px; background:#FDFBF7; display:block; box-shadow:0 1px 2px rgba(58,55,51,0.2)'
+        };
+      }),
+      clearData: () => this.setState({ cards: [], studyView: 'list', route: 'study' }),
+
+      showSaved: s.showSaved,
+      savedName: s.savedCard ? s.savedCard.name : '',
+      savedImplies: s.savedCard ? s.savedCard.implies : '',
+      dismissSaved: () => this.setState({ showSaved: false }),
+      stopClick: (e) => e.stopPropagation()
+    };
+  }
+}
+</script>
+</body>
+</html>
