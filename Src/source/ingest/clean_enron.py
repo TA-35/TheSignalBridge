@@ -91,6 +91,28 @@ def strip_quoted_history(body: str) -> str:
     if match:
         body = body[: match.start()]
 
+    # Enron's own mail client marks forwarded messages with a line like
+    # "----- Forwarded by Vince Kaminski/HOU/ECT on 01/25/2001 -----" -
+    # this pattern was missing at first, and it turned out to matter a
+    # lot more than expected. We found it by spot-checking the cleaned
+    # output and noticing the exact same opening phrase ("Forwarded by
+    # ...") repeating thousands of times across many different senders,
+    # which is a strong sign of an unhandled boilerplate marker rather
+    # than genuinely repeated human writing - real people don't
+    # coincidentally open thousands of unrelated emails with identical text.
+    #
+    # First attempt at this regex didn't use re.DOTALL, so "." couldn't
+    # match a newline - and it turns out the date/time in this marker
+    # often wraps onto a second line (e.g. "...on 05/31/2001 04:18\nPM
+    # ---"), so without DOTALL the pattern silently failed on most real
+    # examples. Caught this by checking how many rows still contained
+    # "Forwarded by" after the first attempt (74,112 - barely any drop
+    # from before the fix), which made it obvious the regex wasn't
+    # actually matching. Added re.DOTALL to fix it.
+    match = re.search(r"-+\s*Forwarded by .+? on .+?-+", body, flags=re.IGNORECASE | re.DOTALL)
+    if match:
+        body = body[: match.start()]
+
     # Manually quoted replies (where someone typed their response inline,
     # interleaved with the old email) usually have each old line prefixed
     # with ">". We can't cleanly cut those out as one block like the cases
@@ -148,6 +170,7 @@ AUTOMATED_SUBJECT_PATTERNS = [
 def is_automated(row) -> bool:
     sender = row["from_"].lower().strip()
     subject = row["subject"].lower().strip()
+    body = row["body"].strip()
 
     for pattern in AUTOMATED_SENDER_PATTERNS:
         if re.match(pattern, sender):
@@ -157,8 +180,26 @@ def is_automated(row) -> bool:
         if re.match(pattern, subject):
             return True
 
-    # If neither the sender nor the subject tripped any of the patterns
-    # above, we treat it as a real, human-written email.
+    # Two more automated patterns found later by spot-checking the
+    # cleaned output, rather than assumed upfront:
+    #
+    # 1. "CALENDAR ENTRY:" - these are structured exports from Enron's
+    #    calendar/scheduling system (Description, Date, Time, Chairperson
+    #    fields), not something a person sat down and typed. They showed
+    #    up as one of the most repeated message openings in the dataset.
+    if body.startswith("CALENDAR ENTRY"):
+        return True
+
+    # 2. "HourAhead schedule download failed" - a recurring system alert
+    #    from what looks like an internal power-trading scheduling tool.
+    #    It doesn't come from an obviously automated sender address, which
+    #    is exactly why the sender-pattern check above didn't catch it -
+    #    found this one the same way, by noticing the exact same message
+    #    repeating hundreds of times in the cleaned data.
+    if "HourAhead" in body and "schedule download failed" in body:
+        return True
+
+    # If nothing above tripped, we treat it as a real, human-written email.
     return False
 
 

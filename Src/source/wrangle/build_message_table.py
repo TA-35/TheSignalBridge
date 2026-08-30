@@ -2,22 +2,29 @@
 build_message_table.py
 
 Takes the cleaned Enron data and reshapes it into the MESSAGE and
-EMAIL_META tables from our ERD, instead of the flat parsed/cleaned CSV
-shape it's been in so far.
+EMAIL_META tables from our ERD, so Enron ends up looking the same way any
+other source (like Circa) will once it's wrangled too - one row per
+message in MESSAGE, with Enron-specific fields like sender/subject/date
+living separately in EMAIL_META.
 
-Why this step exists: every source we bring in (Enron, Circa, and
-whatever else) needs to end up looking the same way once it reaches the
-database - one row per message in MESSAGE, with a consistent set of
-columns, regardless of which dataset it came from. Enron has extra
-fields (sender, recipients, subject, date) that a lot of other sources
-won't have, so those live in a separate EMAIL_META table instead of
-MESSAGE itself - that way MESSAGE stays generic and any source can slot
-into it, and only the sources that actually have email-style metadata
-need a matching EMAIL_META row.
+A note on thread reconstruction, since this took two attempts to get
+right: we originally planned to link replies together using the
+In-Reply-To and References email headers, which is the standard, most
+reliable way to reconstruct threads. We checked directly against this
+dataset and both headers are 0% populated - completely empty on all
+496,679 rows, not just rare. So that approach is a dead end here, and
+this script doesn't try to use it.
 
-This script only handles Enron for now. Once Circa is cleaned, it gets
-its own equivalent script that produces rows in the same MESSAGE shape
-(with EMAIL_META left empty, since Circa isn't email).
+Instead, threads are grouped using the only real signal we actually
+have: same normalised subject line + same sender, and only within a
+7-day window of each other. The time window matters - without it, two
+completely unrelated emails that happen to share a generic subject like
+"Meeting" would get merged into one "thread" just because the words
+matched, which would be wrong. This is a real limitation compared to
+proper header-based threading (it can't catch a reply from someone who
+didn't share the exact normalised subject, for example), and it's
+recorded as a known gap in SOURCE_DATASET.md rather than something this
+script quietly papers over.
 
 Input:  data/staging/enron_cleaned.csv
 Output: data/staging/message_enron.csv       (rows for the MESSAGE table)
@@ -25,6 +32,7 @@ Output: data/staging/message_enron.csv       (rows for the MESSAGE table)
 """
 
 import csv
+import re
 import uuid
 from pathlib import Path
 
@@ -36,7 +44,7 @@ MESSAGE_OUTPUT = STAGING_DIR / "message_enron.csv"
 EMAIL_META_OUTPUT = STAGING_DIR / "email_meta_enron.csv"
 
 MESSAGE_FIELDNAMES = [
-    "message_id",       # our own generated ID for this table - not the same as the email's own Message-ID header
+    "message_id",        # our own generated id for this table - not the same as Enron's Message-ID header
     "source_dataset_id",
     "raw_text",
     "cleaned_text",
@@ -55,26 +63,89 @@ EMAIL_META_FIELDNAMES = [
 ]
 
 
-def build_thread_id(row: dict) -> str:
+def parse_email_date(date_str: str):
     """
-    Groups emails into threads using In-Reply-To first, since that's the
-    most direct signal - it points straight at the message being replied
-    to. If that's missing, we fall back to subject + sender, which isn't
-    as precise (two unrelated emails with the same subject line would get
-    grouped together) but is a reasonable approximation when the more
-    reliable header isn't available.
+    Enron dates are in RFC-822 format, e.g. 'Mon, 24 Sep 2001 08:17:17 -0700'.
+    We need a real datetime object to compare timestamps for thread
+    grouping below. A handful of dates in this dataset are malformed, so
+    if parsing fails we return None and treat that row as having no
+    usable timestamp, rather than crashing the whole script.
     """
-    if row["in_reply_to"].strip():
-        return row["in_reply_to"].strip()
+    if not date_str:
+        return None
+    try:
+        from email.utils import parsedate_to_datetime
+        return parsedate_to_datetime(date_str)
+    except Exception:
+        return None
 
-    # crude fallback: same subject line often means same conversation
-    subject = row["subject"].strip().lower()
-    subject = subject.replace("re:", "").replace("fw:", "").strip()
-    if subject:
-        return f"subject::{subject}"
 
-    # no usable signal at all - treat as its own standalone thread
-    return f"standalone::{row['message_id']}"
+def normalize_subject(subject: str) -> str:
+    """
+    Strips "Re:" / "Fw:" / "Fwd:" prefixes so "Budget", "Re: Budget", and
+    "Re: Fwd: Budget" all normalise down to the same string. Without
+    this, a reply chain would look like an unrelated new topic every time
+    someone hit reply or forward.
+    """
+    subject = subject.strip().lower()
+    subject = re.sub(r"^(re|fw|fwd)\s*:\s*", "", subject)
+    subject = re.sub(r"^(re|fw|fwd)\s*:\s*", "", subject)  # run twice - catches "Re: Fw: X"
+    return subject.strip()
+
+
+def build_thread_ids(rows):
+    """
+    Groups rows into threads by (normalised subject, sender), then within
+    each group, splits it further by time - if two emails in the same
+    subject+sender group are more than 7 days apart, they start a new
+    thread rather than being lumped into one. Emails with no subject at
+    all, or no parseable date, can't be safely grouped, so each one just
+    becomes its own standalone thread instead of guessing.
+
+    Returns a dict mapping each row's position in the list (its index) to
+    a thread_id string. We use the row's index as the key rather than its
+    Message-ID, since it's simpler and every row has a valid index
+    regardless of what's in its other fields.
+    """
+    groups = {}  # (subject, sender) -> list of (index, date)
+
+    for i, row in enumerate(rows):
+        subject = normalize_subject(row["subject"])
+        sender = row["from_"].strip().lower()
+        date = parse_email_date(row["date"])
+        groups.setdefault((subject, sender), []).append((i, date))
+
+    thread_ids = {}
+
+    for (subject, sender), entries in groups.items():
+        if not subject:
+            # nothing to group by - every row in this bucket stands alone
+            for i, _ in entries:
+                thread_ids[i] = f"standalone::{uuid.uuid4()}"
+            continue
+
+        with_dates = [(i, d) for i, d in entries if d is not None]
+        without_dates = [i for i, d in entries if d is None]
+
+        # sort by date so we can check the gap between consecutive emails
+        with_dates.sort(key=lambda pair: pair[1])
+
+        current_thread_id = None
+        last_date = None
+
+        for i, date in with_dates:
+            if last_date is None or (date - last_date).days > 7:
+                # first email in this group, or too big a gap since the
+                # last one - starts a fresh thread
+                current_thread_id = f"thread::{subject}::{sender}::{date.isoformat()}"
+            thread_ids[i] = current_thread_id
+            last_date = date
+
+        # can't time-check these, so each gets its own thread rather than a guess
+        for i in without_dates:
+            thread_ids[i] = f"standalone::{uuid.uuid4()}"
+
+    return thread_ids
 
 
 def main():
@@ -86,15 +157,14 @@ def main():
         reader = csv.DictReader(f)
         rows = list(reader)
 
+    print(f"Loaded {len(rows)} cleaned rows.")
+    print("Grouping into threads by subject + sender + time proximity...")
+    thread_id_map = build_thread_ids(rows)
+
     message_rows = []
     email_meta_rows = []
 
-    for row in rows:
-        # We generate our own message_id here rather than reusing the
-        # email's Message-ID header directly - the header is specific to
-        # email as a format, but MESSAGE needs to work for any source
-        # (Circa questions don't have a Message-ID at all), so every
-        # source generates its own uuid instead and MESSAGE stays generic.
+    for i, row in enumerate(rows):
         our_message_id = str(uuid.uuid4())
 
         message_rows.append({
@@ -104,7 +174,7 @@ def main():
             "cleaned_text": row["body"],
             "char_count": len(row["body"]),
             "external_ref": row["external_ref"],
-            "thread_id": build_thread_id(row),
+            "thread_id": thread_id_map[i],
         })
 
         email_meta_rows.append({
@@ -126,8 +196,15 @@ def main():
         writer.writeheader()
         writer.writerows(email_meta_rows)
 
-    print(f"Wrote {len(message_rows)} rows to {MESSAGE_OUTPUT}")
+    unique_threads = len(set(r["thread_id"] for r in message_rows))
+    standalone_count = sum(1 for r in message_rows if r["thread_id"].startswith("standalone::"))
+    grouped_count = len(message_rows) - standalone_count
+
+    print(f"\nWrote {len(message_rows)} rows to {MESSAGE_OUTPUT}")
     print(f"Wrote {len(email_meta_rows)} rows to {EMAIL_META_OUTPUT}")
+    print(f"Grouped into {unique_threads} distinct threads")
+    print(f"  - {grouped_count} rows grouped by subject+sender+time")
+    print(f"  - {standalone_count} rows had no usable subject/date and stand alone")
 
 
 if __name__ == "__main__":
