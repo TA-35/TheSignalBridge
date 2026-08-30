@@ -13,6 +13,15 @@
   associated with the original FERC dataset. Confirmed via direct check,
   not assumed.
 
+- PII masking limitation: email addresses and phone numbers are reliably
+  masked via regex, and sender/recipient fields are pseudonymised
+  (Person_1, Person_2, ...). However, full names mentioned casually in
+  the body or subject text (e.g. "dinner with Louise and John") are NOT
+  caught - there's no reliable regex pattern for detecting names. Spot-
+  checked and confirmed this gap exists in the cleaned output. If names-
+  in-text needs to be addressed before annotation, a named-entity-
+  recognition step would need to be added as a follow-up.
+  
 ## Rao & Daumé Clarification Questions Dataset
 - URL: https://go.umd.edu/clarification_questions_dataset
 - Status: DEAD LINK as of 2026-08-30 — confirmed "Sorry, the file you have requested does not exist" on Google Drive
