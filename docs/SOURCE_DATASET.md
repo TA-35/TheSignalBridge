@@ -5,6 +5,13 @@
 - License: Non-commercial research use only
 - Downloaded: 2026-08-30
 - Owner: Amulya Reddy
+- Note: the roadmap flagged heavy duplication as expected (same email in
+  sender's Sent + every recipient's Inbox). Verified directly against the
+  full 517,401-row parsed dataset - Message-IDs are 100% unique, zero
+  duplicates found by ID or by content hash. This particular CMU-hosted
+  release of the corpus does not exhibit the duplication pattern often
+  associated with the original FERC dataset. Confirmed via direct check,
+  not assumed.
 
 ## Rao & Daumé Clarification Questions Dataset
 - URL: https://go.umd.edu/clarification_questions_dataset
