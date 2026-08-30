@@ -24,3 +24,19 @@ Thumbs.db
 !.vscode/extensions.json
 .idea/
 
+# DS pipeline - raw & intermediate data (never commit real data)
+data/raw/*
+data/staging/*
+!data/raw/.gitkeep
+!data/staging/.gitkeep
+
+# Large processed files (keep small reference outputs, ignore bulk artifacts)
+data/processed/*.csv
+data/processed/*.tsv
+data/processed/*.parquet
+data/processed/*.jsonl
+!data/processed/.gitkeep
+
+# Common data science junk
+*.ipynb_checkpoints/
+.ipynb_checkpoints/
