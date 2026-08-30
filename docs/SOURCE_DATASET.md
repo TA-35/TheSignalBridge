@@ -13,14 +13,13 @@
   associated with the original FERC dataset. Confirmed via direct check,
   not assumed.
 
-- PII masking limitation: email addresses and phone numbers are reliably
-  masked via regex, and sender/recipient fields are pseudonymised
-  (Person_1, Person_2, ...). However, full names mentioned casually in
-  the body or subject text (e.g. "dinner with Louise and John") are NOT
-  caught - there's no reliable regex pattern for detecting names. Spot-
-  checked and confirmed this gap exists in the cleaned output. If names-
-  in-text needs to be addressed before annotation, a named-entity-
-  recognition step would need to be added as a follow-up.
+- PII masking limitation: email addresses and phone numbers are reliably masked via regex, and sender/recipient fields are pseudonymised
+  (Person_1, Person_2, ...). However, full names mentioned casually in the body or subject text (e.g. "dinner with Louise and John") are NOT caught - there's no reliable regex pattern for detecting names. Spot- checked and confirmed this gap exists in the cleaned output. If names-in-text needs to be addressed before annotation, a named-entity- recognition step would need to be added as a follow-up.
+
+ - Thread reconstruction: In-Reply-To and References headers are both 0% populated in this dataset (confirmed by direct check, not assumed) - proper header-based reply-chain threading isn't possible here.Threads are grouped instead by normalised subject + sender within a  7-day window. Known limitation: this can't catch a reply that doesn't share the same subject line, and could occasionally merge unrelated messages that coincidentally share both subject and sender within the window. 196,286 distinct threads identified across 455,514 messages.
+
+- Data quality fixes found via spot-checking (not caught by "0 errors" parse/clean summaries alone): forwarded-message markers ("Forwarded by X on date") were leaking into cleaned_text due to a
+  regex missing re.DOTALL; CALENDAR ENTRY exports and HourAheadmschedule-alert system messages were not being filtered as automated mail. All three fixed and verified. Final cleaned row count: 455,514. 
   
 ## Rao & Daumé Clarification Questions Dataset
 - URL: https://go.umd.edu/clarification_questions_dataset
