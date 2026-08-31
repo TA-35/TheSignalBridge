@@ -2,7 +2,10 @@ Flask==3.0.3
 flask-cors==4.0.1
 Flask-SQLAlchemy==3.1.1
 Flask-Migrate==4.0.7
-psycopg2-binary==2.9.9
+psycopg2-binary==2.9.12
 python-dotenv==1.0.1
 gunicorn==22.0.0
 pytest==8.3.2
+spacy==3.8.16
+# spaCy English model - pip cannot resolve this by name, needs the wheel URL
+https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
