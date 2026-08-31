@@ -24,9 +24,35 @@ Response `200`:
   "missing": [
     { "field": "deadline", "prompt": "What time is the client call due?" }
   ],
-  "category": "one of the fixed category enum values — see below"
+  "category": "one of the fixed category enum values — see below",
+  "spans": {
+    "time": [60, 63],
+    "task": [0, 18],
+    "deadline": null,
+    "for_whom": null
+  },
+  "tasks": [
+    {
+      "text": "send the Q3 report",
+      "span": [7, 25],
+      "time": "Not specified",
+      "deadline": "next Tuesday",
+      "for_whom": "client",
+      "missing": [{ "field": "time", "prompt": "What time do you need this by?" }]
+    }
+  ]
 }
 ```
+
+`spans` are `[start, end)` character offsets into the exact `message` string
+sent, so the UI can highlight where each value came from. `null` when the
+field is `"Not specified"`.
+
+`tasks` is one entry per ask found in the message — a message with three
+requests returns three. Each carries only the fields that fall inside its own
+clause, so `missing` is scoped per bullet rather than per message. `elements`
+remains the single-task view (the first ask) and is unchanged; clients can
+migrate to `tasks` at their own pace. A message with no ask returns `[]`.
 
 Response `400`: `{ "error": "Please enter a message" }` when empty or meaningless input.
 
@@ -39,7 +65,7 @@ Response `200`: array of pattern-library rows (curated content only, no user dat
 ```json
 [
   {
-    "id": 1,
+    "id": "1",
     "name": "string",
     "category": "string",
     "implies": "what this phrasing usually implies",
@@ -53,7 +79,7 @@ Response `200`: array of pattern-library rows (curated content only, no user dat
 example
 [
   {
-    "id": 1,
+    "id": "1",
     "name": "Before the sync",
     "category": "Vague deadline",
     "implies": "A deadline anchored to an event, not a time. The sender assumes you know when that event is.",
@@ -79,3 +105,9 @@ Confirm/extend this list once the pattern library (15–25 rows) is written, the
 ## Data retention
 
 No message text, extracted elements, or saved cards are ever persisted server-side or logged.
+
+On the client, decodes and saved cards are written to `localStorage` on the
+user's own device, so a decode survives a refresh and a card can point back at
+the message that produced it. The decode history is capped at 100 records.
+This is the only place message text is written to disk; nothing is uploaded,
+and Settings -> "clear" removes all of it.
