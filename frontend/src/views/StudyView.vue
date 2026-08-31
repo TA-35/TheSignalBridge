@@ -10,11 +10,17 @@ const store = useCardsStore()
 const view = ref<'list' | 'deck'>('list')
 const deckPos = ref(0)
 
+function preview(text: string): string {
+  return text.length > 118 ? `${text.slice(0, 116)}…` : text
+}
+
 const cards = computed(() =>
   store.sortedByNeglect.map((card) => ({
     ...card,
     meta: describeLastOpened(card.lastOpened),
-    impliesPreview: card.implies.length > 118 ? card.implies.slice(0, 116) + '…' : card.implies,
+    // A card with no library match has no explanation - show the message
+    // it came from instead.
+    impliesPreview: preview(card.implies ?? card.excerpt),
   })),
 )
 

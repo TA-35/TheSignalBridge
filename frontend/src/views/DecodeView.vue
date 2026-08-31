@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { computed, reactive } from 'vue'
-import { decodeMessage } from '@/services/decodeService'
+import { decodeMessage, EmptyMessageError } from '@/services/decodeService'
 import { findLocalPatternMatch } from '@/services/localPatterns'
 import { getPatterns } from '@/services/patternsService'
 import { useCardsStore } from '@/stores/cards'
+import { useDecodesStore } from '@/stores/decodes'
 import { ELEMENT_LABELS, NOT_SPECIFIED, type DecodeResult, type ElementKey } from '@/types/decode'
 import type { Pattern, SavedCard } from '@/types/pattern'
+import type { DecodeRecord } from '@/types/decode'
 
 const cardsStore = useCardsStore()
+const decodesStore = useDecodesStore()
 
 const SAMPLE =
   "Hi,\n\nWhen you get a chance, could you take a look at the Q3 deck and tighten up the numbers section? Would be great to have it before the leadership sync.\n\nAlso, loop in whoever owns the pricing slide if that's easier.\n\nThanks!"
@@ -19,18 +22,15 @@ const state = reactive({
   result: null as DecodeResult | null,
   checked: new Set<ElementKey>(),
   matchedPattern: null as Pattern | null,
+  record: null as DecodeRecord | null,
   savedCard: null as SavedCard | null,
   showSaved: false,
 })
 
-const isMeaningful = (text: string) => text.length >= 12 && /[a-z]{3,}/i.test(text) && /\s/.test(text)
-
 async function review() {
   const text = state.message.trim()
-  if (!isMeaningful(text)) {
-    state.error = text.length
-      ? 'This does not look like a message yet. Paste the message text itself and try again.'
-      : 'The box is empty. Paste a message and we will go through it together.'
+  if (!text) {
+    state.error = 'The box is empty. Paste a message and we will go through it together.'
     return
   }
 
@@ -50,6 +50,16 @@ async function review() {
       state.matchedPattern =
         candidates.find((p) => p.id === specific?.id) ?? (candidates.length === 1 ? (candidates[0] ?? null) : null)
     }
+    // Keep the decode so the work survives the session and a card can point
+    // back at the message. Local only - see stores/decodes.ts.
+    state.record = decodesStore.save(text, state.result, state.matchedPattern?.id ?? null)
+  } catch (err) {
+    // The decoder decides what counts as a message - one rule, server-side,
+    // mirrored offline. See decodeService.
+    if (!(err instanceof EmptyMessageError)) throw err
+    state.result = null
+    state.record = null
+    state.error = 'This does not look like a message yet. Paste the message text itself and try again.'
   } finally {
     state.loading = false
   }
@@ -61,13 +71,15 @@ function reset() {
   state.result = null
   state.checked = new Set()
   state.matchedPattern = null
+  state.record = null
   state.showSaved = false
 }
 
-// F7: explicit, opt-in save — nothing is stored until this is clicked.
+// F7: explicit, opt-in save. A card is saved even with no library match —
+// what the message left unsaid is the lesson either way.
 function makeFlashcard() {
-  if (!state.matchedPattern) return
-  state.savedCard = cardsStore.save(state.matchedPattern)
+  if (!state.record) return
+  state.savedCard = cardsStore.save(state.record, state.matchedPattern)
   state.showSaved = true
 }
 
@@ -83,6 +95,8 @@ function editMessage() {
 function toggleChecked(field: ElementKey) {
   if (state.checked.has(field)) state.checked.delete(field)
   else state.checked.add(field)
+  // Remember which questions the user judged worth asking.
+  if (state.record) decodesStore.setAsked(state.record.id, [...state.checked])
 }
 
 const coveredRows = computed(() => {
@@ -92,6 +106,27 @@ const coveredRows = computed(() => {
     label: ELEMENT_LABELS[field],
     value: state.result!.elements[field],
   }))
+})
+
+// One bullet per ask. Falls back to the single-task view when the offline
+// decoder answered, which has no `tasks` array.
+const todo = computed(() => {
+  if (!state.result) return []
+
+  const tasks = state.result.tasks ?? []
+  if (tasks.length) {
+    return tasks.map((task) => {
+      const known = [
+        task.deadline !== NOT_SPECIFIED ? `by ${task.deadline}` : null,
+        task.for_whom !== NOT_SPECIFIED ? `for ${task.for_whom}` : null,
+        task.time !== NOT_SPECIFIED ? `at ${task.time}` : null,
+      ].filter(Boolean)
+      return { text: task.text, detail: known.join(' · ') }
+    })
+  }
+
+  const single = state.result.elements.task
+  return single && single !== NOT_SPECIFIED ? [{ text: single, detail: '' }] : []
 })
 
 const checkedPrompts = computed(() => {
@@ -150,6 +185,21 @@ const checkedPrompts = computed(() => {
         </div>
 
         <div class="findings">
+          <div v-if="todo.length" class="panel panel--todo">
+            <div class="panel__header panel__header--todo">
+              <span class="panel-dot panel-dot--todo" />
+              <strong>What you're being asked to do</strong>
+            </div>
+            <div class="panel__body">
+              <ul class="todo">
+                <li v-for="(item, i) in todo" :key="i" class="todo__item">
+                  <span class="todo__text">{{ item.text }}</span>
+                  <span v-if="item.detail" class="todo__detail">{{ item.detail }}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
           <div class="panel panel--covered">
             <div class="panel__header panel__header--covered">
               <span class="panel-dot panel-dot--covered" />
@@ -210,9 +260,10 @@ const checkedPrompts = computed(() => {
           <div v-if="!state.matchedPattern" class="notice">
             <span class="notice-dot" />
             <div>
-              <strong>No flashcard for this one yet</strong>
+              <strong>No library match for this wording</strong>
               <span>
-                Nothing in the pattern library matches this message, so there's nothing to save here.
+                You can still keep this one — the card will show the message and what it left
+                unsaid, without a pattern explanation.
                 <RouterLink to="/library">Browse the library</RouterLink> to see what is covered so far.
               </span>
             </div>
@@ -220,7 +271,7 @@ const checkedPrompts = computed(() => {
 
           <div class="actions">
             <button
-              v-if="state.matchedPattern"
+              v-if="state.record"
               type="button"
               class="btn btn--primary"
               @click="makeFlashcard"
@@ -473,6 +524,45 @@ const checkedPrompts = computed(() => {
   border-radius: var(--radius-md);
   background: var(--color-surface);
   overflow: hidden;
+}
+
+/* The bullet list is the headline answer - it spans both columns above
+   the covered/missing split. */
+.panel--todo {
+  grid-column: 1 / -1;
+  border: 1px solid var(--color-primary-soft-border);
+}
+
+.panel__header--todo {
+  background: var(--color-primary-soft-bg);
+}
+
+.panel-dot--todo {
+  background: var(--color-primary);
+}
+
+.todo {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.todo__item {
+  line-height: 1.5;
+}
+
+.todo__text {
+  display: block;
+}
+
+.todo__detail {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 2px;
 }
 
 .panel--covered {

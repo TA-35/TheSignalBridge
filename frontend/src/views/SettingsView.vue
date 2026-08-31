@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useCardsStore } from '@/stores/cards'
+import { useDecodesStore } from '@/stores/decodes'
 import { useSettingsStore, type Contrast, type Typeface } from '@/stores/settings'
 
 const settingsStore = useSettingsStore()
 const cardsStore = useCardsStore()
+const decodesStore = useDecodesStore()
 
 const CONTRAST_OPTIONS: { value: Contrast; label: string }[] = [
   { value: 'soft', label: 'Soft' },
@@ -21,6 +23,8 @@ const showDeleteConfirm = ref(false)
 
 function confirmDelete() {
   cardsStore.clear()
+  // Decodes hold the message text - clearing cards alone would leave it.
+  decodesStore.clear()
   showDeleteConfirm.value = false
 }
 </script>
