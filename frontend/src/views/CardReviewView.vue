@@ -38,19 +38,36 @@ function step(delta: number) {
     </div>
 
     <div class="card">
-      <span class="tag">{{ card.category }}</span>
+      <span v-if="card.category" class="tag">{{ card.category }}</span>
       <strong class="name">{{ card.name }}</strong>
+
+      <p v-if="card.excerpt" class="excerpt">{{ card.excerpt }}</p>
 
       <div class="reveal" :class="{ 'reveal--open': flipped }">
         <div class="reveal__inner">
-          <div class="block">
-            <span class="block__label">What this phrasing usually implies</span>
-            <span class="block__text">{{ card.implies }}</span>
+          <template v-if="card.implies">
+            <div class="block">
+              <span class="block__label">What this phrasing usually implies</span>
+              <span class="block__text">{{ card.implies }}</span>
+            </div>
+            <div class="rule" />
+            <div class="block">
+              <span class="block__label">Why it tends to get misread</span>
+              <span class="block__text">{{ card.why_misread }}</span>
+            </div>
+          </template>
+
+          <!-- No library match: what the message left unsaid is the lesson. -->
+          <div v-if="card.unsaid.length" class="block">
+            <div v-if="card.implies" class="rule" />
+            <span class="block__label">What this message left unsaid</span>
+            <ul class="unsaid">
+              <li v-for="gap in card.unsaid" :key="gap.field">{{ gap.prompt }}</li>
+            </ul>
           </div>
-          <div class="rule" />
-          <div class="block">
-            <span class="block__label">Why it tends to get misread</span>
-            <span class="block__text">{{ card.why_misread }}</span>
+
+          <div v-if="!card.implies && !card.unsaid.length" class="block">
+            <span class="block__text">This one stated everything it needed to.</span>
           </div>
         </div>
       </div>
@@ -209,5 +226,21 @@ function step(delta: number) {
   .reveal {
     transition: none;
   }
+}
+
+.excerpt {
+  margin: 12px 0 0;
+  font-style: italic;
+  opacity: 0.78;
+  line-height: 1.5;
+}
+
+.unsaid {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.unsaid li {
+  margin-bottom: 4px;
 }
 </style>
