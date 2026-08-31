@@ -40,3 +40,14 @@ data/processed/*.jsonl
 # Common data science junk
 *.ipynb_checkpoints/
 .ipynb_checkpoints/
+
+# SSH keys - never commit
+documents
+documents.pub
+*.pem
+*.key
+id_ed25519*
+id_rsa*
+
+# Flask instance folder (local sqlite db)
+backend/instance/
