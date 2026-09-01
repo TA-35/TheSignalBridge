@@ -1,0 +1,177 @@
+[
+  {
+    "id": 1,
+    "name": "Would you mind referencing them to conform with wiki-policy?",
+    "category": "Softened request",
+    "implies": "This usually means they'd like it done. ‘Would you mind’ is softening the ask, not really leaving it optional.",
+    "why_misread": "You might take ‘would you mind’ at face value as a genuine choice. Usually the answer they’re hoping for is already decided."
+  },
+  {
+    "id": 2,
+    "name": "Could you give a more detailed description of the problem?",
+    "category": "Softened request",
+    "implies": "Often, this signals they're stuck without more detail. ‘Could you’ is just making the ask sound less demanding.",
+    "why_misread": "It's easy to read this as a casual follow-up question. Usually it's blocking them from moving forward."
+  },
+  {
+    "id": 3,
+    "name": "Can you explain your scenario better? Perhaps with an example?",
+    "category": "Softened request",
+    "implies": "This usually means they don't have enough to go on yet. ‘Perhaps’ is softening a fairly direct ask for detail.",
+    "why_misread": "You might take ‘perhaps with an example’ at face value as a nice-to-have. Usually it's the thing that would actually help most."
+  },
+  {
+    "id": 4,
+    "name": "Can you please let me know the approach that should be adopted when building a software?",
+    "category": "Softened request",
+    "implies": "There's likely a real decision waiting on this. ‘Please let me know’ is softening what's actually a request for direction.",
+    "why_misread": "You might take this at face value as a casual question you can answer whenever. Usually something is waiting on your answer."
+  },
+  {
+    "id": 5,
+    "name": "Could you please take a moment and provide the code I would need to add which would allow me to achieve these goals?",
+    "category": "Softened request",
+    "implies": "There's likely a fairly concrete ask underneath all the softening. They want the actual code, not just general pointers.",
+    "why_misread": "It's easy to read all the polite phrasing as low-pressure or optional. The request itself is usually pretty specific."
+  },
+  {
+    "id": 6,
+    "name": "Let's aim to have this done soon.",
+    "category": "Vague deadline",
+    "implies": "There's often a real timeframe in mind. ‘Soon’ is doing the job of softening it, not removing it.",
+    "why_misread": "It's easy to take ‘soon’ as low-pressure or open-ended. The actual timing is usually somewhere else, in a calendar or someone's head."
+  },
+  {
+    "id": 7,
+    "name": "Can we wrap this up by early next week-ish?",
+    "category": "Vague deadline",
+    "implies": "This usually means there's a specific day in mind, even if it isn't stated. ‘-ish’ is softening the ask, not the actual target.",
+    "why_misread": "You might take ‘early next week-ish’ at face value as flexible. Usually there's a firmer date behind it than the wording suggests."
+  },
+  {
+    "id": 8,
+    "name": "This should go out sometime before the launch.",
+    "category": "Vague deadline",
+    "implies": "Often, this signals there's a real internal deadline tied to launch prep. ‘Sometime before’ just isn't naming it directly.",
+    "why_misread": "It's easy to read this as loosely timed, whenever it fits. Usually it needs to land earlier than that to leave room for launch prep."
+  },
+  {
+    "id": 9,
+    "name": "We'll need this fairly soon, so don't sit on it too long.",
+    "category": "Vague deadline",
+    "implies": "This usually means the timeline is tighter than ‘fairly soon’ sounds. The softness is about tone, not the actual urgency.",
+    "why_misread": "You might take this at face value as a gentle, no-rush reminder. Usually it's closer to a real deadline than it reads."
+  },
+  {
+    "id": 10,
+    "name": "This needs to be reviewed before we ship.",
+    "category": "Unassigned owner",
+    "implies": "Often, this signals the review is expected to land on you. The sentence just doesn't say so directly.",
+    "why_misread": "It's easy to read this as a general status update. Usually someone specific is meant to pick it up, and it's often the reader."
+  },
+  {
+    "id": 11,
+    "name": "The onboarding doc needs an update.",
+    "category": "Unassigned owner",
+    "implies": "This usually means someone specific is expected to make the update, most often whoever's reading it. The sentence just leaves that part out.",
+    "why_misread": "You might take this at face value as background information, not a task. Usually it's a task, just missing a name."
+  },
+  {
+    "id": 12,
+    "name": "This bug should get fixed before the next release.",
+    "category": "Unassigned owner",
+    "implies": "Often, this signals you're the one expected to own it. The passive wording just leaves your name out.",
+    "why_misread": "It's easy to read this as a general note to the team. Ownership is usually assumed here, not spelled out."
+  },
+  {
+    "id": 13,
+    "name": "We need to circle back on the vendor contract.",
+    "category": "Unassigned owner",
+    "implies": "Often, this signals someone needs to own following up, and that's frequently whoever gets the message. ‘We’ doesn't always mean everyone equally.",
+    "why_misread": "It's easy to read ‘we’ as shared ownership across the group. Usually one person ends up carrying it, and it may be you."
+  },
+  {
+    "id": 14,
+    "name": "This is fairly important, so let's not let it slip.",
+    "category": "Unclear priority",
+    "implies": "This usually means it should rank above routine tasks, though exactly how high is left open. ‘Fairly important’ is doing a lot of work here.",
+    "why_misread": "You might take ‘fairly important’ at face value as one item among many. It's often meant to stand out more than that."
+  },
+  {
+    "id": 15,
+    "name": "Not urgent, but worth getting to at some point.",
+    "category": "Unclear priority",
+    "implies": "There's likely a real point where this becomes urgent, even though the message doesn't say when. ‘At some point’ is a placeholder, not a shrug.",
+    "why_misread": "It's easy to read this as low priority indefinitely. Usually there's a point where it matters more than it sounds right now."
+  },
+  {
+    "id": 16,
+    "name": "Let's try to prioritize this when we can.",
+    "category": "Unclear priority",
+    "implies": "Often, this signals it should move up the list soon, not whenever there's spare time. ‘When we can’ usually means sooner than it sounds.",
+    "why_misread": "You might take ‘when we can’ at face value as open-ended. Usually there's more urgency behind it than the wording lets on."
+  },
+  {
+    "id": 17,
+    "name": "This matters, just not sure how much compared to everything else.",
+    "category": "Unclear priority",
+    "implies": "This usually means the person hasn't ranked it themselves either, but still wants it kept in view. It's not a low-priority signal.",
+    "why_misread": "It's easy to read the uncertainty as permission to deprioritize it. Usually it just means the ranking hasn't been worked out yet."
+  },
+  {
+    "id": 18,
+    "name": "Can you clean up the onboarding flow a bit?",
+    "category": "Undefined scope",
+    "implies": "There's likely a specific set of issues in mind, even though ‘a bit’ doesn't say what they are. The scope is narrower than it sounds.",
+    "why_misread": "You might take ‘a bit’ at face value as light, open-ended polish. Usually there's a more specific fix already in mind."
+  },
+  {
+    "id": 19,
+    "name": "Take a pass at improving the report.",
+    "category": "Undefined scope",
+    "implies": "Often, this signals a particular kind of improvement, not a full redesign. ‘A pass’ usually means a bounded round of changes.",
+    "why_misread": "It's easy to read ‘improving’ as broad, do-whatever-you-think scope. Usually the person has a narrower change in mind."
+  },
+  {
+    "id": 20,
+    "name": "See if you can tighten up the checkout process.",
+    "category": "Undefined scope",
+    "implies": "This usually means a specific friction point, not the whole process end to end. ‘Tighten up’ is pointing at something narrower.",
+    "why_misread": "You might take this at face value as a full review of checkout. Usually it's about one part that's already bothering someone."
+  },
+  {
+    "id": 21,
+    "name": "Can you look into making the dashboard better?",
+    "category": "Undefined scope",
+    "implies": "There's likely a particular thing that's not working well, even though ‘better’ sounds open-ended. The ask is usually more specific than it reads.",
+    "why_misread": "It's easy to read ‘better’ as a broad, open invitation to redesign. Usually there's a narrower issue driving the request."
+  },
+  {
+    "id": 22,
+    "name": "This is great overall — just a couple of small things to tweak.",
+    "category": "Feedback framing",
+    "implies": "There's likely more substance in the ‘small things’ than the phrase suggests. The praise is softening what follows.",
+    "why_misread": "You might take ‘small things’ at face value as minor. The real feedback is often packed into that second half."
+  },
+  {
+    "id": 23,
+    "name": "I love the direction — one thing I'm wondering about is the pacing.",
+    "category": "Feedback framing",
+    "implies": "Often, this signals the pacing is the main thing they'd like changed. The praise is genuine, but it's also softening the actual note.",
+    "why_misread": "You might take ‘one thing’ at face value as a minor aside. Usually it's the part of the feedback that matters most."
+  },
+  {
+    "id": 24,
+    "name": "Nice job on this! A few small suggestions below.",
+    "category": "Feedback framing",
+    "implies": "This usually means the suggestions are worth taking seriously, not just optional extras. ‘Small’ is softening the framing, not the content.",
+    "why_misread": "It's easy to read ‘small suggestions’ as things you can skip. Usually they're the actual feedback, just gently introduced."
+  },
+  {
+    "id": 25,
+    "name": "This is really close — just some minor polish needed.",
+    "category": "Feedback framing",
+    "implies": "There's likely a specific list of changes behind ‘minor polish,’ even if it isn't spelled out yet. ‘Close’ is encouragement, not a final verdict.",
+    "why_misread": "You might take ‘minor polish’ at face value as nearly done. Usually there's still a real list of changes to work through."
+  }
+]
