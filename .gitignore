@@ -1,4 +1,4 @@
-# Environment
+﻿# Environment
 .env
 .env.local
 *.env
@@ -51,3 +51,6 @@ id_rsa*
 
 # Flask instance folder (local sqlite db)
 backend/instance/
+
+# Root virtual environment
+.venv/
