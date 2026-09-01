@@ -7,6 +7,15 @@ import { findLocalPatternMatch } from './localPatterns'
 // Same response shape as the real contract 
 // An unmatched field is left `null`.
 
+// Mirrors is_meaningless() in backend/app/services/extraction.py: fewer than
+// three alphabetic word-tokens of length >= 2. Kept here so the offline path
+// judges a message exactly as the server would - one rule, not two.
+const MEANINGFUL_WORD = /[A-Za-z]{2,}/g
+
+export function isMeaningless(message: string): boolean {
+  return (message.trim().match(MEANINGFUL_WORD) ?? []).length < 3
+}
+
 function firstMatch(text: string, patterns: RegExp[]): string | null {
   for (const pattern of patterns) {
     const match = text.match(pattern)

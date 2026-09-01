@@ -17,7 +17,9 @@ class Pattern(db.Model):
 
     def to_dict(self) -> dict:
         return {
-            "id": self.id,
+            # String, not int: the frontend Pattern type and the local seed
+            # ids ("l1".."l6") share this shape, and cards dedupe on ===.
+            "id": str(self.id),
             "name": self.name,
             "category": self.category,
             "implies": self.implies,

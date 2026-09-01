@@ -24,12 +24,13 @@ const visible = computed(() =>
 )
 
 function addToCards(pattern: Pattern) {
-  store.save(pattern)
+  store.savePattern(pattern)
 }
 
 function explore(pattern: Pattern) {
-  store.save(pattern)
-  router.push({ name: 'card-review', params: { id: pattern.id } })
+  // Route by the card's own id - a card is no longer identified by its pattern.
+  const card = store.savePattern(pattern)
+  router.push({ name: 'card-review', params: { id: card.id } })
 }
 </script>
 
@@ -64,11 +65,11 @@ function explore(pattern: Pattern) {
           <button
             type="button"
             class="btn"
-            :class="store.isSaved(item.id) ? 'btn--saved' : 'btn--outline'"
-            :disabled="store.isSaved(item.id)"
+            :class="store.isPatternSaved(item.id) ? 'btn--saved' : 'btn--outline'"
+            :disabled="store.isPatternSaved(item.id)"
             @click="addToCards(item)"
           >
-            {{ store.isSaved(item.id) ? 'Saved' : 'Add to my cards' }}
+            {{ store.isPatternSaved(item.id) ? 'Saved' : 'Add to my cards' }}
           </button>
           <button type="button" class="explore" @click="explore(item)">Explore -></button>
         </div>
