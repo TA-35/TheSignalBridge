@@ -1,6 +1,7 @@
 ﻿# Environment
 .env
 .env.local
+.env.production
 *.env
 !.env.example
 
@@ -54,3 +55,6 @@ backend/instance/
 
 # Root virtual environment
 .venv/
+
+# One-off deploy artifacts (e.g. `git archive` tarballs for manual scp)
+*.tar
