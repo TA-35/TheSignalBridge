@@ -27,7 +27,7 @@ const cards = computed(() =>
 const deckCard = computed(() => (cards.value.length ? cards.value[deckPos.value % cards.value.length] : null))
 
 function open(id: string) {
-  router.push({ name: 'card-review', params: { id } })
+  router.push({ name: 'card-review', params: { id }, query: { from: 'study' } })
 }
 
 function nextInDeck() {

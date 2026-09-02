@@ -13,6 +13,12 @@ const orderedIds = computed(() => store.sortedByNeglect.map((c) => c.id))
 const index = computed(() => orderedIds.value.indexOf(route.params.id as string))
 const card = computed(() => store.cards.find((c) => c.id === route.params.id))
 
+// Explore (from Library) and Open (from Study) both link in here — remember
+// which one so leaving goes back to where the user actually came from.
+const cameFromLibrary = computed(() => route.query.from === 'library')
+const backTo = computed(() => (cameFromLibrary.value ? '/library' : '/study'))
+const backLabel = computed(() => (cameFromLibrary.value ? '← Back to Library' : '← Back to Study'))
+
 watch(
   () => route.params.id,
   (id) => {
@@ -26,14 +32,15 @@ function step(delta: number) {
   const ids = orderedIds.value
   if (!ids.length || index.value < 0) return
   const next = (index.value + delta + ids.length) % ids.length
-  router.push({ name: 'card-review', params: { id: ids[next] } })
+  // Keep `from` so paging through cards doesn't lose the entry point.
+  router.push({ name: 'card-review', params: { id: ids[next] }, query: route.query })
 }
 </script>
 
 <template>
   <div v-if="card" class="review">
     <div class="topline">
-      <RouterLink to="/study" class="back">← Back to Study</RouterLink>
+      <RouterLink :to="backTo" class="back">{{ backLabel }}</RouterLink>
       <span class="pos">card {{ index + 1 }} of {{ orderedIds.length }}</span>
     </div>
 
@@ -127,7 +134,6 @@ function step(delta: number) {
   font-size: 10.5px;
   letter-spacing: 0.09em;
   color: var(--color-text-faint);
-  text-transform: uppercase;
 }
 
 .name {
@@ -173,7 +179,6 @@ function step(delta: number) {
   font-size: 10.5px;
   letter-spacing: 0.09em;
   color: #8ca79a;
-  text-transform: uppercase;
 }
 
 .block__text {

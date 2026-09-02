@@ -30,7 +30,7 @@ function addToCards(pattern: Pattern) {
 function explore(pattern: Pattern) {
   // Route by the card's own id - a card is no longer identified by its pattern.
   const card = store.savePattern(pattern)
-  router.push({ name: 'card-review', params: { id: card.id } })
+  router.push({ name: 'card-review', params: { id: card.id }, query: { from: 'library' } })
 }
 </script>
 
@@ -153,7 +153,6 @@ function explore(pattern: Pattern) {
   font-size: 10.5px;
   letter-spacing: 0.08em;
   color: var(--color-text-faint);
-  text-transform: uppercase;
 }
 
 .item__name {

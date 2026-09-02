@@ -1,6 +1,6 @@
 import type { DecodeResult, ElementKey } from '@/types/decode'
 import { NOT_SPECIFIED } from '@/types/decode'
-import { findLocalPatternMatch } from './localPatterns'
+import { guessCategory } from './localPatterns'
 
 // Placeholder extraction used until the backend AI model
 // is decided and POST /api/decode is implemented. 
@@ -59,9 +59,7 @@ export function localDecode(message: string): DecodeResult {
     .filter((key) => elements[key] === NOT_SPECIFIED)
     .map((field) => ({ field, prompt: PROMPTS[field] }))
 
-  // Category comes from the same specific-pattern match used for the
-  // flashcard suggestion (see localPatterns.ts)
-  const category = findLocalPatternMatch(message)?.category ?? null
+  const category = guessCategory(message)
 
   return { elements, covered, missing, category }
 }

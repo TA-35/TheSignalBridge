@@ -66,6 +66,8 @@ CATEGORY_ENUM = {
     "Vague deadline",
     "Unassigned owner",
     "Feedback framing",
+    "Unclear priority",
+    "Undefined scope",
 }
 
 

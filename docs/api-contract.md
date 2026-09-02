@@ -69,8 +69,7 @@ Response `200`: array of pattern-library rows (curated content only, no user dat
     "name": "string",
     "category": "string",
     "implies": "what this phrasing usually implies",
-    "why_misread": "why it tends to get misread",
-    "source": "citation for the explanation"
+    "why_misread": "why it tends to get misread"
   }
 ]
 ```
@@ -83,24 +82,29 @@ example
     "name": "Before the sync",
     "category": "Vague deadline",
     "implies": "A deadline anchored to an event, not a time. The sender assumes you know when that event is.",
-    "why_misread": "Event anchors feel precise to the sender and unknowable to the reader, so the gap goes unnoticed by both.",
-    "source": "Clark, Using Language (1996) — common-ground assumptions in reference"
+    "why_misread": "Event anchors feel precise to the sender and unknowable to the reader, so the gap goes unnoticed by both."
   }
 ]
 ```
+
+Rows have no citation field. AC 2.2.2's "source label per card" requirement
+was dropped by the content team — flag this if AC 2.2.2 is still being
+graded against, since the schema no longer satisfies it.
 
 ## Category enum
 
 The AI model's classification output must be bounded to a fixed set of category strings that match `patterns.category` rows cuz free text `breaks` the pattern-library join silently.
 
-**Draft values** (from the frontend's local seed content — `frontend/src/services/localPatterns.ts` — pending the real content-authoring pass in build plan §7):
+**Values**, from the real content in `data/library_dataset/library_dataset.json` (25 rows, content team's authoring pass — see build plan §7):
 
 - `Softened request`
 - `Vague deadline`
 - `Unassigned owner`
 - `Feedback framing`
+- `Unclear priority`
+- `Undefined scope`
 
-Confirm/extend this list once the pattern library (15–25 rows) is written, then update this doc and the seed data together.
+Implemented in `backend/app/services/ai_decoder.py` (`_CATEGORY_RULES`) and mirrored in `frontend/src/services/localPatterns.ts` (`CATEGORY_TRIGGERS`) for the offline fallback — keep both in step if this list changes again.
 
 ## Data retention
 

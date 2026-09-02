@@ -13,7 +13,6 @@ class Pattern(db.Model):
     category = db.Column(db.String(60), nullable=False)
     implies = db.Column(db.Text, nullable=False)
     why_misread = db.Column(db.Text, nullable=False)
-    source = db.Column(db.String(255), nullable=False)
 
     def to_dict(self) -> dict:
         return {
@@ -24,5 +23,4 @@ class Pattern(db.Model):
             "category": self.category,
             "implies": self.implies,
             "why_misread": self.why_misread,
-            "source": self.source,
         }

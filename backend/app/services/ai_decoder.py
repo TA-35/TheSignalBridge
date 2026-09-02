@@ -37,10 +37,10 @@ PROMPTS = {
 }
 
 
-# Phrase -> category, in the same order as LOCAL_PATTERNS in
-# frontend/src/services/localPatterns.ts. Order matters: the frontend
-# picks the *first* matching pattern and then checks that its category
-# equals ours, so both sides must agree on which match wins.
+# Phrase -> category, kept in step with CATEGORY_TRIGGERS in
+# frontend/src/services/localPatterns.ts (the offline fallback uses the
+# same rules so it classifies identically to this endpoint). Order
+# matters: the first match wins on both sides, so keep them aligned.
 #
 # This is deterministic phrase matching bounded to the category enum in
 # docs/api-contract.md, not a guess - the "never invent meaning" rule
@@ -52,6 +52,11 @@ _CATEGORY_RULES = [
     (re.compile(r"\bjust a few\b|\bsmall tweaks?\b", re.I), "Feedback framing"),
     (re.compile(r"no pressure", re.I), "Softened request"),
     (re.compile(r"\beod\b|end of day|\bthis week\b", re.I), "Vague deadline"),
+    (
+        re.compile(r"not let it slip|not urgent,? but|prioriti[sz]e|not sure how (?:much|important)", re.I),
+        "Unclear priority",
+    ),
+    (re.compile(r"\bclean up\b|\btake a pass\b|\btighten up\b|\blook into\b", re.I), "Undefined scope"),
 ]
 
 

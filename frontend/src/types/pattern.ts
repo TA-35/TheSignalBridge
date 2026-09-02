@@ -8,7 +8,6 @@ export interface Pattern {
   category: string
   implies: string
   why_misread: string
-  source: string
 }
 
 // A card the user has explicitly chosen to keep. Lives only in localStorage.
@@ -27,7 +26,6 @@ export interface SavedCard {
   category: string | null
   implies: string | null
   why_misread: string | null
-  source: string | null
 
   excerpt: string
   unsaid: { field: string; prompt: string }[]
