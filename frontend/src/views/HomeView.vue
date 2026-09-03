@@ -9,7 +9,7 @@ const FEATURES = [
 <template>
   <div class="home">
     <div class="hero">
-      <h1>Signals in many forms, <br />a bridge to shared understanding.</h1>
+      <h1>Signals in many forms, <br />A bridge to shared understanding.</h1>
       <p>Paste a message<br />Take a second look, then decide what comes next</p>
     </div>
 
