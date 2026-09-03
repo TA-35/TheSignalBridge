@@ -17,7 +17,7 @@ const isActive = (to: string) => computed(() => (to === '/' ? route.path === '/'
 <template>
   <div class="shell">
     <div class="topbar">
-      <span class="brand">ReadTheRoom</span>
+      <span class="brand">TheSignalBridge</span>
     </div>
 
     <div class="frame">
