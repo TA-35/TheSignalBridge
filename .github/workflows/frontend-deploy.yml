@@ -6,7 +6,7 @@ on:
 env:
   # Not a secret - this is the URL the browser calls, visible in any
   # network tab. Update here if the API domain ever changes.
-  VITE_API_BASE_URL: https://api.reedtheroom.online
+  VITE_API_BASE_URL: https://api.thesignalbridge.com
 
 jobs:
   deploy:

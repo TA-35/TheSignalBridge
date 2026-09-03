@@ -2,7 +2,7 @@
 
 A local-first web app that separates what a workplace message *actually says* from what it *leaves unsaid*, and turns each decode into a reusable, judgement-free lesson in workplace communication.
 
-> Access our website: https://reedtheroom.online/
+> Access our website: https://www.thesignalbridge.com/
 
 
 

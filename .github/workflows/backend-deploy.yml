@@ -44,4 +44,4 @@ jobs:
           '
 
       - name: Smoke test
-        run: curl -sf https://api.reedtheroom.online/api/patterns > /dev/null
+        run: curl -sf https://api.thesignalbridge.com/api/patterns > /dev/null
