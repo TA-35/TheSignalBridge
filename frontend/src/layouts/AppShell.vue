@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 const navItems = [
@@ -11,33 +11,55 @@ const navItems = [
 ]
 
 const route = useRoute()
-const isActive = (to: string) => computed(() => (to === '/' ? route.path === '/' : route.path.startsWith(to)))
+const isActive = (to: string) => (to === '/' ? route.path === '/' : route.path.startsWith(to))
+
+const menuOpen = ref(false)
+watch(
+  () => route.path,
+  () => {
+    menuOpen.value = false
+  },
+)
 </script>
 
 <template>
   <div class="shell">
-    <div class="topbar">
-      <span class="brand">TheSignalBridge</span>
-    </div>
+    <header class="header">
+      <div class="header__inner">
+        <RouterLink to="/" class="brand">TheSignalBridge</RouterLink>
 
-    <div class="frame">
-      <nav class="nav">
-        <RouterLink
-          v-for="item in navItems"
-          :key="item.to"
-          :to="item.to"
-          class="nav-item"
-          :class="{ 'nav-item--active': isActive(item.to).value }"
+        <button
+          type="button"
+          class="menu-toggle"
+          :aria-expanded="menuOpen"
+          aria-controls="primary-nav"
+          aria-label="Toggle navigation menu"
+          @click="menuOpen = !menuOpen"
         >
-          <span class="nav-dot" />
-          <span>{{ item.label }}</span>
-        </RouterLink>
-      </nav>
+          <span class="menu-toggle__bar" />
+          <span class="menu-toggle__bar" />
+          <span class="menu-toggle__bar" />
+        </button>
 
-      <main class="main">
+        <nav id="primary-nav" class="nav" :class="{ 'nav--open': menuOpen }">
+          <RouterLink
+            v-for="item in navItems"
+            :key="item.to"
+            :to="item.to"
+            class="nav-item"
+            :class="{ 'nav-item--active': isActive(item.to) }"
+          >
+            {{ item.label }}
+          </RouterLink>
+        </nav>
+      </div>
+    </header>
+
+    <main class="main">
+      <div class="main__inner">
         <RouterView />
-      </main>
-    </div>
+      </div>
+    </main>
   </div>
 </template>
 
@@ -46,60 +68,59 @@ const isActive = (to: string) => computed(() => (to === '/' ? route.path === '/'
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  padding: 18px 18px 48px;
 }
 
-.topbar {
-  width: 100%;
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--color-frame);
+  border-bottom: 1px solid var(--color-border-soft);
+  box-shadow: 0 1px 2px rgba(58, 55, 51, 0.04);
+}
+
+.header__inner {
   max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 64px;
   display: flex;
   align-items: center;
-  padding: 0 4px;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .brand {
   font-family: var(--font-serif);
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 600;
   letter-spacing: -0.01em;
+  color: var(--color-text);
+  flex: 0 0 auto;
 }
 
-.frame {
-  width: 100%;
-  max-width: 1240px;
-  display: flex;
-  background: var(--color-frame);
-  border: 1px solid var(--color-border-soft);
-  border-radius: 16px;
-  overflow: hidden;
-  min-height: 760px;
-  box-shadow: 0 1px 2px rgba(58, 55, 51, 0.04);
+.brand:hover {
+  color: var(--color-text);
 }
 
 .nav {
-  width: 236px;
-  flex: 0 0 236px;
-  border-right: 1px solid var(--color-border-soft);
-  background: var(--color-surface-soft);
-  padding: 26px 16px;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 4px;
 }
 
 .nav-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 9px;
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
   font-size: 14.5px;
-  font-weight: 400;
+  font-weight: 500;
   color: var(--color-text-muted);
-  flex-shrink: 0;
   white-space: nowrap;
+}
+
+.nav-item:hover {
+  background: var(--color-surface-soft);
+  color: var(--color-text);
 }
 
 .nav-item--active {
@@ -108,48 +129,69 @@ const isActive = (to: string) => computed(() => (to === '/' ? route.path === '/'
   color: var(--color-primary-strong-text);
 }
 
-.nav-dot {
-  width: 6px;
-  height: 6px;
-  flex: 0 0 6px;
-  border-radius: 999px;
-  background: var(--color-border-strong);
+.menu-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-frame);
+  cursor: pointer;
+  flex: 0 0 auto;
 }
 
-.nav-item--active .nav-dot {
-  background: var(--color-primary);
+.menu-toggle__bar {
+  display: block;
+  height: 2px;
+  margin: 0 auto;
+  width: 18px;
+  background: var(--color-text);
+  border-radius: 1px;
 }
 
 .main {
   flex: 1;
-  min-width: 0;
-  padding: 32px 36px 40px;
+  padding: 32px 24px 48px;
 }
 
-@media (max-width: 720px) {
-  .frame {
-    flex-direction: column;
-    min-height: 0;
+.main__inner {
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+@media (max-width: 860px) {
+  .menu-toggle {
+    display: flex;
   }
 
   .nav {
-    width: 100%;
-    flex: 0 0 auto;
-    flex-direction: row;
-    border-right: none;
+    position: absolute;
+    top: 64px;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    background: var(--color-frame);
     border-bottom: 1px solid var(--color-border-soft);
-    padding: 10px 12px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-
-  .nav::-webkit-scrollbar {
+    padding: 10px 16px 14px;
+    box-shadow: 0 8px 16px rgba(58, 55, 51, 0.06);
     display: none;
   }
 
+  .nav--open {
+    display: flex;
+  }
+
+  .nav-item {
+    padding: 12px 14px;
+  }
+
   .main {
-    padding: 22px 18px 28px;
+    padding: 24px 18px 32px;
   }
 }
 </style>
