@@ -58,28 +58,18 @@ const FEATURES: FeatureCard[] = [
     <section class="hero">
       <h1>Signals in many forms, <br />A bridge to shared understanding.</h1>
       <p>
-        TheSignalBridge helps neurodivergent and neurotypical colleagues read each other's
-        messages the same way — less guessing, less rereading, clearer next steps.
+        Clearly takes a message apart: what it covers, what it leaves out, 
+        what the polite wording implies, and what to do next. 
+        It checks messages you send the same way, before they go out.
       </p>
       <div class="actions">
-        <RouterLink to="/decode" class="btn btn--primary">Review a message</RouterLink>
-        <RouterLink to="/library" class="btn btn--secondary">Browse the library</RouterLink>
-      </div>
-    </section>
-
-    <section class="moments">
-      <div class="moment">
-        <strong>Reading a message</strong>
-        <span>Not sure what an email is actually asking? Decode it into what's clear and what's still open.</span>
-      </div>
-      <div class="moment">
-        <strong>Writing a message</strong>
-        <span>Sending one instead? The Drafter (coming soon) flags what a reader might miss before it's sent.</span>
+        <RouterLink to="/decode" class="btn btn--primary">Decode a message</RouterLink>
+        <RouterLink to="/compose" class="btn btn--secondary">Compose a message</RouterLink>
       </div>
     </section>
 
     <section class="features">
-      <h2>What's here</h2>
+      <h2>What we provide</h2>
       <div class="feature-grid">
         <component
           :is="feature.to ? 'RouterLink' : 'div'"
@@ -94,14 +84,11 @@ const FEATURES: FeatureCard[] = [
             <span v-if="feature.status === 'soon'" class="badge">Coming soon</span>
           </div>
           <span class="feature__desc">{{ feature.desc }}</span>
-          <span v-if="feature.cta" class="feature__cta">{{ feature.cta }} →</span>
+          <span v-if="feature.cta" class="feature__cta">{{ feature.cta }}</span>
         </component>
       </div>
     </section>
 
-    <section class="closing">
-      <p>No account needed to start. Sign-in for saved history and progress is on the way.</p>
-    </section>
   </div>
 </template>
 

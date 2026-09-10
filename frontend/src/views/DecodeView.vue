@@ -137,7 +137,7 @@ const checkedPrompts = computed(() => {
 
 <template>
   <div class="decode">
-    <template v-if="!state.result">
+    <div v-if="!state.result" class="intake">
       <div class="intro">
         <h2>Paste the message</h2>
         <p>An email, a Slack message, a note from your manager...</p>
@@ -164,11 +164,11 @@ const checkedPrompts = computed(() => {
 
       <div class="actions">
         <button type="button" class="btn btn--primary" :disabled="state.loading" @click="review">
-          {{ state.loading ? 'Reviewing…' : 'Review Message' }}
+          {{ state.loading ? 'Decoding...' : 'Decode Message' }}
         </button>
         <button type="button" class="btn btn--secondary" @click="reset">Reset</button>
       </div>
-    </template>
+    </div>
 
     <template v-else>
       <div class="results-header">
@@ -262,7 +262,7 @@ const checkedPrompts = computed(() => {
             <div>
               <strong>No library match for this wording</strong>
               <span>
-                You can still keep this one — the card will show the message and what it left
+                You can still keep this card, it will show the message and what it left
                 unsaid, without a pattern explanation.
                 <RouterLink to="/library">Browse the library</RouterLink> to see what is covered so far.
               </span>
@@ -281,7 +281,7 @@ const checkedPrompts = computed(() => {
             <button type="button" class="btn btn--secondary" @click="reset">Start a new message</button>
           </div>
           <span v-if="state.matchedPattern" class="disclaimer">
-            Leaving without saving discards this pattern. That's fine — nothing is kept unless you say so.
+            Or leaving this page without save a Flashcard :)
           </span>
         </div>
       </div>
@@ -309,6 +309,12 @@ const checkedPrompts = computed(() => {
 
 <style scoped>
 .decode {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.intake {
   max-width: 720px;
   display: flex;
   flex-direction: column;

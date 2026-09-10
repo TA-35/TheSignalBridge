@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import logoUrl from '@/assets/logo.svg'
 
 const navItems = [
   { to: '/', label: 'Home' },
-  { to: '/decode', label: 'Review' },
+  { to: '/decode', label: 'Decoder' },
+  { to: '/compose', label: 'Composer'},
   { to: '/study', label: 'Study' },
   { to: '/library', label: 'Library' },
   { to: '/settings', label: 'Settings' },
+  { to: '/login', label: 'Login'}
 ]
 
 const route = useRoute()
@@ -26,7 +29,10 @@ watch(
   <div class="shell">
     <header class="header">
       <div class="header__inner">
-        <RouterLink to="/" class="brand">TheSignalBridge</RouterLink>
+        <RouterLink to="/" class="brand">
+          <img :src="logoUrl" alt="" class="brand__logo" />
+          <span>TheSignalBridge</span>
+        </RouterLink>
 
         <button
           type="button"
@@ -74,6 +80,7 @@ watch(
   position: sticky;
   top: 0;
   z-index: 30;
+  padding: 0 24px;
   background: var(--color-frame);
   border-bottom: 1px solid var(--color-border-soft);
   box-shadow: 0 1px 2px rgba(58, 55, 51, 0.04);
@@ -82,7 +89,6 @@ watch(
 .header__inner {
   max-width: 1240px;
   margin: 0 auto;
-  padding: 0 24px;
   height: 64px;
   display: flex;
   align-items: center;
@@ -91,6 +97,9 @@ watch(
 }
 
 .brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
   font-family: var(--font-serif);
   font-size: 22px;
   font-weight: 600;
@@ -101,6 +110,14 @@ watch(
 
 .brand:hover {
   color: var(--color-text);
+}
+
+.brand__logo {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex: 0 0 auto;
 }
 
 .nav {
