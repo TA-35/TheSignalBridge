@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import logoUrl from '@/assets/logo.svg'
+import logoUrl from '@/assets/logo.png'
 
 const navItems = [
   { to: '/', label: 'Home' },
@@ -30,8 +30,7 @@ watch(
     <header class="header">
       <div class="header__inner">
         <RouterLink to="/" class="brand">
-          <img :src="logoUrl" alt="" class="brand__logo" />
-          <span>TheSignalBridge</span>
+          <img :src="logoUrl" alt="TheSignalBridge" class="brand__logo" />
         </RouterLink>
 
         <button
@@ -99,25 +98,13 @@ watch(
 .brand {
   display: flex;
   align-items: center;
-  gap: 9px;
-  font-family: var(--font-serif);
-  font-size: 22px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--color-text);
   flex: 0 0 auto;
-}
-
-.brand:hover {
-  color: var(--color-text);
 }
 
 .brand__logo {
-  width: 30px;
-  height: 30px;
-  border-radius: var(--radius-sm);
-  object-fit: cover;
-  flex: 0 0 auto;
+  height: 32px;
+  width: auto;
+  display: block;
 }
 
 .nav {
