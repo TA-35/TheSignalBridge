@@ -18,6 +18,26 @@ docs/       api-contract.md
 
 See [docs/api-contract.md](docs/api-contract.md) for the frontend/backend/AI API contract.
 
+### Shared website password
+
+The production Nginx configuration protects the frontend with one shared password. The password file is created directly on the EC2 server and is never committed to Git:
+
+```sh
+sudo apt install apache2-utils
+sudo htpasswd -c /etc/nginx/.htpasswd thesignalbridge
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+After HTTPS is enabled with Certbot, keep these directives in the HTTPS server block for `thesignalbridge.com` and `www.thesignalbridge.com`:
+
+```nginx
+auth_basic "TheSignalBridge";
+auth_basic_user_file /etc/nginx/.htpasswd;
+```
+
+Leave `/.well-known/acme-challenge/` public so Certbot can renew the certificate.
+
 ## Local development
 
 ### Frontend
