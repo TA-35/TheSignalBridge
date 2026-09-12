@@ -40,6 +40,8 @@ def build_note(body, label):
 
 
 def predict(body):
+    if not isinstance(body, str) or not body.strip():
+        body = " "  # empty rows still need a valid string for the tokenizer
     model, tok = _load()
     inputs = tok(body, truncation=True, max_length=256, padding=True, return_tensors="pt")
     with torch.no_grad():
@@ -73,10 +75,9 @@ def evaluate():
     cm = confusion_matrix(df["human_label"], df["predicted_label"], labels=LABELS)
     print(pd.DataFrame(cm, index=LABELS, columns=LABELS))
 
-    fi, ni = LABELS.index("formal"), LABELS.index("neutral")
-    confusion_pct = (cm[fi][ni] + cm[ni][fi]) / cm.sum() if cm.sum() else 0
-    if confusion_pct > 0.15:
-        print("formal/neutral getting mixed up a lot - might be worth merging into 3 classes")
+    # formal/neutral merge-confusion check removed - formal is already
+    # merged into neutral, so LABELS.index("formal") no longer exists.
+    # casual is the weak class now (recall 0.30) per the report above.
 
     return df
 
