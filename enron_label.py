@@ -25,13 +25,15 @@ EVAL_UNLABELED_FILE = Path("data/processed/enron_tone_eval_unlabeled.csv")
 EVAL_SIZE = 300
 LABELS = ["neutral", "casual", "terse"]
 
-# tightened from the 10-word cutoff - agreement check showed a lot of
-# genuinely terse messages run 11-15 words
 TERSE_MAX_WORDS = 15
 
 CASUAL_MARKERS = [r"\bhey\b", r"\byeah\b", r"\bgonna\b", r"\bwanna\b", r"\blol\b",
                   r"\bthx\b", r"\bomg\b", r"\bcool\b", r"\bkinda\b", r"\bhaha\b",
-                  r"\bscrew it\b", r"\bwhatever\b"]
+                  r"\bscrew it\b", r"\bwhatever\b", r"\bsorta\b", r"\bgotta\b",
+                  r"\bain'?t\b", r"\by'?a'?ll\b", r"\bdunno\b", r"\bgimme\b",
+                  r"\blemme\b", r"\bnah\b", r"\byep\b", r"\byup\b", r"\bmeh\b",
+                  r"\bugh\b", r"\bhowdy\b", r"\byo\b", r"\bguess what\b"]
+
 PLAIN_SIGNOFFS = [r"\bthanks\b", r"\bthank you\b", r"\bbest\b", r"\bcheers\b",
                    r"\bregards\b", r"\bsincerely\b"]
 GREETING_WORDS = ["hi", "hello", "hey", "dear"]
@@ -42,7 +44,7 @@ def has_any(patterns, text):
 
 
 def label_message(body):
-    if not body or not body.strip():
+    if not isinstance(body, str) or not body.strip():
         return "neutral"
 
     text = body.lower().strip()
@@ -50,7 +52,10 @@ def label_message(body):
     first_line = text[:40]
     last_chunk = text[-80:]
 
-    has_greeting = any(g in first_line for g in GREETING_WORDS)
+    # bug fix: plain substring check was matching "hi" inside "this",
+    # "which", "within" etc - false positives were disqualifying real
+    # terse messages. use word boundaries instead.
+    has_greeting = re.search(r"\b(" + "|".join(GREETING_WORDS) + r")\b", first_line) is not None
     has_signoff = has_any(PLAIN_SIGNOFFS, last_chunk)
     contraction_count = len(re.findall(r"\b\w+'\w+\b", text))
 
@@ -65,7 +70,6 @@ def label_message(body):
     if has_any(CASUAL_MARKERS, text):
         return "casual"
 
-    # heavy contraction density is also a casual signal on its own
     if word_count > 0 and (contraction_count / word_count) > 0.04:
         return "casual"
 
