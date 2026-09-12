@@ -1,0 +1,7 @@
+starting rows: 517401
+after parsing: 517401
+after stripping quotes/sigs: 517401
+after dedup: 231815 (removed 285586)
+after length filter: 172704 (removed 59111)
+sampled: 3000
+pii scrubbed on 3000 rows
