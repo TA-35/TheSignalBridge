@@ -87,17 +87,40 @@ def correlation_check(tone_df):
         print(f"no {STANFORD_FILE} yet, skipping correlation check")
         return
     stanford_df = pd.read_csv(STANFORD_FILE)
-    merged = tone_df.merge(stanford_df, on="body", how="inner")
+    # yvonne flagged 12 rows with blank scores (empty body on her end) -
+    # drop those before correlating, pearsonr can't handle NaN
+    stanford_df = stanford_df.dropna(subset=["politeness_score"])
+
+    # some message bodies repeat (short generic ones like "fyi" show up
+    # more than once) - without deduping first, an inner merge fans out
+    # (2 copies matching 2 copies = 4 rows), which inflates n and can
+    # break the correlation. keep first occurrence only, on both sides.
+    tone_dedup = tone_df.drop_duplicates(subset="body", keep="first")
+    stanford_dedup = stanford_df.drop_duplicates(subset="body", keep="first")
+
+    merged = tone_dedup.merge(stanford_dedup, on="body", how="inner")
     if merged.empty:
         print("no overlap between tone eval and stanford output")
         return
 
-    tone_scores = merged["predicted_label"].map(LABEL2SCORE)
-    politeness_scores = merged["politeness_score"]
+    tone_scores = merged["predicted_label"].map(LABEL2SCORE).astype(float)
+    politeness_scores = merged["politeness_score"].astype(float)
+
+    valid = tone_scores.notna() & politeness_scores.notna()
+    tone_scores, politeness_scores = tone_scores[valid], politeness_scores[valid]
+
+    print(f"matched {len(merged)} unique messages between tone eval and stanford output")
+
+    if tone_scores.nunique() <= 1 or politeness_scores.nunique() <= 1:
+        print("one of the two score sets has zero variance in this overlap - cant compute a correlation")
+        return
+
     corr, p = pearsonr(tone_scores, politeness_scores)
-    print(f"\ntone vs politeness correlation (n={len(merged)}): r={corr:.3f}, p={p:.4f}")
+    print(f"\ntone vs politeness correlation (n={len(tone_scores)}): r={corr:.3f}, p={p:.4f}")
     if abs(corr) > 0.7:
         print("high correlation - might not be as orthogonal as we wanted, flag to team")
+    else:
+        print("correlation is low enough that tone and politeness look like separable signals")
 
 
 def main():
