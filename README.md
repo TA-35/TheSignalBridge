@@ -1,4 +1,4 @@
-# Read_the_room_iteration_1
+# TheSignalBridge_iteration_1
 
 A local-first web app that separates what a workplace message *actually says* from what it *leaves unsaid*, and turns each decode into a reusable, judgement-free lesson in workplace communication.
 
