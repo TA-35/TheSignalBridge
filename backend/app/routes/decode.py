@@ -4,11 +4,23 @@ from ..services import ai_decoder
 
 bp = Blueprint("decode", __name__)
 
+# Kept in sync with MAX_MESSAGE_LENGTH in
+# frontend/src/services/decodeService.ts - see docs/api-contract.md. A large
+# message runs spaCy plus several regexes over the full string, so an
+# unbounded length is a cheap denial-of-service vector, not just a UX issue.
+MAX_MESSAGE_LENGTH = 5000
+
 
 @bp.post("")
 def decode_message():
     data = request.get_json(silent=True) or {}
     message = data.get("message", "")
+
+    if len(message) > MAX_MESSAGE_LENGTH:
+        return (
+            jsonify({"error": f"Message is too long (limit is {MAX_MESSAGE_LENGTH} characters)."}),
+            413,
+        )
 
     try:
         result = ai_decoder.decode(message)

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive } from 'vue'
-import { decodeMessage, EmptyMessageError } from '@/services/decodeService'
+import { decodeMessage, EmptyMessageError, MAX_MESSAGE_LENGTH, MessageTooLongError } from '@/services/decodeService'
 import { findLocalPatternMatch } from '@/services/localPatterns'
 import { getPatterns } from '@/services/patternsService'
 import { useCardsStore } from '@/stores/cards'
@@ -56,10 +56,15 @@ async function review() {
   } catch (err) {
     // The decoder decides what counts as a message - one rule, server-side,
     // mirrored offline. See decodeService.
-    if (!(err instanceof EmptyMessageError)) throw err
     state.result = null
     state.record = null
-    state.error = 'This does not look like a message yet. Paste the message text itself and try again.'
+    if (err instanceof EmptyMessageError) {
+      state.error = 'This does not look like a message yet. Paste the message text itself and try again.'
+    } else if (err instanceof MessageTooLongError) {
+      state.error = err.message
+    } else {
+      throw err
+    }
   } finally {
     state.loading = false
   }
@@ -151,7 +156,12 @@ const checkedPrompts = computed(() => {
           :class="{ 'input-area__box--error': !!state.error }"
           class="input-area__box"
         />
-        <button type="button" class="link-button" @click="loadSample">Use a sample message</button>
+        <div class="input-area__footer">
+          <button type="button" class="link-button" @click="loadSample">Use a sample message</button>
+          <span class="char-count" :class="{ 'char-count--over': state.message.length > MAX_MESSAGE_LENGTH }">
+            {{ state.message.length }} / {{ MAX_MESSAGE_LENGTH }}
+          </span>
+        </div>
       </div>
 
       <div v-if="state.error" class="error-banner">
@@ -368,6 +378,25 @@ const checkedPrompts = computed(() => {
 
 .input-area__box--error {
   border-color: #d8c9b8;
+}
+
+.input-area__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.char-count {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text-faint);
+  white-space: nowrap;
+}
+
+.char-count--over {
+  color: var(--color-warn-text);
+  font-weight: 600;
 }
 
 .link-button {

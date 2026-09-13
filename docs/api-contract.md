@@ -7,7 +7,7 @@ Draft. Update in the same PR that changes an endpoint's shape.
 Request:
 
 ```json
-{ "message": "string, required, non-empty and non-meaningless" }
+{ "message": "string, required, non-empty and non-meaningless, max 5000 characters" }
 ```
 
 Response `200`:
@@ -55,6 +55,13 @@ remains the single-task view (the first ask) and is unchanged; clients can
 migrate to `tasks` at their own pace. A message with no ask returns `[]`.
 
 Response `400`: `{ "error": "Please enter a message" }` when empty or meaningless input.
+
+Response `413`: `{ "error": "Message is too long (limit is 5000 characters)." }` when
+`message` exceeds the limit above. The same shape (`{ "error": "Request is
+too large." }`) is also returned if the raw request body itself exceeds
+`MAX_CONTENT_LENGTH` (100 KB), which is rejected before the body is even
+parsed. Mirrored client-side by `MAX_MESSAGE_LENGTH` in
+`frontend/src/services/decodeService.ts` - keep both in step if this changes.
 
 **Rule:** the model must never fill in a value for an element the message doesn't state. Absent elements are `"Not specified"`.
 
