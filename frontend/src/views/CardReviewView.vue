@@ -1,29 +1,59 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCardsStore } from '@/stores/cards'
+import { getPatterns } from '@/services/patternsService'
+import type { Pattern } from '@/types/pattern'
 
 const route = useRoute()
 const router = useRouter()
 const store = useCardsStore()
 
 const flipped = ref(false)
+const patterns = ref<Pattern[]>([])
 
-const orderedIds = computed(() => store.sortedByNeglect.map((c) => c.id))
-const index = computed(() => orderedIds.value.indexOf(route.params.id as string))
-const card = computed(() => store.cards.find((c) => c.id === route.params.id))
+// Library links here to preview a pattern that may not be saved yet; Study
+// links here to open a card the user already chose to keep. Same page, two
+// very different data sources - a preview must never write to the store.
+const isPreview = computed(() => route.name === 'pattern-preview')
 
-// Explore (from Library) and Open (from Study) both link in here — remember
-// which one so leaving goes back to where the user actually came from.
-const cameFromLibrary = computed(() => route.query.from === 'library')
-const backTo = computed(() => (cameFromLibrary.value ? '/library' : '/study'))
-const backLabel = computed(() => (cameFromLibrary.value ? '← Back to Library' : '← Back to Study'))
+onMounted(async () => {
+  if (isPreview.value) patterns.value = await getPatterns()
+})
+
+const previewPattern = computed(() => patterns.value.find((p) => p.id === route.params.patternId))
+const savedCard = computed(() => store.cards.find((c) => c.id === route.params.id))
+
+const card = computed(() => {
+  if (!isPreview.value) return savedCard.value
+  const p = previewPattern.value
+  if (!p) return undefined
+  return {
+    category: p.category,
+    name: p.name,
+    excerpt: '',
+    implies: p.implies,
+    why_misread: p.why_misread,
+    unsaid: [] as { field: string; prompt: string }[],
+  }
+})
+
+const alreadySaved = computed(() => (previewPattern.value ? store.isPatternSaved(previewPattern.value.id) : false))
+
+const orderedIds = computed(() =>
+  isPreview.value ? patterns.value.map((p) => p.id) : store.sortedByNeglect.map((c) => c.id),
+)
+const currentId = computed(() => (isPreview.value ? (route.params.patternId as string) : (route.params.id as string)))
+const index = computed(() => orderedIds.value.indexOf(currentId.value))
+
+const backTo = computed(() => (isPreview.value ? '/library' : '/study'))
+const backLabel = computed(() => (isPreview.value ? '← Back to Library' : '← Back to Study'))
 
 watch(
-  () => route.params.id,
+  currentId,
   (id) => {
     flipped.value = false
-    if (typeof id === 'string') store.touch(id)
+    if (!isPreview.value && typeof id === 'string') store.touch(id)
   },
   { immediate: true },
 )
@@ -32,8 +62,15 @@ function step(delta: number) {
   const ids = orderedIds.value
   if (!ids.length || index.value < 0) return
   const next = (index.value + delta + ids.length) % ids.length
-  // Keep `from` so paging through cards doesn't lose the entry point.
-  router.push({ name: 'card-review', params: { id: ids[next] }, query: route.query })
+  if (isPreview.value) {
+    router.push({ name: 'pattern-preview', params: { patternId: ids[next] } })
+  } else {
+    router.push({ name: 'card-review', params: { id: ids[next] } })
+  }
+}
+
+function saveToStudy() {
+  if (previewPattern.value) store.savePattern(previewPattern.value)
 }
 </script>
 
@@ -87,6 +124,17 @@ function step(delta: number) {
       </button>
       <button type="button" class="btn btn--secondary" @click="step(1)">Next</button>
     </div>
+
+    <button
+      v-if="isPreview"
+      type="button"
+      class="btn save-to-study"
+      :class="alreadySaved ? 'btn--saved' : 'btn--outline'"
+      :disabled="alreadySaved"
+      @click="saveToStudy"
+    >
+      {{ alreadySaved ? 'Saved to Study ✓' : 'Save to Study' }}
+    </button>
   </div>
 </template>
 
@@ -217,6 +265,24 @@ function step(delta: number) {
   border: 1px solid var(--color-primary-border);
   background: var(--color-primary);
   color: var(--color-frame);
+}
+
+.btn--outline {
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-frame);
+  color: #4a453e;
+}
+
+.btn--saved {
+  border: 1px solid var(--color-primary-soft-border);
+  background: var(--color-primary-soft-bg);
+  color: var(--color-primary-strong-text);
+  cursor: default;
+}
+
+.save-to-study {
+  padding: 11px 20px;
+  font-weight: 500;
 }
 
 .flip {

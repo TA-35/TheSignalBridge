@@ -28,9 +28,12 @@ function addToCards(pattern: Pattern) {
 }
 
 function explore(pattern: Pattern) {
-  // Route by the card's own id - a card is no longer identified by its pattern.
-  const card = store.savePattern(pattern)
-  router.push({ name: 'card-review', params: { id: card.id }, query: { from: 'library' } })
+  // Preview only - saving is an explicit choice made on the detail page.
+  router.push({ name: 'pattern-preview', params: { patternId: pattern.id } })
+}
+
+function hint(text: string): string {
+  return text.length > 58 ? `${text.slice(0, 56)}…` : text
 }
 </script>
 
@@ -38,7 +41,7 @@ function explore(pattern: Pattern) {
   <div class="library">
     <div class="header">
       <h2>Pattern library</h2>
-      <p>Common workplace phrasings. Add any of them to your own cards.</p>
+      <p>Short phrases that carry more than they say. Tap a card to see what it actually implies.</p>
     </div>
 
     <div class="tags">
@@ -57,21 +60,21 @@ function explore(pattern: Pattern) {
     <p v-if="loading" class="status">Loading the pattern library…</p>
 
     <div v-else class="grid">
-      <div v-for="item in visible" :key="item.id" class="item">
+      <div v-for="item in visible" :key="item.id" class="item" @click="explore(item)">
         <span class="item__tag">{{ item.category }}</span>
         <strong class="item__name">{{ item.name }}</strong>
-        <span class="item__implies">{{ item.implies }}</span>
+        <span class="item__hint">{{ hint(item.implies) }}</span>
         <div class="item__actions">
           <button
             type="button"
             class="btn"
             :class="store.isPatternSaved(item.id) ? 'btn--saved' : 'btn--outline'"
             :disabled="store.isPatternSaved(item.id)"
-            @click="addToCards(item)"
+            @click.stop="addToCards(item)"
           >
             {{ store.isPatternSaved(item.id) ? 'Saved' : 'Add to my cards' }}
           </button>
-          <button type="button" class="explore" @click="explore(item)">Explore -></button>
+          <button type="button" class="explore" @click.stop="explore(item)">See what this means -></button>
         </div>
       </div>
     </div>
@@ -146,6 +149,12 @@ function explore(pattern: Pattern) {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  cursor: pointer;
+}
+
+.item:hover {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-soft);
 }
 
 .item__tag {
@@ -161,10 +170,11 @@ function explore(pattern: Pattern) {
   color: var(--color-text);
 }
 
-.item__implies {
-  font-size: 13.5px;
-  line-height: 1.6;
-  color: var(--color-text-muted);
+.item__hint {
+  font-size: 13px;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--color-text-faint);
 }
 
 .item__actions {
@@ -197,11 +207,18 @@ function explore(pattern: Pattern) {
 }
 
 .explore {
-  background: none;
-  border: none;
-  padding: 0;
-  font-size: 13px;
-  color: var(--color-primary);
+  padding: 8px 13px;
+  border-radius: 8px;
+  border: 1px solid var(--color-primary-soft-border);
+  background: var(--color-primary-soft-bg);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-primary-strong-text);
   cursor: pointer;
+  white-space: nowrap;
+}
+
+.explore:hover {
+  border-color: var(--color-primary-border);
 }
 </style>
