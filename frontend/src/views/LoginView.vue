@@ -4,7 +4,7 @@
 
 <template>
     <div class="login">
-        <h1>TODO</h1>
+        <h1>Coming Soon...</h1>
     </div>
 
 </template>
