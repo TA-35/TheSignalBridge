@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import heroImage from '@/assets/home-hero.jpg'
+
 interface FeatureCard {
   title: string
   desc: string
@@ -31,7 +33,7 @@ const FEATURES: FeatureCard[] = [
   },
   {
     title: 'Comfort Settings',
-    desc: 'Adjust contrast, typeface, and colour intensity so the page fits how you read best, on desktop or mobile.',
+    desc: 'Switch to dark mode, pick an accent color, and resize or bold the text so the page fits how you read best.',
     to: '/settings',
     cta: 'Adjust settings',
     status: 'live',
@@ -54,20 +56,25 @@ const FEATURES: FeatureCard[] = [
 </script>
 
 <template>
-  <div class="home">
-    <section class="hero">
-      <h1>Signals in many forms, <br />A bridge to shared understanding.</h1>
-      <p>
-        Clearly takes a message apart: what it covers, what it leaves out, 
-        what the polite wording implies, and what to do next. 
-        It checks messages you send the same way, before they go out.
-      </p>
-      <div class="actions">
-        <RouterLink to="/decode" class="btn btn--primary">Decode a message</RouterLink>
-        <RouterLink to="/compose" class="btn btn--secondary">Compose a message</RouterLink>
+  <section class="hero-section">
+    <img :src="heroImage" alt="A team celebrating together around a meeting table" class="hero-bg-img" />
+    <div class="hero-scrim" />
+    <div class="hero-inner">
+      <div class="hero-panel">
+        <h1 class="hero-title">Signals in many forms, <br />A bridge to shared understanding.</h1>
+        <p class="hero-subtitle">
+          Clearly takes a message apart: what it covers, what it leaves out,
+          what the polite wording implies, and what to do next.
+          It checks messages you send the same way, before they go out.
+        </p>
+        <div class="actions">
+          <RouterLink to="/decode" class="btn btn--primary">Decode a message</RouterLink>
+          <RouterLink to="/compose" class="btn btn--secondary">Compose a message</RouterLink>
+        </div>
       </div>
-    </section>
-
+    </div>
+  </section>
+  <div class="home">
     <section class="features">
       <h2>What we provide</h2>
       <div class="feature-grid">
@@ -101,29 +108,83 @@ const FEATURES: FeatureCard[] = [
   padding-bottom: 16px;
 }
 
-.hero {
+/* Breaks out of AppShell's centered, padded `.main__inner` (max-width
+   1240px) so the photo runs edge-to-edge instead of stopping at that
+   container's width. The negative top margin cancels out `.main`'s own
+   top padding (32px, 24px under 860px - see AppShell.vue) so the photo
+   sits flush under the sticky header instead of leaving a bare strip. */
+.hero-section {
+  position: relative;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  margin-top: -32px;
+  margin-bottom: 32px;
+  height: 72vh;
+  min-height: 420px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.hero-bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+/* Darkens the photo so the white text stays readable over it. */
+.hero-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.1) 100%);
+  z-index: 1;
+}
+
+/* Re-establishes the same content column the rest of the page uses
+   (AppShell's `.main__inner`/`.main`), now that the section itself has
+   broken out of it. */
+.hero-inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.hero-panel {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-width: 680px;
+  max-width: 620px;
   font-style: italic;
 }
 
-.hero h1 {
+.hero-title {
   font-family: var(--font-serif);
   font-size: 42px;
   line-height: 1.14;
   font-weight: 500;
   letter-spacing: -0.02em;
   margin: 0;
-  color: var(--color-text);
+  color: #ffffff;
 }
 
-.hero p {
+.hero-subtitle {
   margin: 0;
   font-size: 16.5px;
   line-height: 1.62;
-  color: var(--color-text-muted);
+  color: rgba(255, 255, 255, 0.88);
+}
+
+@media (max-width: 720px) {
+  .hero-title {
+    font-size: 31px;
+  }
 }
 
 .actions {
@@ -280,16 +341,16 @@ a.feature:hover {
 }
 
 @media (max-width: 860px) {
+  .hero-section {
+    margin-top: -24px;
+  }
+
   .feature-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 720px) {
-  .hero h1 {
-    font-size: 31px;
-  }
-
   .moments {
     grid-template-columns: 1fr;
   }

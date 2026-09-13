@@ -512,6 +512,18 @@ const checkedPrompts = computed(() => {
   padding: 18px;
 }
 
+/* Follows the scroll on desktop's two-column layout, stopping clear of the
+   sticky app header (64px) - stays put while the longer analysis column
+   scrolls past it. Mobile stacks the panels instead, so nothing sticks there. */
+@media (min-width: 721px) {
+  .original-panel {
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+  }
+}
+
 .original-panel p {
   margin: 0;
   font-size: 14.5px;

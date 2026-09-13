@@ -1,7 +1,15 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import logoUrl from '@/assets/logo.png'
+import { useSettingsStore } from '@/stores/settings'
+import logoLight from '@/assets/logo.png'
+import logoDark from '@/assets/logo-dark.png'
+
+const settingsStore = useSettingsStore()
+// The wordmark's ink color is baked into the PNG - swap the whole asset
+// rather than filtering it, so the sage-green mark keeps its brand color
+// instead of being flattened by a brightness/invert filter.
+const logoUrl = computed(() => (settingsStore.settings.appearance === 'dark' ? logoDark : logoLight))
 
 const navItems = [
   { to: '/', label: 'Home' },
