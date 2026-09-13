@@ -3,16 +3,26 @@ import { defineStore } from 'pinia'
 
 const STORAGE_KEY = 'readtheroom.settings'
 
-export type Contrast = 'soft' | 'standard' | 'high'
 export type Typeface = 'default' | 'hyperlegible'
+export type Appearance = 'light' | 'dark'
+export type Accent = 'sage' | 'ocean' | 'lavender' | 'slate'
+export type TextSize = 'small' | 'standard' | 'large'
 
 interface Settings {
-  contrast: Contrast
   typeface: Typeface
-  calm: boolean
+  appearance: Appearance
+  accent: Accent
+  textSize: TextSize
+  boldText: boolean
 }
 
-const DEFAULTS: Settings = { contrast: 'standard', typeface: 'default', calm: false }
+const DEFAULTS: Settings = {
+  typeface: 'default',
+  appearance: 'light',
+  accent: 'sage',
+  textSize: 'standard',
+  boldText: false,
+}
 
 function load(): Settings {
   try {
@@ -32,9 +42,11 @@ export const useSettingsStore = defineStore('settings', () => {
   watchEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
     const root = document.documentElement
-    root.dataset.contrast = settings.contrast
     root.dataset.typeface = settings.typeface
-    root.dataset.calm = String(settings.calm)
+    root.dataset.appearance = settings.appearance
+    root.dataset.accent = settings.accent
+    root.dataset.textSize = settings.textSize
+    root.dataset.boldText = String(settings.boldText)
   })
 
   function reset() {
