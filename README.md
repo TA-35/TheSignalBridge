@@ -1,4 +1,4 @@
-# Read_the_room_iteration_1
+# TheSignalBridge_iteration_1
 
 A local-first web app that separates what a workplace message *actually says* from what it *leaves unsaid*, and turns each decode into a reusable, judgement-free lesson in workplace communication.
 
@@ -20,23 +20,26 @@ See [docs/api-contract.md](docs/api-contract.md) for the frontend/backend/AI API
 
 ### Shared website password
 
-The production Nginx configuration protects the frontend with one shared password. The password file is created directly on the EC2 server and is never committed to Git:
+The website sits behind one shared password, enforced by the CloudFront function in [infra/cloudfront/basic-auth.js](infra/cloudfront/basic-auth.js).
+
+It has to be enforced at CloudFront, not in Nginx. The frontend is a private S3 bucket served through CloudFront distribution `E1YGUMFRDSPNVG`, and both `thesignalbridge.com` and `www.thesignalbridge.com` resolve there. The EC2 box under [infra/nginx/](infra/nginx/) only serves `api.thesignalbridge.com`, so an `auth_basic` block there never sees website traffic.
+
+This covers the website only. `api.thesignalbridge.com` stays public, because the browser calls it cross-origin and would not attach the password to those requests.
+
+**The password is never committed.** `basic-auth.js` carries a `__BASIC_AUTH_TOKEN__` placeholder; `infra/cloudfront/publish.sh` substitutes the real value from the environment into a copy outside the working tree, so the checked-in file and the deployed function differ on purpose. Ask a teammate for the current password rather than looking for it in the repo.
+
+To set or rotate it, run from the repo root:
 
 ```sh
-sudo apt install apache2-utils
-sudo htpasswd -c /etc/nginx/.htpasswd thesignalbridge
-sudo nginx -t
-sudo systemctl reload nginx
+SITE_AUTH_USER=thesignalbridge SITE_AUTH_PASSWORD='<the password>' \
+  ./infra/cloudfront/publish.sh
 ```
 
-After HTTPS is enabled with Certbot, keep these directives in the HTTPS server block for `thesignalbridge.com` and `www.thesignalbridge.com`:
+That uploads the function, verifies it returns a 401 challenge before going live, publishes it, and attaches it to the distribution if it isn't attached yet. Rotating is the same command with a new value — no code edit. Edges take a few minutes to catch up; confirm with:
 
-```nginx
-auth_basic "TheSignalBridge";
-auth_basic_user_file /etc/nginx/.htpasswd;
+```sh
+curl -sI https://www.thesignalbridge.com/ | head -3    # expect HTTP/2 401
 ```
-
-Leave `/.well-known/acme-challenge/` public so Certbot can renew the certificate.
 
 ## Local development
 

@@ -1,0 +1,94 @@
+{
+  "iteration": 1,
+  "task": "English request politeness regression",
+  "data": {
+    "file": "stanford_politeness_clean.csv",
+    "rows": 10956,
+    "split_rows": {
+      "train": 7666,
+      "validation": 1645,
+      "test": 1645
+    }
+  },
+  "model": {
+    "type": "hashed-ngram residual MLP",
+    "hash_dimension": 2048,
+    "hidden_size": 64,
+    "seed": 5120
+  },
+  "target": {
+    "name": "Normalized Score",
+    "train_mean": 0.00029795480077154934,
+    "train_std": 0.7311672568321228,
+    "tertile_thresholds": [
+      -0.20488597452640533,
+      0.3116236627101898
+    ]
+  },
+  "training": {
+    "epochs_requested": 30,
+    "epochs_completed": 8,
+    "batch_size": 256,
+    "learning_rate": 0.0015,
+    "high_disagreement_weight": 0.55
+  },
+  "metrics": {
+    "train": {
+      "mae": 0.45766958594322205,
+      "rmse": 0.6251503229141235,
+      "pearson": 0.5297813010269632,
+      "spearman": 0.5360267448819799
+    },
+    "validation": {
+      "mae": 0.4813285768032074,
+      "rmse": 0.6482085585594177,
+      "pearson": 0.44976775763619464,
+      "spearman": 0.4405587544374821
+    },
+    "test": {
+      "mae": 0.5107400417327881,
+      "rmse": 0.6940467953681946,
+      "pearson": 0.41076795812040584,
+      "spearman": 0.42290725678195756
+    }
+  },
+  "history": [
+    {
+      "epoch": 1,
+      "validation_mae_standardized": 0.6789215207099915
+    },
+    {
+      "epoch": 2,
+      "validation_mae_standardized": 0.6583015322685242
+    },
+    {
+      "epoch": 3,
+      "validation_mae_standardized": 0.6632818579673767
+    },
+    {
+      "epoch": 4,
+      "validation_mae_standardized": 0.667552649974823
+    },
+    {
+      "epoch": 5,
+      "validation_mae_standardized": 0.6756282448768616
+    },
+    {
+      "epoch": 6,
+      "validation_mae_standardized": 0.6792885661125183
+    },
+    {
+      "epoch": 7,
+      "validation_mae_standardized": 0.6885504722595215
+    },
+    {
+      "epoch": 8,
+      "validation_mae_standardized": 0.6900187134742737
+    }
+  ],
+  "limitations": [
+    "Trained on English requests from Wikipedia and Stack Exchange.",
+    "Levels are relative to this corpus, not universal politeness categories.",
+    "Iteration 1 does not generate rewrites or calibrated predictive uncertainty."
+  ]
+}
