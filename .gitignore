@@ -58,4 +58,19 @@ backend/instance/
 
 # One-off deploy artifacts (e.g. `git archive` tarballs for manual scp)
 *.tar
-models/
+
+# Model weights. Ignore the big ones by name, not the whole models/ folder:
+# the DistilBERT tone weights are ~265MB and stay out, but the NumPy
+# politeness model in models/politeness_nn_iteration1/ is small and IS
+# committed. Ignoring all of models/ silently hides a retrain's new files.
+models/enron_tone_distilbert/
+models/enron_tone_checkpoints/
+models/**/*.bin
+models/**/*.safetensors
+models/**/*.pt
+models/**/*.pth
+
+# train_politeness_nn.py copies its input corpus next to the weights for
+# provenance. The original is already tracked in data/Stanford_Politeness/,
+# so the copy is 2.2MB of duplication - keep it local.
+models/**/training_data_snapshot.csv
