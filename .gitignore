@@ -58,3 +58,4 @@ backend/instance/
 
 # One-off deploy artifacts (e.g. `git archive` tarballs for manual scp)
 *.tar
+models/

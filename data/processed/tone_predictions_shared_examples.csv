@@ -1,0 +1,44 @@
+example_num,body_preview,model,label,confidence,note
+1,I told [PERSON_REDACTED] that you called him yesterday so abruptly because you d...,tone,neutral,0.97,standard business tone
+2,"[PERSON_REDACTED], This was a pretty meaty day.? You should read this summary.? ...",tone,neutral,0.98,standard business tone
+3,Wheat of course - blame it on all those years in Austin.,tone,terse,0.98,"no greeting, no sign-off, 12 words"
+4,"Tom-
+
+Thanks for sending the file.  Welcome to the amazing world of e-mail.
+
+-nb",tone,neutral,0.84,standard business tone
+5,"Yeah, I can help you out as long as it is not to late in the evening.  Let me 
+k...",tone,neutral,0.85,standard business tone
+6,I thought you might find this interesting since we see her on TV so much.,tone,terse,0.95,"no greeting, no sign-off, 15 words"
+7,"[PERSON_REDACTED], could I have one of the nights next week to give to [PERSON_R...",tone,neutral,0.66,standard business tone
+8,The differences we had on Friday were mainly volume related. Correcting the deal...,tone,neutral,0.98,standard business tone
+9,"Attached per your request on [PERSON_REDACTED]'s behalf is my ""Year 2000 
+Accomp...",tone,neutral,0.98,standard business tone
+10,"The information contained herein is based on sources that we believe to be
+relia...",tone,neutral,0.98,standard business tone
+11,"[PERSON_REDACTED],
+
+Thanks for the invitation. The evening of July the 18th is f...",tone,neutral,0.97,standard business tone
+12,"Hi Shea -
+
+[PERSON_REDACTED] will not be able to attend this meeting.  That is [...",tone,neutral,0.98,standard business tone
+13,Attached below is [ORG_REDACTED]'s request to [ORG_REDACTED] for clarification t...,tone,neutral,0.98,standard business tone
+14,The title transfer fee is much like [ORG_REDACTED]'s in that if you move gas fro...,tone,neutral,0.97,standard business tone
+15,"see note below
+
+
+[PERSON_REDACTED]
+[ORG_REDACTED]
+[PHONE_REDACTED] (ph)
+[PHONE_R...",tone,terse,0.98,"no greeting, no sign-off, 10 words"
+16,I guess they have signed quite a few deals.,tone,terse,0.96,"no greeting, no sign-off, 9 words"
+17,only 3 minutes!,tone,terse,0.98,"no greeting, no sign-off, 3 words"
+18,"Looks like I won't be out for another 15 minutes or so.
+ [PERSON_REDACTED]",tone,terse,0.95,"no greeting, no sign-off, 13 words"
+19,"Where are you staying?
+
+
+
+
+[PERSON_REDACTED]02/20/2001 02:36 PM",tone,terse,0.98,"no greeting, no sign-off, 7 words"
+20,The report named: Power West Price Off-Peak <http://erv.corp.enron.com/linkFromE...,tone,neutral,0.97,standard business tone
