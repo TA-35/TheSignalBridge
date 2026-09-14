@@ -40,13 +40,23 @@ const card = computed(() => {
 
 const alreadySaved = computed(() => (previewPattern.value ? store.isPatternSaved(previewPattern.value.id) : false))
 
-const orderedIds = computed(() =>
-  isPreview.value ? patterns.value.map((p) => p.id) : store.sortedByNeglect.map((c) => c.id),
-)
+// Came in from a specific category's list (Library's sidebar) - paging and
+// "back" should stay inside that category, not jump across the whole set.
+const previewCategory = computed(() => (typeof route.query.category === 'string' ? route.query.category : null))
+
+const orderedIds = computed(() => {
+  if (!isPreview.value) return store.sortedByNeglect.map((c) => c.id)
+  const pool = previewCategory.value
+    ? patterns.value.filter((p) => p.category === previewCategory.value)
+    : patterns.value
+  return pool.map((p) => p.id)
+})
 const currentId = computed(() => (isPreview.value ? (route.params.patternId as string) : (route.params.id as string)))
 const index = computed(() => orderedIds.value.indexOf(currentId.value))
 
-const backTo = computed(() => (isPreview.value ? '/library' : '/study'))
+const backTo = computed(() =>
+  isPreview.value ? { path: '/library', query: previewCategory.value ? { category: previewCategory.value } : {} } : '/study',
+)
 const backLabel = computed(() => (isPreview.value ? '← Back to Library' : '← Back to Study'))
 
 watch(
@@ -63,7 +73,11 @@ function step(delta: number) {
   if (!ids.length || index.value < 0) return
   const next = (index.value + delta + ids.length) % ids.length
   if (isPreview.value) {
-    router.push({ name: 'pattern-preview', params: { patternId: ids[next] } })
+    router.push({
+      name: 'pattern-preview',
+      params: { patternId: ids[next] },
+      query: previewCategory.value ? { category: previewCategory.value } : {},
+    })
   } else {
     router.push({ name: 'card-review', params: { id: ids[next] } })
   }

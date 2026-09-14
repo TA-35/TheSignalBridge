@@ -1,27 +1,80 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import {
+  CalendarClock,
+  Compass,
+  MessageCircleQuestion,
+  MessageSquareText,
+  Search,
+  Shapes,
+  SlidersHorizontal,
+  UserRoundX,
+  X,
+  type LucideIcon,
+} from '@lucide/vue'
 import { getPatterns } from '@/services/patternsService'
 import { useCardsStore } from '@/stores/cards'
 import type { Pattern } from '@/types/pattern'
 
 const router = useRouter()
+const route = useRoute()
 const store = useCardsStore()
 
 const patterns = ref<Pattern[]>([])
 const loading = ref(true)
-const activeTag = ref('All')
 
 onMounted(async () => {
   patterns.value = await getPatterns()
   loading.value = false
 })
 
-const tags = computed(() => ['All', ...new Set(patterns.value.map((p) => p.category))])
+// Category isn't part of the Pattern record's own metadata - these six are
+// the fixed enum from docs/api-contract.md, so an icon + one-line blurb per
+// category is safe to hand-write here rather than fetched.
+const CATEGORY_INFO: Record<string, { icon: LucideIcon; blurb: string }> = {
+  'Softened request': { icon: MessageCircleQuestion, blurb: 'Politely worded, but still a real ask.' },
+  'Vague deadline': { icon: CalendarClock, blurb: 'A time is implied, just never stated.' },
+  'Unassigned owner': { icon: UserRoundX, blurb: "Someone's expected to own this - it just doesn't say who." },
+  'Feedback framing': { icon: MessageSquareText, blurb: 'Praise softening a note that matters more than it sounds.' },
+  'Unclear priority': { icon: SlidersHorizontal, blurb: 'How urgent this really is, left for you to guess.' },
+  'Undefined scope': { icon: Shapes, blurb: 'The size of the ask is narrower than the wording suggests.' },
+}
 
-const visible = computed(() =>
-  patterns.value.filter((p) => activeTag.value === 'All' || p.category === activeTag.value),
-)
+const categories = computed(() => {
+  const counts = new Map<string, number>()
+  for (const p of patterns.value) counts.set(p.category, (counts.get(p.category) ?? 0) + 1)
+  return [...counts.entries()].map(([name, count]) => ({
+    name,
+    count,
+    icon: CATEGORY_INFO[name]?.icon ?? Compass,
+    blurb: CATEGORY_INFO[name]?.blurb ?? '',
+  }))
+})
+
+// Lives in the query string, not a route param, so it never collides with
+// /library/:patternId (the preview route) - and so a category is
+// bookmarkable/shareable and survives the back button.
+const activeCategory = computed(() => (typeof route.query.category === 'string' ? route.query.category : null))
+
+function selectCategory(name: string | null) {
+  searchQuery.value = ''
+  router.push({ query: { ...route.query, category: name ?? undefined } })
+}
+
+// A typed search takes over from category browsing - it looks across every
+// category by phrase name, not just the one currently selected, since the
+// point is finding a specific phrase without knowing where it lives.
+const searchQuery = ref('')
+const isSearching = computed(() => searchQuery.value.trim().length > 0)
+
+const visible = computed(() => {
+  if (isSearching.value) {
+    const q = searchQuery.value.trim().toLowerCase()
+    return patterns.value.filter((p) => p.name.toLowerCase().includes(q))
+  }
+  return activeCategory.value ? patterns.value.filter((p) => p.category === activeCategory.value) : []
+})
 
 function addToCards(pattern: Pattern) {
   store.savePattern(pattern)
@@ -29,49 +82,100 @@ function addToCards(pattern: Pattern) {
 
 function explore(pattern: Pattern) {
   // Preview only - saving is an explicit choice made on the detail page.
-  router.push({ name: 'pattern-preview', params: { patternId: pattern.id } })
+  // Carries the category along so "back" and paging stay inside it - but
+  // not while searching, since results there can span every category.
+  router.push({
+    name: 'pattern-preview',
+    params: { patternId: pattern.id },
+    query: !isSearching.value && activeCategory.value ? { category: activeCategory.value } : {},
+  })
 }
-
 </script>
 
 <template>
   <div class="library">
     <div class="header">
       <h2>Pattern library</h2>
-      <p>Short phrases that carry more than they say. Tap a card to see what it actually implies.</p>
+      <p>Common phrases, and what they actually mean.</p>
     </div>
 
-    <div class="tags">
-      <button
-        v-for="tag in tags"
-        :key="tag"
-        type="button"
-        class="tag"
-        :class="{ 'tag--active': activeTag === tag }"
-        @click="activeTag = tag"
-      >
-        {{ tag }}
+    <div class="search">
+      <Search :size="16" :stroke-width="2" class="search__icon" aria-hidden="true" />
+      <input
+        v-model="searchQuery"
+        type="text"
+        class="search__input"
+        placeholder="Search by phrase…"
+        aria-label="Search the pattern library by phrase"
+      />
+      <button v-if="searchQuery" type="button" class="search__clear" aria-label="Clear search" @click="searchQuery = ''">
+        <X :size="15" :stroke-width="2" aria-hidden="true" />
       </button>
     </div>
 
+    <select
+      class="category-select"
+      :value="activeCategory ?? ''"
+      @change="selectCategory(($event.target as HTMLSelectElement).value || null)"
+    >
+      <option value="">Overview</option>
+      <option v-for="cat in categories" :key="cat.name" :value="cat.name">{{ cat.name }} ({{ cat.count }})</option>
+    </select>
+
     <p v-if="loading" class="status">Loading the pattern library…</p>
 
-    <div v-else class="grid">
-      <div v-for="item in visible" :key="item.id" class="item" @click="explore(item)">
-        <span class="item__tag">{{ item.category }}</span>
-        <strong class="item__name">{{ item.name }}</strong>
-        
-        <div class="item__actions">
-          <button
-            type="button"
-            class="btn"
-            :class="store.isPatternSaved(item.id) ? 'btn--saved' : 'btn--outline'"
-            :disabled="store.isPatternSaved(item.id)"
-            @click.stop="addToCards(item)"
-          >
-            {{ store.isPatternSaved(item.id) ? 'Saved' : 'Add to my cards' }}
-          </button>
-          <button type="button" class="explore" @click.stop="explore(item)">See what this means -></button>
+    <div v-else class="layout">
+      <nav class="sidebar">
+        <button
+          type="button"
+          class="sidebar-item"
+          :class="{ 'sidebar-item--active': !activeCategory }"
+          @click="selectCategory(null)"
+        >
+          <Compass :size="17" :stroke-width="1.75" aria-hidden="true" />
+          <span>Overview</span>
+        </button>
+        <button
+          v-for="cat in categories"
+          :key="cat.name"
+          type="button"
+          class="sidebar-item"
+          :class="{ 'sidebar-item--active': activeCategory === cat.name }"
+          @click="selectCategory(cat.name)"
+        >
+          <component :is="cat.icon" :size="17" :stroke-width="1.75" aria-hidden="true" />
+          <span class="sidebar-item__label">{{ cat.name }}</span>
+          <span class="sidebar-item__count">{{ cat.count }}</span>
+        </button>
+      </nav>
+
+      <div class="content">
+        <div v-if="!isSearching && !activeCategory" class="intro">
+          <strong>Pick a category to start</strong>
+          <p>
+            Pick a category to see real examples and what they actually imply.
+          </p>
+        </div>
+
+        <p v-else-if="isSearching && !visible.length" class="status">No phrases match "{{ searchQuery }}".</p>
+
+        <div v-else class="grid">
+          <div v-for="item in visible" :key="item.id" class="item" @click="explore(item)">
+            <span class="item__tag">{{ item.category }}</span>
+            <strong class="item__name">{{ item.name }}</strong>
+            <div class="item__actions">
+              <button
+                type="button"
+                class="btn"
+                :class="store.isPatternSaved(item.id) ? 'btn--saved' : 'btn--outline'"
+                :disabled="store.isPatternSaved(item.id)"
+                @click.stop="addToCards(item)"
+              >
+                {{ store.isPatternSaved(item.id) ? 'Saved' : 'Add to my cards' }}
+              </button>
+              <button type="button" class="explore" @click.stop="explore(item)">See what this means</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -99,30 +203,148 @@ function explore(pattern: Pattern) {
   color: var(--color-text-muted);
 }
 
-.tags {
+.search {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.tag {
-  padding: 8px 14px;
-  border-radius: 999px;
-  font-size: 13px;
-  cursor: pointer;
-  border: 1px solid var(--color-border);
+  align-items: center;
+  gap: 9px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
   background: var(--color-frame);
-  color: var(--color-text-muted);
 }
 
-.tag--active {
-  border-color: var(--color-primary-soft-border);
-  background: var(--color-primary-soft-bg);
-  color: var(--color-primary-strong-text);
+.search:focus-within {
+  border-color: var(--color-primary);
+}
+
+.search__icon {
+  flex: 0 0 auto;
+  color: var(--color-text-faint);
+}
+
+.search__input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: none;
+  padding: 11px 0;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.search__clear {
+  flex: 0 0 auto;
+  display: flex;
+  padding: 4px;
+  border: none;
+  background: none;
+  color: var(--color-text-faint);
+  cursor: pointer;
+}
+
+.search__clear:hover {
+  color: var(--color-text);
 }
 
 .status {
   font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+/* Mobile-only category picker - hidden on desktop, where the sidebar does
+   this job. Kept in the DOM at all sizes and toggled by media query, rather
+   than v-if/v-else, so there's one source of truth for the selection. */
+.category-select {
+  display: none;
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-frame);
+  color: var(--color-text);
+  font-size: 14px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 22px;
+  align-items: start;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  padding: 8px;
+  position: sticky;
+  top: 84px;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  background: none;
+  font-size: 13.5px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  text-align: left;
+}
+
+.sidebar-item:hover {
+  background: var(--color-surface-soft);
+  color: var(--color-text);
+}
+
+.sidebar-item--active {
+  background: var(--color-primary-soft-bg);
+  color: var(--color-primary-strong-text);
+  font-weight: 600;
+}
+
+.sidebar-item__label {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-item__count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-faint);
+}
+
+.sidebar-item--active .sidebar-item__count {
+  color: var(--color-primary-strong-text);
+}
+
+.content {
+  min-width: 0;
+}
+
+.intro {
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+  padding: 40px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
+.intro p {
+  margin: 0;
+  max-width: 420px;
+  font-size: 14px;
+  line-height: 1.6;
   color: var(--color-text-muted);
 }
 
@@ -132,7 +354,7 @@ function explore(pattern: Pattern) {
   gap: 12px;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 860px) {
   .grid {
     grid-template-columns: 1fr;
   }
@@ -167,13 +389,6 @@ function explore(pattern: Pattern) {
   color: var(--color-text);
 }
 
-.item__hint {
-  font-size: 13px;
-  font-style: italic;
-  line-height: 1.5;
-  color: var(--color-text-faint);
-}
-
 .item__actions {
   margin-top: auto;
   padding-top: 6px;
@@ -193,7 +408,7 @@ function explore(pattern: Pattern) {
 .btn--outline {
   border: 1px solid var(--color-border-strong);
   background: var(--color-frame);
-  color: #4a453e;
+  color: var(--color-text-muted);
 }
 
 .btn--saved {
@@ -217,5 +432,23 @@ function explore(pattern: Pattern) {
 
 .explore:hover {
   border-color: var(--color-primary-border);
+}
+
+@media (max-width: 720px) {
+  .category-select {
+    display: block;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
