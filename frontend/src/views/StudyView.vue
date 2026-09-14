@@ -47,7 +47,6 @@ function open(id: string) {
       <button v-for="card in cards" :key="card.id" type="button" class="card-row" @click="open(card.id)">
         <span class="card-row__text">
           <strong>{{ card.name }}</strong>
-          <span class="hint">{{ card.impliesPreview }}</span>
           <span class="meta">{{ card.meta }}</span>
         </span>
         <span class="explore">See more -></span>
@@ -169,13 +168,6 @@ function open(id: string) {
   font-size: 15.5px;
   font-weight: 600;
   color: var(--color-text);
-}
-
-.card-row__text .hint {
-  font-size: 13px;
-  font-style: italic;
-  line-height: 1.5;
-  color: var(--color-text-faint);
 }
 
 .meta {

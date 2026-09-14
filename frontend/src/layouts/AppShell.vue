@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { BookOpen, Home, Library, LogIn, PenLine, MailQuestionMark, Settings } from '@lucide/vue'
 import { useSettingsStore } from '@/stores/settings'
 import logoLight from '@/assets/logo.png'
 import logoDark from '@/assets/logo-dark.png'
@@ -12,13 +13,13 @@ const settingsStore = useSettingsStore()
 const logoUrl = computed(() => (settingsStore.settings.appearance === 'dark' ? logoDark : logoLight))
 
 const navItems = [
-  { to: '/', label: 'Home' },
-  { to: '/decode', label: 'Decoder' },
-  { to: '/compose', label: 'Composer'},
-  { to: '/study', label: 'Study' },
-  { to: '/library', label: 'Library' },
-  { to: '/settings', label: 'Settings' },
-  { to: '/login', label: 'Login'}
+  { to: '/', label: 'Home', icon: Home },
+  { to: '/decode', label: 'Decoder', icon: MailQuestionMark },
+  { to: '/compose', label: 'Compose', icon: PenLine },
+  { to: '/study', label: 'Study', icon: BookOpen },
+  { to: '/library', label: 'Library', icon: Library },
+  { to: '/settings', label: 'Settings', icon: Settings },
+  { to: '/login', label: 'Login', icon: LogIn },
 ]
 
 const route = useRoute()
@@ -62,6 +63,7 @@ watch(
             class="nav-item"
             :class="{ 'nav-item--active': isActive(item.to) }"
           >
+            <component :is="item.icon" class="nav-item__icon" :size="16" :stroke-width="2" aria-hidden="true" />
             {{ item.label }}
           </RouterLink>
         </nav>
@@ -122,12 +124,20 @@ watch(
 }
 
 .nav-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   padding: 9px 14px;
   border-radius: var(--radius-sm);
   font-size: 14.5px;
   font-weight: 500;
   color: var(--color-text-muted);
   white-space: nowrap;
+}
+
+.nav-item__icon {
+  flex: 0 0 auto;
+  color: currentColor;
 }
 
 .nav-item:hover {

@@ -32,9 +32,6 @@ function explore(pattern: Pattern) {
   router.push({ name: 'pattern-preview', params: { patternId: pattern.id } })
 }
 
-function hint(text: string): string {
-  return text.length > 58 ? `${text.slice(0, 56)}…` : text
-}
 </script>
 
 <template>
@@ -63,7 +60,7 @@ function hint(text: string): string {
       <div v-for="item in visible" :key="item.id" class="item" @click="explore(item)">
         <span class="item__tag">{{ item.category }}</span>
         <strong class="item__name">{{ item.name }}</strong>
-        <span class="item__hint">{{ hint(item.implies) }}</span>
+        
         <div class="item__actions">
           <button
             type="button"

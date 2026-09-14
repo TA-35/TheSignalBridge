@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, reactive } from 'vue'
+import { computed, reactive, ref } from 'vue'
+import { Check, Copy } from '@lucide/vue'
 import { decodeMessage, EmptyMessageError, MAX_MESSAGE_LENGTH, MessageTooLongError } from '@/services/decodeService'
 import { findLocalPatternMatch } from '@/services/localPatterns'
 import { getPatterns } from '@/services/patternsService'
@@ -138,6 +139,23 @@ const checkedPrompts = computed(() => {
   if (!state.result) return []
   return state.result.missing.filter((item) => state.checked.has(item.field))
 })
+
+const copyState = ref<'idle' | 'copied' | 'failed'>('idle')
+let copyResetTimer: ReturnType<typeof setTimeout> | undefined
+
+async function copyPromptsToClipboard() {
+  const text = checkedPrompts.value.map((q) => q.prompt).join('\n')
+  try {
+    await navigator.clipboard.writeText(text)
+    copyState.value = 'copied'
+  } catch {
+    copyState.value = 'failed'
+  }
+  clearTimeout(copyResetTimer)
+  copyResetTimer = setTimeout(() => {
+    copyState.value = 'idle'
+  }, 2000)
+}
 </script>
 
 <template>
@@ -259,7 +277,14 @@ const checkedPrompts = computed(() => {
           </div>
 
           <div v-if="checkedPrompts.length" class="panel panel--confirm">
-            <strong>Before you reply, ask</strong>
+            <div class="confirm-header">
+              <strong>Before you reply, ask</strong>
+              <button type="button" class="copy-btn" @click="copyPromptsToClipboard">
+                <Check v-if="copyState === 'copied'" :size="14" :stroke-width="2" aria-hidden="true" />
+                <Copy v-else :size="14" :stroke-width="2" aria-hidden="true" />
+                {{ copyState === 'copied' ? 'Copied' : copyState === 'failed' ? "Couldn't copy" : 'Copy' }}
+              </button>
+            </div>
             <div class="confirm-list">
               <div v-for="q in checkedPrompts" :key="q.field" class="confirm-item">
                 {{ q.prompt }}
@@ -363,7 +388,6 @@ const checkedPrompts = computed(() => {
   min-height: 262px;
   resize: vertical;
   padding: 18px;
-  border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
   background: var(--color-surface);
   font-size: 15.5px;
@@ -568,7 +592,6 @@ const checkedPrompts = computed(() => {
 }
 
 .panel {
-  border-radius: var(--radius-md);
   background: var(--color-surface);
   overflow: hidden;
 }
@@ -727,7 +750,6 @@ const checkedPrompts = computed(() => {
   height: 18px;
   flex: 0 0 18px;
   margin-top: 2px;
-  border-radius: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -781,6 +803,32 @@ const checkedPrompts = computed(() => {
   color: var(--color-text);
 }
 
+.confirm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border-radius: 7px;
+  border: 1px solid var(--color-primary-soft-border);
+  background: var(--color-primary-soft-bg);
+  color: var(--color-primary-strong-text);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.copy-btn:hover {
+  border-color: var(--color-primary-border);
+}
+
 .confirm-list {
   display: flex;
   flex-direction: column;
@@ -805,7 +853,6 @@ const checkedPrompts = computed(() => {
   display: flex;
   gap: 12px;
   padding: 14px 16px;
-  border-radius: 10px;
   background: var(--color-surface-soft);
   border: 1px solid var(--color-border-soft);
 }

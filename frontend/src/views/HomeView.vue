@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { BookOpen, Library, PenLine, MailQuestionMark, Settings, UserRound, type LucideIcon } from '@lucide/vue'
 import heroImage from '@/assets/home-hero.jpg'
 
 interface FeatureCard {
@@ -7,50 +8,59 @@ interface FeatureCard {
   to: string | null
   cta: string | null
   status: 'live' | 'soon'
+  icon: LucideIcon
 }
 
+// Icons match the nav bar's (AppShell.vue) where the feature has a live
+// route, so the shape is already familiar by the time someone reaches it.
 const FEATURES: FeatureCard[] = [
   {
     title: 'Message Decoder',
-    desc: "Paste a long email and get what's covered, what's missing, and a suggested next step — plus a draft reply asking for exactly what's unclear.",
+    desc: "See what a message covers, what it leaves out, and what to ask next.",
     to: '/decode',
     cta: 'Decode message',
     status: 'live',
+    icon: MailQuestionMark,
   },
   {
     title: 'Pattern Library',
-    desc: 'Browse common workplace phrasings by category — softened requests, vague deadlines, feedback framing — and what they actually imply.',
+    desc: 'Common workplace phrasings, and what they actually imply.',
     to: '/library',
     cta: 'Browse the library',
     status: 'live',
+    icon: Library,
   },
   {
     title: 'Study & Flashcards',
-    desc: 'Turn anything you decode or look up into a flashcard. No scores, no streaks — cards you haven’t opened in a while just float a little higher.',
+    desc: 'Save what you learn. Review whenever you want',
     to: '/study',
     cta: 'Open Study',
     status: 'live',
+    icon: BookOpen,
   },
   {
     title: 'Comfort Settings',
-    desc: 'Switch to dark mode, pick an accent color, and resize or bold the text so the page fits how you read best.',
+    desc: 'Switch to dark mode, color themes, and different text size & weight.',
     to: '/settings',
     cta: 'Adjust settings',
     status: 'live',
+    icon: Settings,
   },
   {
-    title: 'Message Drafter',
-    desc: 'For the writing side: paste a message before you send it and see what a neurodivergent reader might find missing.',
+    title: 'Message Composer',
+    desc: 'See what a message might be missing before you send it.',
     to: null,
     cta: null,
     status: 'soon',
+    icon: PenLine,
   },
   {
     title: 'Accounts & Progress',
-    desc: 'An optional account to keep your history across devices and notice the situations you tend to find unclear.',
+    desc: 'An optional account to keep your history across devices.',
     to: null,
     cta: null,
     status: 'soon',
+    icon: UserRound,
   },
 ]
 </script>
@@ -59,13 +69,14 @@ const FEATURES: FeatureCard[] = [
   <section class="hero-section">
     <img :src="heroImage" alt="A team celebrating together around a meeting table" class="hero-bg-img" />
     <div class="hero-scrim" />
+    <div class="hero-fade" />
     <div class="hero-inner">
       <div class="hero-panel">
-        <h1 class="hero-title">Signals in many forms, <br />A bridge to shared understanding.</h1>
+        <h1 class="hero-title">Clear communication, <br />with no hidden "surprises".</h1>
         <p class="hero-subtitle">
-          Clearly takes a message apart: what it covers, what it leaves out,
-          what the polite wording implies, and what to do next.
-          It checks messages you send the same way, before they go out.
+          Analyze incoming messages to spot unstated expectations 
+          and subtext. And, audit your own drafts to ensure your 
+          true intent comes through every time.
         </p>
         <div class="actions">
           <RouterLink to="/decode" class="btn btn--primary">Decode a message</RouterLink>
@@ -86,6 +97,9 @@ const FEATURES: FeatureCard[] = [
           class="feature"
           :class="{ 'feature--soon': feature.status === 'soon' }"
         >
+          <span class="feature__icon">
+            <component :is="feature.icon" :size="20" :stroke-width="1.75" aria-hidden="true" />
+          </span>
           <div class="feature__head">
             <strong>{{ feature.title }}</strong>
             <span v-if="feature.status === 'soon'" class="badge">Coming soon</span>
@@ -109,17 +123,16 @@ const FEATURES: FeatureCard[] = [
 }
 
 /* Breaks out of AppShell's centered, padded `.main__inner` (max-width
-   1240px) so the photo runs edge-to-edge instead of stopping at that
-   container's width. The negative top margin cancels out `.main`'s own
-   top padding (32px, 24px under 860px - see AppShell.vue) so the photo
-   sits flush under the sticky header instead of leaving a bare strip. */
+   1240px) so the photo runs edge-to-edge as full screen. 
+   The negative top margin cancels out `.main`'s own
+   top padding so the photo
+   sits flush under the sticky header. */
 .hero-section {
   position: relative;
   width: 100vw;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
   margin-top: -32px;
-  margin-bottom: 32px;
   height: 72vh;
   min-height: 420px;
   display: flex;
@@ -140,7 +153,21 @@ const FEATURES: FeatureCard[] = [
 .hero-scrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.1) 100%);
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.1) 100%);
+  z-index: 1;
+}
+
+/* Dissolves the photo into the page background instead of cutting to it on
+   a hard edge. Sits above the scrim/image but below the text, and never
+   intercepts clicks even if a tall viewport puts it near the buttons. */
+.hero-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 140px;
+  background: linear-gradient(to bottom, transparent, var(--color-bg));
+  pointer-events: none;
   z-index: 1;
 }
 
@@ -283,6 +310,23 @@ const FEATURES: FeatureCard[] = [
 a.feature:hover {
   border-color: var(--color-primary-soft-border);
   background: var(--color-primary-soft-bg);
+}
+
+.feature__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  background: var(--color-primary-soft-bg);
+  color: var(--color-primary-strong-text);
+  margin-bottom: 2px;
+}
+
+.feature--soon .feature__icon {
+  background: var(--color-border-soft);
+  color: var(--color-text-faint);
 }
 
 .feature--soon {
