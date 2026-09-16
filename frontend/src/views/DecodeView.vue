@@ -10,7 +10,13 @@ import { useDecodesStore } from '@/stores/decodes'
 import { ELEMENT_LABELS, NOT_SPECIFIED, type DecodeResult } from '@/types/decode'
 import type { Pattern, SavedCard } from '@/types/pattern'
 import type { DecodeRecord } from '@/types/decode'
-import { REVIEW_FIELD_LABELS, type FullReview, type ReviewField, type ReviewGap } from '@/types/review'
+import {
+  REVIEW_FIELD_LABELS,
+  type FullReview,
+  type QuickReview,
+  type ReviewField,
+  type ReviewGap,
+} from '@/types/review'
 
 const cardsStore = useCardsStore()
 const decodesStore = useDecodesStore()
@@ -38,6 +44,47 @@ const state = reactive({
   // never blocked waiting for it.
   llm: null as FullReview | null,
   llmLoading: false,
+  // Stage one. It lands in milliseconds and carries the three models'
+  // read of the message, which nothing used to render - see registerChips.
+  quick: null as QuickReview | null,
+  // Which asks the reader has ticked off. Session-only and keyed by the
+  // ask's own text: the list is rebuilt when the model answers, and an
+  // index would then point at a different ask than the one that was ticked.
+  done: new Set<string>(),
+})
+
+// The span currently being pointed at, highlighted in the original message.
+//
+// This is the page's main interactive idea. Every claim carries a span that
+// was verified server-side - message.slice(start, end) === text - so pointing
+// at a finding can show exactly which characters it came from, rather than
+// asking the reader to take it on trust and hunt for the phrase themselves.
+// For a literal reader that hunt is the expensive part.
+const activeSpan = ref<[number, number] | null>(null)
+
+function showSpan(span?: [number, number] | null) {
+  activeSpan.value = span && span.length === 2 ? span : null
+}
+function clearSpan() {
+  activeSpan.value = null
+}
+
+/** The original message, split so the active span can be marked up. */
+const messageParts = computed(() => {
+  const text = state.message
+  const span = activeSpan.value
+  if (!span) return [{ text, hit: false }]
+  const [start, end] = span
+  // Defensive: a span from a stale response could point outside this
+  // message. Showing the message unhighlighted is the right failure.
+  if (!(Number.isInteger(start) && Number.isInteger(end)) || start < 0 || end > text.length || start >= end) {
+    return [{ text, hit: false }]
+  }
+  return [
+    { text: text.slice(0, start), hit: false },
+    { text: text.slice(start, end), hit: true },
+    { text: text.slice(end), hit: false },
+  ]
 })
 
 async function review() {
@@ -73,7 +120,12 @@ async function review() {
     // break a decode that already worked.
     state.llm = null
     state.llmLoading = true
-    void reviewMessage(text)
+    state.quick = null
+    void reviewMessage(text, (quick) => {
+      // Stage one, in milliseconds. Only accept it if the reader has not
+      // already moved on, the same guard stage two carries.
+      if (state.message.trim() === text) state.quick = quick
+    })
       .then((result) => {
         // Ignore a late reply for a message the user has moved on from.
         if (state.message.trim() !== text) return
@@ -113,6 +165,53 @@ async function review() {
   }
 }
 
+// How the message reads, from the three models that run at stage one.
+//
+// These already ran on every message and their output went nowhere but the
+// LLM prompt - `comments` appeared in types/review.ts and in no component.
+// Register is the hardest thing to infer from a workplace message and the
+// most useful thing to be told, so it is now the first thing on the page.
+//
+// Stated as plain English, never as a model name or a raw score. A reader
+// wants "sounds politely worded", not "politeness: high (1.0)".
+const REGISTER_WORDS: Record<string, Record<string, string>> = {
+  politeness: {
+    high: 'politely worded',
+    medium: 'plainly worded',
+    low: 'blunt',
+  },
+  tone: {
+    formal: 'formal',
+    neutral: 'neutral in tone',
+    casual: 'casual',
+  },
+  circa: {
+    direct: 'a direct ask',
+    indirect: 'an indirect ask',
+    yes: 'a direct ask',
+    no: 'an indirect ask',
+  },
+}
+
+// Below this, the model is guessing more than reading. Shown, but labelled -
+// hiding a weak signal is dishonest and presenting it as firm is worse.
+const LOW_CONFIDENCE = 0.5
+
+const registerChips = computed(() => {
+  const comments = state.quick?.comments ?? []
+  return comments
+    // confidence 0 is the adapters' "model unavailable" stub. There is no
+    // reading to report, so there is no chip - an empty slot is better than
+    // a chip saying "unknown", which reads as a claim about the message.
+    .filter((c) => c.confidence > 0)
+    .map((c) => ({
+      model: c.model,
+      word: REGISTER_WORDS[c.model]?.[c.label] ?? '',
+      unsure: c.confidence < LOW_CONFIDENCE,
+    }))
+    .filter((c) => c.word)
+})
+
 /** Claims worth showing: those with a reading, in a stable field order. */
 const llmClaims = computed(() => {
   const order: ReviewField[] = [
@@ -146,6 +245,9 @@ function reset() {
   // The closer reading belongs to the message that was cleared.
   state.llm = null
   state.llmLoading = false
+  state.quick = null
+  state.done = new Set()
+  activeSpan.value = null
   state.checked = new Set()
   state.matchedPattern = null
   state.record = null
@@ -191,6 +293,7 @@ const coveredRows = computed(() => {
       label: c.label,
       value: c.text,
       reading: c.reading ?? '',
+      span: c.span,
     }))
   }
   if (!state.result) return []
@@ -201,6 +304,7 @@ const coveredRows = computed(() => {
       label: ELEMENT_LABELS[field],
       value: state.result!.elements[field],
       reading: '',
+      span: state.result!.spans?.[field] ?? null,
     }))
     .filter((row) => !asks.has(row.value.trim().toLowerCase()))
 })
@@ -244,6 +348,7 @@ const todo = computed(() => {
       text: c.text,
       detail: '',
       reading: c.reading ?? '',
+      span: c.span,
     }))
   }
   if (!state.result) return []
@@ -256,15 +361,58 @@ const todo = computed(() => {
         task.for_whom !== NOT_SPECIFIED ? `for ${task.for_whom}` : null,
         task.time !== NOT_SPECIFIED ? `at ${task.time}` : null,
       ].filter(Boolean)
-      return { text: task.text, detail: known.join(' · '), reading: '' }
+      return { text: task.text, detail: known.join(' · '), reading: '', span: null }
     })
   }
 
   const single = state.result.elements.task
   return single && single !== NOT_SPECIFIED
-    ? [{ text: single, detail: '', reading: '' }]
+    ? [{ text: single, detail: '', reading: '', span: null }]
     : []
 })
+
+// Ticking asks off. Not persistence - a reader who comes back tomorrow
+// re-decodes - but a place to put "I have done that one" so the list stops
+// being a wall of undifferentiated demands. Knowing which of three things is
+// left is the difference between a task and a decision about a task.
+function toggleDone(text: string) {
+  if (state.done.has(text)) state.done.delete(text)
+  else state.done.add(text)
+}
+
+const doneCount = computed(
+  () => todo.value.filter((item) => state.done.has(item.text)).length,
+)
+
+// Sections the reader has folded away, remembered between decodes.
+//
+// Everything starts open on purpose. Hidden content is a worse default than
+// a long page: it cannot be scanned, and it makes the page a different shape
+// each visit. Folding is offered for readers who want fewer things demanding
+// attention at once, and the choice is theirs to keep.
+const SECTIONS_KEY = 'readtheroom.decode.folded'
+
+function loadFolded(): Record<string, boolean> {
+  try {
+    const raw = localStorage.getItem(SECTIONS_KEY)
+    return raw ? (JSON.parse(raw) as Record<string, boolean>) : {}
+  } catch {
+    // Private mode, blocked storage, or corrupt JSON. Everything open is the
+    // right answer in all three.
+    return {}
+  }
+}
+
+const folded = reactive<Record<string, boolean>>(loadFolded())
+
+function toggleFold(key: string) {
+  folded[key] = !folded[key]
+  try {
+    localStorage.setItem(SECTIONS_KEY, JSON.stringify(folded))
+  } catch {
+    // Preference lost, page unaffected.
+  }
+}
 
 const checkedPrompts = computed(() =>
   gaps.value.filter((gap) => state.checked.has(gap.field)),
@@ -283,22 +431,40 @@ const checkedPrompts = computed(() =>
 // headings avoid it - not every decoded message is a task assigned to the
 // reader, and an update or a thank-you note would make that phrasing read as
 // a non-sequitur.
+//
+// Two registers, because "will this read as rude?" is the thing that stops
+// people sending the message at all, and it is not a question you can answer
+// for someone else - it depends on the workplace. Offering both and letting
+// them pick is faster than either guessing or leaving them to rewrite it.
+const draftTone = ref<'plain' | 'warm'>('plain')
+
 const replyDraft = computed(() => {
   const questions = checkedPrompts.value.map((q) => q.question.trim()).filter(Boolean)
   if (!questions.length) return ''
 
+  const count = questions.length === 1 ? 'one' : questions.length === 2 ? 'couple' : 'few'
   const opener =
-    questions.length === 1
-      ? 'One thing I wanted to check:'
-      : questions.length === 2
-        ? 'A couple of things I wanted to check:'
-        : 'A few things I wanted to check:'
+    draftTone.value === 'warm'
+      ? {
+          one: 'Just one thing I wanted to check first, if that is okay:',
+          couple: 'Just a couple of things I wanted to check first, if that is okay:',
+          few: 'Just a few things I wanted to check first, if that is okay:',
+        }[count]
+      : {
+          one: 'One thing I wanted to check:',
+          couple: 'A couple of things I wanted to check:',
+          few: 'A few things I wanted to check:',
+        }[count]
 
   // A single question reads better inline than as a one-item bullet list.
   const body =
     questions.length === 1 ? questions[0] : questions.map((q) => `- ${q}`).join('\n')
 
-  return `Hi,\n\n${opener}\n\n${body}\n\nThanks!`
+  // Still no name in either register - see the note above. The warm version
+  // adds a thank-you, which needs nothing from the message to be true.
+  const greeting = draftTone.value === 'warm' ? 'Hi,\n\nThanks for this.' : 'Hi,'
+
+  return `${greeting}\n\n${opener}\n\n${body}\n\nThanks!`
 })
 
 const copyState = ref<'idle' | 'copied' | 'failed'>('idle')
@@ -369,137 +535,210 @@ async function copyDraftToClipboard() {
       </div>
 
       <div class="results-grid">
+        <!-- Sticky so the message stays in view while the reader works down
+             the findings. Every claim points back into this text, and a
+             citation you have to scroll to is a citation you stop checking. -->
         <div class="original-panel">
-          <p>{{ state.message }}</p>
+          <p class="original-panel__label">The message</p>
+          <p class="original-text">
+            <template v-for="(part, i) in messageParts" :key="i">
+              <mark v-if="part.hit" class="original-text__hit">{{ part.text }}</mark>
+              <template v-else>{{ part.text }}</template>
+            </template>
+          </p>
         </div>
 
         <div class="findings">
-          <!-- The model leads. It is the part of this page that reads the
-               message rather than extracting from it, so it goes first and
-               the extraction below becomes its supporting detail. Every claim
-               was verified server-side against the original message; anything
-               that could not be traced back was dropped before it got here. -->
-          <div v-if="state.llmLoading || state.llm" class="panel panel--reading">
-            <div class="panel__header panel__header--reading">
-              <span class="panel-dot panel-dot--reading" />
-              <strong>A closer reading</strong>
-              <span v-if="state.llmLoading" class="reading__status">reading…</span>
+          <!-- 1. How it reads ----------------------------------------------
+               First because register is the hardest thing to infer from a
+               work message and the most useful thing to be told, and because
+               it arrives in milliseconds while the reading below takes
+               seconds. Hedged in the copy: three small models, advisory. -->
+          <div v-if="registerChips.length" class="register">
+            <div class="register__line">
+              <span class="register__lead">Reads as</span>
               <span
-                v-else-if="state.llm?.degraded"
-                class="reading__status reading__status--degraded"
-                title="The model's answer could not be verified against your message, so only what was read directly from the text is shown."
-              >limited</span>
+                v-for="chip in registerChips"
+                :key="chip.model"
+                class="register__chip"
+                :class="{ 'register__chip--unsure': chip.unsure }"
+              >
+                {{ chip.word }}<template v-if="chip.unsure"> (not sure)</template>
+              </span>
             </div>
-
-            <!-- The model takes seconds. An empty bordered box under a
-                 header reads as broken, so hold the shape with placeholder
-                 lines until real content replaces them. -->
-            <div v-if="state.llmLoading && !state.llm" class="panel__body">
-              <div class="skeleton skeleton--wide" />
-              <div class="skeleton skeleton--wide" />
-              <div class="skeleton" />
-            </div>
-
-            <div v-if="state.llm" class="panel__body">
-              <p v-if="state.llm.summary" class="reading__summary">{{ state.llm.summary }}</p>
-
-              <!-- The claims are not listed here. Each one now sits in the
-                   panel that acts on it - actions under "asked to do",
-                   everything else under "what the message settles" - so the
-                   reading is the overview and the panels below are the
-                   detail, rather than the same list twice. -->
-              <div v-if="state.llm.unstated?.length" class="reading__unstated">
-                <span class="reading__label">Questions worth asking</span>
-                <ul>
-                  <li v-for="(q, i) in state.llm.unstated" :key="i">{{ q }}</li>
-                </ul>
-              </div>
-
-              <p v-if="state.llm.degraded" class="reading__degraded-note">
-                Showing only what could be read directly from your message.
-              </p>
-            </div>
+            <p class="register__note">
+              A guess from the wording, not a fact about the sender. Trust the words
+              on the left over this.
+            </p>
           </div>
 
-          <div v-if="todo.length" class="panel panel--todo">
-            <div class="panel__header panel__header--todo">
-              <span class="panel-dot panel-dot--todo" />
-              <strong>What you're being asked to do</strong>
-            </div>
-            <div class="panel__body">
-              <ul class="todo">
-                <li v-for="(item, i) in todo" :key="i" class="todo__item">
-                  <span class="todo__text">{{ item.text }}</span>
-                  <span v-if="item.detail" class="todo__detail">{{ item.detail }}</span>
-                  <span v-if="item.reading" class="todo__reading">{{ item.reading }}</span>
-                </li>
-              </ul>
-            </div>
-          </div>
+          <!-- 2. What it means --------------------------------------------- -->
+          <section class="card" :class="{ 'card--folded': folded.meaning }">
+            <button type="button" class="card__head" :aria-expanded="!folded.meaning" @click="toggleFold('meaning')">
+              <span class="card__index" aria-hidden="true">01</span>
+              <span class="card__title">What this message means</span>
+              <span v-if="state.llmLoading && !state.llm" class="card__status">
+                reading closely — usually 5–15 seconds
+              </span>
+              <span v-else-if="state.llm?.degraded" class="card__status card__status--warn">
+                showing only what was quoted directly
+              </span>
+              <span class="card__fold" aria-hidden="true">{{ folded.meaning ? '⌄' : '⌃' }}</span>
+            </button>
 
-          <div v-if="coveredRows.length" class="panel panel--covered">
-            <div class="panel__header panel__header--covered">
-              <span class="panel-dot panel-dot--covered" />
-              <strong>What the message settles</strong>
+            <div v-show="!folded.meaning" class="card__body">
+              <template v-if="state.llmLoading && !state.llm">
+                <div class="skeleton skeleton--wide" />
+                <div class="skeleton skeleton--wide" />
+                <div class="skeleton" />
+              </template>
+              <template v-else-if="state.llm">
+                <p v-if="state.llm.summary" class="meaning">{{ state.llm.summary }}</p>
+                <p v-else class="muted-line">No closer reading came back for this one.</p>
+              </template>
+              <p v-else class="muted-line">Reading the message…</p>
             </div>
-            <div class="panel__body">
-              <div v-for="row in coveredRows" :key="row.field" class="row">
-                <span class="row__label">{{ row.label }}</span>
-                <span class="row__value">
-                  {{ row.value }}
-                  <span v-if="row.reading" class="row__reading">{{ row.reading }}</span>
+          </section>
+
+          <!-- 3. Asks, tickable -------------------------------------------- -->
+          <section v-if="todo.length" class="card" :class="{ 'card--folded': folded.asks }">
+            <button type="button" class="card__head" :aria-expanded="!folded.asks" @click="toggleFold('asks')">
+              <span class="card__index" aria-hidden="true">02</span>
+              <span class="card__title">What you're being asked to do</span>
+              <span class="card__status">{{ doneCount }} of {{ todo.length }} done</span>
+              <span class="card__fold" aria-hidden="true">{{ folded.asks ? '⌄' : '⌃' }}</span>
+            </button>
+
+            <div v-show="!folded.asks" class="card__body card__body--flush">
+              <button
+                v-for="(item, i) in todo"
+                :key="i"
+                type="button"
+                class="ask"
+                :class="{ 'ask--done': state.done.has(item.text) }"
+                @click="toggleDone(item.text)"
+                @mouseenter="showSpan(item.span)"
+                @mouseleave="clearSpan()"
+                @focus="showSpan(item.span)"
+                @blur="clearSpan()"
+              >
+                <span class="tick" :class="{ 'tick--on': state.done.has(item.text) }" aria-hidden="true" />
+                <span class="ask__text">
+                  <span class="ask__main">{{ item.text }}</span>
+                  <span v-if="item.detail" class="ask__detail">{{ item.detail }}</span>
+                  <span v-if="item.reading" class="ask__reading">{{ item.reading }}</span>
+                </span>
+              </button>
+              <p class="card__hint">Ticking is just for you — nothing is sent anywhere.</p>
+            </div>
+          </section>
+
+          <!-- 4. What it states, with its evidence -------------------------- -->
+          <section v-if="coveredRows.length" class="card" :class="{ 'card--folded': folded.states }">
+            <button type="button" class="card__head" :aria-expanded="!folded.states" @click="toggleFold('states')">
+              <span class="card__index" aria-hidden="true">03</span>
+              <span class="card__title">What the message states</span>
+              <span class="card__fold" aria-hidden="true">{{ folded.states ? '⌄' : '⌃' }}</span>
+            </button>
+
+            <div v-show="!folded.states" class="card__body card__body--flush">
+              <div
+                v-for="row in coveredRows"
+                :key="row.field"
+                class="fact"
+                :class="{ 'fact--live': !!row.span }"
+                tabindex="0"
+                @mouseenter="showSpan(row.span)"
+                @mouseleave="clearSpan()"
+                @focus="showSpan(row.span)"
+                @blur="clearSpan()"
+              >
+                <span class="fact__label">{{ row.label }}</span>
+                <span class="fact__body">
+                  <span class="fact__value">{{ row.value }}</span>
+                  <span v-if="row.reading" class="fact__reading">{{ row.reading }}</span>
                 </span>
               </div>
+              <p class="card__hint">Point at a row to light up where it came from.</p>
             </div>
-          </div>
+          </section>
 
-          <div class="panel panel--missing">
-            <div class="panel__header panel__header--missing">
-              <div class="panel__header-title">
-                <span class="panel-dot panel-dot--missing" />
-                <strong>What's missing</strong>
-              </div>
-              <span class="hint">tick what matters to you</span>
-            </div>
-            <div class="panel__body panel__body--flush">
+          <!-- 5. Gaps ------------------------------------------------------- -->
+          <section class="card" :class="{ 'card--folded': folded.gaps }">
+            <button type="button" class="card__head" :aria-expanded="!folded.gaps" @click="toggleFold('gaps')">
+              <span class="card__index" aria-hidden="true">04</span>
+              <span class="card__title">What it doesn't say</span>
+              <span v-if="checkedPrompts.length" class="card__status">{{ checkedPrompts.length }} in your reply</span>
+              <span class="card__fold" aria-hidden="true">{{ folded.gaps ? '⌄' : '⌃' }}</span>
+            </button>
+
+            <div v-show="!folded.gaps" class="card__body card__body--flush">
+              <!-- Declarative, not an instruction. "Tick what matters to you"
+                   asks the reader to judge what matters, which is often the
+                   thing they came here unable to do - and an imperative reads
+                   as pressure to anyone who bristles at being told. This says
+                   what the control does and leaves the choice alone. -->
+              <p class="card__hint card__hint--top">
+                Anything you tick goes into the reply below. Anything you leave stays out.
+              </p>
               <button
                 v-for="gap in gaps"
                 :key="gap.field"
                 type="button"
-                class="gap-row"
-                :class="{ 'gap-row--checked': state.checked.has(gap.field) }"
+                class="gap"
+                :class="{ 'gap--on': state.checked.has(gap.field) }"
                 @click="toggleChecked(gap.field)"
               >
-                <span class="checkbox" :class="{ 'checkbox--checked': state.checked.has(gap.field) }">
-                  <span v-if="state.checked.has(gap.field)" class="checkbox__mark" />
-                </span>
-                <span class="gap-row__text">
-                  <strong>{{ gap.label }} not specified</strong>
-                  <span>{{ gap.question }}</span>
+                <span class="tick" :class="{ 'tick--on': state.checked.has(gap.field) }" aria-hidden="true" />
+                <span class="gap__text">
+                  <span class="gap__label">{{ gap.label }}</span>
+                  <span class="gap__q">{{ gap.question }}</span>
                 </span>
               </button>
-              <div v-if="!gaps.length" class="gap-row gap-row--empty">
-                <span>Every element was stated in the message.</span>
+              <div v-if="!gaps.length" class="gap gap--empty">
+                <span>This message answers everything it needed to.</span>
               </div>
             </div>
-          </div>
+          </section>
 
-
-          <div v-if="checkedPrompts.length" class="panel panel--confirm">
-            <div class="confirm-header">
-              <strong>Your reply</strong>
+          <!-- 6. The reply -------------------------------------------------- -->
+          <section v-if="checkedPrompts.length" class="card card--reply">
+            <div class="card__head card__head--static">
+              <span class="card__index" aria-hidden="true">05</span>
+              <span class="card__title">Your reply</span>
               <button type="button" class="copy-btn" @click="copyDraftToClipboard">
                 <Check v-if="copyState === 'copied'" :size="14" :stroke-width="2" aria-hidden="true" />
                 <Copy v-else :size="14" :stroke-width="2" aria-hidden="true" />
                 {{ copyState === 'copied' ? 'Copied' : copyState === 'failed' ? "Couldn't copy" : 'Copy' }}
               </button>
             </div>
-            <!-- A <pre> because the draft is newline-formatted text meant to
-                 be pasted somewhere else exactly as it reads here. Styled back
-                 to the body font so it looks like a message rather than code,
-                 and wrapped so a long question does not scroll sideways. -->
-            <pre class="draft">{{ replyDraft }}</pre>
-          </div>
+
+            <div class="card__body">
+              <div class="tone-pick" role="group" aria-label="Wording">
+                <span class="tone-pick__lead">Wording</span>
+                <button
+                  type="button"
+                  class="tone-pick__opt"
+                  :class="{ 'tone-pick__opt--on': draftTone === 'plain' }"
+                  :aria-pressed="draftTone === 'plain'"
+                  @click="draftTone = 'plain'"
+                >Plain</button>
+                <button
+                  type="button"
+                  class="tone-pick__opt"
+                  :class="{ 'tone-pick__opt--on': draftTone === 'warm' }"
+                  :aria-pressed="draftTone === 'warm'"
+                  @click="draftTone = 'warm'"
+                >Warmer</button>
+              </div>
+
+              <!-- A <pre> because this is newline-formatted text meant to be
+                   pasted elsewhere exactly as it reads here. Styled back to
+                   the body font so it looks like a message, not code. -->
+              <pre class="draft">{{ replyDraft }}</pre>
+              <p class="card__hint">Copy it when you are ready. Nothing is sent from here.</p>
+            </div>
+          </section>
 
           <div v-if="!state.matchedPattern" class="notice">
             <span class="notice-dot" />
@@ -800,234 +1039,17 @@ async function copyDraftToClipboard() {
   gap: 16px;
 }
 
-.panel {
-  background: var(--color-surface);
-  overflow: hidden;
-}
-
-/* The asks, directly extracted. Sits under the model's reading now, so it
-   is the concrete checklist rather than the headline. */
-.panel--todo {
-  grid-column: 1 / -1;
-  border: 1px solid var(--color-primary-soft-border);
-}
-
-.panel__header--todo {
-  background: var(--color-primary-soft-bg);
-}
-
-.panel-dot--todo {
-  background: var(--color-primary);
-}
-
-.todo {
-  margin: 0;
-  padding-left: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.todo__item {
-  line-height: 1.5;
-}
-
-.todo__text {
-  display: block;
-}
-
-.todo__detail {
-  display: block;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  opacity: 0.7;
-  margin-top: 2px;
-}
-
-.panel--covered {
-  border: 1px solid var(--color-primary-soft-border);
-}
-
-.panel--missing {
-  border: 1px solid var(--color-warn-border);
-}
-
-.panel__header {
-  padding: 15px 18px;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-
-.panel__header--covered {
-  background: var(--color-primary-soft-bg);
-}
-
-.panel__header--missing {
-  background: var(--color-warn-bg);
-  justify-content: space-between;
-}
-
-.panel__header-title {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-
-.panel-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-}
-
-.panel-dot--covered {
-  background: var(--color-primary);
-}
-
-.panel-dot--missing {
-  background: var(--color-warn-dot);
-}
-
-.hint {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--color-text-faint);
-}
-
-.panel__body {
-  display: flex;
-  flex-direction: column;
-}
-
-.row {
-  display: grid;
-  grid-template-columns: 132px 1fr;
-  gap: 14px;
-  padding: 13px 18px;
-  border-top: 1px solid #f0ebe2;
-}
-
-.row__label {
-  font-size: 13px;
-  color: var(--color-text-faint);
-  padding-top: 1px;
-}
-
-.row__value {
-  font-size: 14.5px;
-  line-height: 1.55;
-  color: var(--color-text);
-}
-
-.row__value--muted {
-  color: var(--color-text-faint);
-}
-
-.panel__body--flush .gap-row:first-child {
-  border-top: none;
-}
-
-.gap-row {
-  display: flex;
-  gap: 13px;
-  align-items: flex-start;
-  text-align: left;
-  width: 100%;
-  padding: 14px 18px;
-  border: none;
-  border-top: 1px solid #f0ebe2;
-  cursor: pointer;
-  background: none;
-  /* F23: the covered/missing split does not rely on color alone —
-     a dashed left border marks a missing row independent of hue. */
-  border-left: 3px dashed var(--color-warn-border);
-}
-
-.gap-row--checked {
-  background: #f7faf8;
-}
-
-.gap-row--empty {
-  cursor: default;
-  border-left: none;
-  color: var(--color-text-muted);
-  font-size: 14px;
-}
-
-.checkbox {
-  width: 18px;
-  height: 18px;
-  flex: 0 0 18px;
-  margin-top: 2px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--color-border-strong);
-  background: var(--color-surface);
-}
-
-.checkbox--checked {
-  border-color: var(--color-primary);
-  background: var(--color-primary-soft-bg);
-}
-
-.checkbox__mark {
-  width: 9px;
-  height: 9px;
-  border-radius: 2px;
-  background: var(--color-primary);
-  display: block;
-}
-
-.gap-row__text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.gap-row__text strong {
-  font-size: 14.5px;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.gap-row__text span {
-  font-size: 13.5px;
-  line-height: 1.55;
-  color: var(--color-text-muted);
-}
-
+/* Serif, because it is a letter the reader is about to send, and seeing it
+   set like one is what makes it feel finished rather than generated. */
 .draft {
   margin: 0;
   padding: 0;
-  font-family: inherit;
-  font-size: 14px;
-  line-height: 1.6;
+  font-family: var(--font-serif);
+  font-size: 15.5px;
+  line-height: 1.75;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   color: var(--color-text);
-}
-
-.panel--confirm {
-  border: 1px solid var(--color-border);
-  background: var(--color-surface-soft);
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.panel--confirm strong {
-  font-size: 14.5px;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.confirm-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
 }
 
 .copy-btn {
@@ -1157,58 +1179,6 @@ async function copyDraftToClipboard() {
   line-height: 1.6;
   color: var(--color-text-muted);
 }
-
-/* A closer reading - the model-backed panel, and the lead of this page.
-   It is the only panel that interprets rather than extracts, so it carries
-   the accent rule and the largest type. The extraction panels below it are
-   deliberately quieter. */
-.panel--reading {
-  border: 1px solid var(--color-primary-soft-border);
-  border-left: 3px solid #7c6cf0;
-}
-.panel__header--reading { display: flex; align-items: center; gap: 0.5rem; }
-.panel-dot--reading { background: #7c6cf0; }
-.reading__status {
-  margin-left: auto; font-size: 0.78rem; opacity: 0.7; font-weight: 500;
-}
-.reading__status--degraded { color: #a8632b; opacity: 1; cursor: help; }
-/* The summary is the one-line answer to "what is this message actually
-   asking of me", so it is set larger than body copy and separated by a rule
-   from the per-field claims that justify it. */
-.reading__summary {
-  margin: 0 0 0.9rem;
-  padding-bottom: 0.85rem;
-  border-bottom: 1px solid var(--border-subtle, #f0f0f0);
-  font-size: 15px;
-  line-height: 1.55;
-  color: var(--color-text);
-}
-.reading__claim {
-  padding: 0.6rem 0; border-top: 1px solid var(--border-subtle, #f0f0f0);
-}
-.reading__claim:first-of-type { border-top: 0; padding-top: 0.2rem; }
-.reading__insight { margin: 0; line-height: 1.5; }
-/* Same 132px label column as .row above, so the citation's field name lines
-   up with "Task-To-Do" and "Time not specified" rather than sitting at its
-   own arbitrary indent. */
-.reading__source {
-  margin: 0.35rem 0 0; font-size: 13px; color: var(--color-text-faint);
-  display: grid; grid-template-columns: 132px 1fr; gap: 14px;
-}
-.reading__field { text-transform: lowercase; }
-
-/* The model's reading, shown under the thing it is about. Set smaller and
-   lighter than the quote above it: the quote is the message's own words and
-   the reading is commentary on them, and the type should say which is which
-   without the user having to work it out. */
-.todo__reading,
-.row__reading {
-  display: block;
-  margin-top: 3px;
-  font-size: 12.5px;
-  line-height: 1.45;
-  color: var(--color-text-muted);
-}
 @media (max-width: 640px) {
   .reading__source { grid-template-columns: 1fr; gap: 0.15rem; }
 }
@@ -1233,16 +1203,437 @@ async function copyDraftToClipboard() {
 @media (prefers-reduced-motion: reduce) {
   .skeleton { animation: none; }
 }
-.reading__quote { font-style: italic; }
-.reading__label { font-size: 0.8rem; opacity: 0.68; }
-.reading__unstated { margin-top: 0.9rem; }
-.reading__unstated ul { margin: 0.35rem 0 0; padding-left: 1.1rem; }
-.reading__unstated li { margin-bottom: 0.3rem; line-height: 1.45; }
-.reading__degraded-note {
-  margin: 0.85rem 0 0; font-size: 0.85rem; opacity: 0.65;
+
+/* ==========================================================================
+   Decode results
+   --------------------------------------------------------------------------
+   Editorial, not dashboard. The first pass at this looked like generated
+   scaffolding - every section an identical bordered box with a numbered
+   circle, uniform padding, pills everywhere - so it reads as a template
+   rather than as something written for a person.
+
+   What changed, and why:
+   - Borders removed. Sections separate by space and a very soft shadow, so
+     the page reads as paper rather than as a form. A 1px rule everywhere is
+     what makes a layout feel machine-assembled.
+   - Serif for anything that is prose - the message, the headings, the
+     reading. Sans is kept for labels and controls. That split is what makes
+     a page feel written instead of rendered.
+   - The numbered circles became small quiet indices. Order is still there
+     for anyone reading linearly; it no longer shouts.
+   - Generous, uneven spacing. Equal gaps everywhere is the other tell.
+
+   What did NOT change, because it is load-bearing for the people this page
+   is for: nothing is hidden by default, colour never carries meaning alone,
+   and --color-text-faint stays unused here - it measures 2.96:1 on this
+   background, below the 4.5:1 AA wants, and small print is where a
+   struggling reader can least afford it.
+   ========================================================================== */
+
+.findings {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
+
+/* --- the message ---------------------------------------------------------- */
+
+.original-panel {
+  position: sticky;
+  top: 16px;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  padding: 26px 26px 28px;
+  box-shadow:
+    0 1px 2px rgba(58, 55, 51, 0.04),
+    0 14px 34px -18px rgba(58, 55, 51, 0.18);
+}
+
+.original-panel__label {
+  margin: 0 0 14px !important;
+  font-family: var(--font-sans);
+  font-size: 11px !important;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted) !important;
+}
+
+/* Serif, and roomy. This is somebody's letter, and setting it like one is
+   the difference between reading it and scanning it. */
+.original-text {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 16.5px;
+  line-height: 1.82;
+  letter-spacing: -0.003em;
+  white-space: pre-wrap;
+  color: #453f38;
+}
+
+/* The payoff of the spans pipeline: point at a finding and the exact
+   characters it came from light up here. Underlined as well as tinted so it
+   survives greyscale and colourblindness. */
+.original-text__hit {
+  background: linear-gradient(0deg, #fbe9b0 0%, #fdf3d2 100%);
+  color: #3d3a33;
+  border-radius: 2px;
+  box-shadow: 0 0 0 3px #fdf3d2;
+  text-decoration: underline;
+  text-decoration-color: #d9a93a;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+/* --- register ------------------------------------------------------------- */
+/* A caption, not a component. It is one short observation and boxing it made
+   it look more certain than three small models deserve. */
+
+.register {
+  padding: 2px 2px 0;
+}
+
+.register__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 9px;
+}
+
+.register__lead {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.register__chip {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-style: italic;
+  color: var(--color-primary-strong-text);
+}
+
+.register__chip + .register__chip::before {
+  content: '·';
+  margin-right: 9px;
+  font-style: normal;
+  color: var(--color-text-muted);
+}
+
+.register__chip--unsure {
+  color: var(--color-text-muted);
+}
+
+.register__note {
+  margin: 7px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+  max-width: 54ch;
+}
+
+/* --- sections ------------------------------------------------------------- */
+
+.card {
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  overflow: hidden;
+  box-shadow:
+    0 1px 2px rgba(58, 55, 51, 0.04),
+    0 14px 34px -20px rgba(58, 55, 51, 0.16);
+}
+
+.card--reply {
+  background: linear-gradient(180deg, var(--color-primary-soft-bg) 0%, var(--color-surface) 88px);
+}
+
+.card__head {
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 20px 24px 14px;
+  background: none;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: var(--color-text);
+}
+
+.card__head--static { cursor: default; align-items: center; }
+
+/* A quiet index rather than a badge - order without decoration. */
+.card__index {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  padding-top: 3px;
+}
+
+.card__title {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  line-height: 1.3;
+}
+
+.card__status {
+  margin-left: auto;
+  font-size: 12.5px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.card__status--warn { color: #8a5220; }
+
+.card__fold {
+  flex: none;
+  width: 18px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  transition: color 0.15s ease;
+}
+
+button.card__head:hover .card__fold { color: var(--color-primary); }
+
+.card__body { padding: 0 24px 22px; }
+.card__body--flush { padding: 0 0 6px; }
+
+.card__hint {
+  margin: 0;
+  padding: 12px 24px 6px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+}
+
+.card__hint--top { padding: 0 24px 10px; }
+
+/* The one-line answer to "what is this message actually asking of me", so it
+   is set as prose and given room, not as a data field. */
+.meaning {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 17px;
+  line-height: 1.68;
+  letter-spacing: -0.005em;
+  color: var(--color-text);
+  max-width: 62ch;
+}
+
+.muted-line {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+/* --- tick ----------------------------------------------------------------- */
+
+.tick {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: 6px;
+  background: var(--color-surface);
+  position: relative;
+  transition: background 0.14s ease, border-color 0.14s ease;
+}
+
+.tick--on { background: var(--color-primary); border-color: var(--color-primary); }
+
+/* Drawn, not coloured: ticked vs unticked has to be a shape, or it vanishes
+   in greyscale and at low contrast. */
+.tick--on::after {
+  content: '';
+  position: absolute;
+  left: 5.5px;
+  top: 1.5px;
+  width: 4px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* --- rows ----------------------------------------------------------------- */
+
+.ask,
+.gap {
+  width: 100%;
+  display: flex;
+  gap: 13px;
+  align-items: flex-start;
+  padding: 13px 24px;
+  background: none;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: var(--color-text);
+  transition: background 0.14s ease;
+}
+
+/* Hairlines inset from the edge, so the card still reads as one surface. */
+.ask + .ask,
+.gap + .gap {
+  box-shadow: inset 0 1px 0 rgba(58, 55, 51, 0.07);
+}
+
+.ask:hover,
+.gap:hover { background: rgba(79, 122, 105, 0.055); }
+
+.ask:focus-visible,
+.gap:focus-visible,
+.fact:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -3px;
+  border-radius: 8px;
+}
+
+.ask__text,
+.gap__text { display: flex; flex-direction: column; gap: 4px; }
+
+.ask__main {
+  font-size: 15px;
+  line-height: 1.5;
+  transition: color 0.14s ease;
+}
+
+/* Struck through as well as dimmed - "done" must survive greyscale, and
+   dimming alone reads as "disabled" rather than "finished". */
+.ask--done .ask__main {
+  text-decoration: line-through;
+  text-decoration-color: rgba(107, 98, 89, 0.5);
+  color: var(--color-text-muted);
+}
+
+.ask__detail {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.ask__reading,
+.fact__reading {
+  font-family: var(--font-serif);
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: #6b6259;
+  max-width: 58ch;
+}
+
+/* --- stated facts --------------------------------------------------------- */
+
+.fact {
+  display: grid;
+  grid-template-columns: 104px 1fr;
+  gap: 16px;
+  padding: 13px 24px;
+  transition: background 0.14s ease;
+}
+
+.fact + .fact { box-shadow: inset 0 1px 0 rgba(58, 55, 51, 0.07); }
+.fact--live { cursor: default; }
+.fact--live:hover { background: rgba(217, 169, 58, 0.09); }
+
+.fact__label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  padding-top: 4px;
+}
+
+.fact__body { display: flex; flex-direction: column; gap: 4px; }
+.fact__value { font-size: 15px; line-height: 1.5; }
+
+/* --- gaps ----------------------------------------------------------------- */
+
+.gap__label { font-size: 15px; font-weight: 600; letter-spacing: -0.006em; }
+
+.gap__q {
+  font-family: var(--font-serif);
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: #6b6259;
+  max-width: 58ch;
+}
+
+.gap--on { background: rgba(79, 122, 105, 0.075); }
+.gap--empty { cursor: default; font-size: 14.5px; color: var(--color-text-muted); }
+.gap--empty:hover { background: none; }
+
+/* --- reply ---------------------------------------------------------------- */
+
+.tone-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 16px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(58, 55, 51, 0.055);
+}
+
+.tone-pick__lead {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  padding: 0 8px 0 10px;
+}
+
+.tone-pick__opt {
+  font: inherit;
+  font-size: 13px;
+  padding: 5px 15px;
+  border-radius: 999px;
+  border: 0;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+
+.tone-pick__opt--on {
+  background: var(--color-surface);
+  color: var(--color-primary-strong-text);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(58, 55, 51, 0.14);
+}
+
+@media (max-width: 720px) {
+  .original-panel { position: static; padding: 22px; }
+}
+
 @media (max-width: 640px) {
-  .reading__claim { grid-template-columns: 1fr; }
-  .reading__note { grid-column: 1; }
+  .fact { grid-template-columns: 1fr; gap: 4px; }
+  .card__head { padding: 18px 18px 12px; }
+  .card__body { padding: 0 18px 18px; }
+  .card__hint { padding: 12px 18px 6px; }
+  .ask, .gap, .fact { padding-left: 18px; padding-right: 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ask, .gap, .fact, .tick, .tone-pick__opt, .card__fold, .ask__main {
+    transition: none;
+  }
 }
 </style>
