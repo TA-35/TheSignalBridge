@@ -17,9 +17,15 @@ EnvironmentFile=__HOME__/inference/.env
 # --timeout 120 because a single review can take 5-9 seconds and gunicorn's
 # 30s default would kill a slow one mid-flight. --preload so the models load
 # once before forking rather than once per worker.
+#
+# Binds 0.0.0.0, not 127.0.0.1: the API box reaches this over the private
+# network, and loopback-only silently refuses it. Access is restricted by the
+# security group, which allows 8100 only from the API's security group - that
+# is the control here, not the bind address. Confirmed with
+# `aws ec2 describe-security-group-rules` before widening this.
 ExecStart=__HOME__/inference/.venv/bin/gunicorn \
     --workers 1 --threads 4 --timeout 120 --preload \
-    --bind 127.0.0.1:8100 \
+    --bind 0.0.0.0:8100 \
     'Src.source.pipeline.service:create_service()'
 Restart=on-failure
 RestartSec=5
