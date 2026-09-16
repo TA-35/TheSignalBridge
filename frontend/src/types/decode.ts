@@ -50,7 +50,10 @@ export interface DecodeRecord {
   elements: Record<ElementKey, string>
   missing: MissingElement[]
   // Gaps the user ticked - the questions they decided were worth asking.
-  asked: ElementKey[]
+  /** Field names the user ticked. Widened from ElementKey because the
+   *  gap list is model-keyed once the review lands, and the two sources
+   *  name the same field differently ("task" / "required_action"). */
+  asked: string[]
   category: string | null
   patternId: string | null
 }

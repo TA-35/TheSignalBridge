@@ -28,11 +28,13 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any, Callable, Mapping
 
 from ._lazy import LazyDict
 from .config import LLMConfig, load
-from .prompt import RESPONSE_SCHEMA
+# FIELDS via prompt, which already imports it - llm.py has no other reason
+# to reach analysis.py, and that module pulls spaCy in with it.
+from .prompt import FIELDS, RESPONSE_SCHEMA
 
 
 class LLMError(RuntimeError):
@@ -59,7 +61,7 @@ def _strip_fences(text: str) -> str:
     return cleaned.strip()
 
 
-REQUIRED_KEYS = ("summary", "claims", "unstated")
+REQUIRED_KEYS = ("summary", "claims", "unstated", "missing")
 
 
 def _coerce_shape(data: dict[str, Any]) -> dict[str, Any]:
@@ -82,7 +84,7 @@ def _coerce_shape(data: dict[str, Any]) -> dict[str, Any]:
     elif summary is not None and not isinstance(summary, str):
         data["summary"] = str(summary)
 
-    for key in ("claims", "unstated"):
+    for key in ("claims", "unstated", "missing"):
         value = data.get(key)
         if value is None:
             data[key] = []
@@ -95,6 +97,19 @@ def _coerce_shape(data: dict[str, Any]) -> dict[str, Any]:
     # `unstated` is rendered as plain text; anything else would print as an
     # object in the UI.
     data["unstated"] = [str(u).strip() for u in data["unstated"] if str(u).strip()]
+
+    # `missing` drives checkboxes keyed by field, so an entry without a usable
+    # field is not a gap the UI can render - it is a row with no identity. Drop
+    # those rather than pass them on, and ignore any field outside our six: the
+    # enum is advisory on endpoints that do not enforce it, and llama is
+    # already known to invent field names.
+    data["missing"] = [
+        {"field": entry["field"], "question": str(entry.get("question", "")).strip()}
+        for entry in data["missing"]
+        if isinstance(entry, Mapping)
+        and entry.get("field") in FIELDS
+        and str(entry.get("question", "")).strip()
+    ]
     return data
 
 
@@ -300,7 +315,8 @@ def complete(
         # missing `summary` is not a reason to throw away good claims.
         missing = [k for k in REQUIRED_KEYS if k not in data]
         if missing:
-            data = {**{"summary": "", "claims": [], "unstated": []}, **data}
+            data = {**{"summary": "", "claims": [], "unstated": [],
+                       "missing": []}, **data}
         data = _coerce_shape(data)
 
         return LLMResult(data=data, attempts=attempts,

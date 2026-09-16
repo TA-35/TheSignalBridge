@@ -55,9 +55,28 @@ Make a claim only where you have something to say about it. Four is plenty;
 one good one beats four restatements. Never pad - a quote you cannot find in
 the message fails verification and the whole answer is discarded.
 
+`missing` - which of those same six fields this message leaves unsettled for
+the reader, and the `question` that would settle each. Judge this yourself
+from the message; the extractor's list above is a keyword guess and it is
+often wrong, both ways. A field you made a claim about is settled - do not
+also list it as missing. A field nobody needs here is not missing either: a
+thank-you note with no deadline is not missing a deadline. If the message
+genuinely settles everything that matters, return an empty list.
+
+Write `question` as the reader would type it to the sender - "Is Thursday
+end of day, or do you need it before your morning review?" - not as a label.
+
+If what you have to say about a field is that the message does not settle it,
+that belongs in `missing`, not in `claims`. A claim reading "the sender does
+not specify who is responsible" is a gap wearing a claim's clothes: it sends
+the reader looking for an answer in the half of the page that is meant to
+hold answers. Put it in `missing` and let the question carry it.
+
 `unstated` - real questions the reader could ask, in their own words. Never
 field names: not "responsible_person" but "Who else is expecting this, or is
 it just me?" Each one should be something they could paste into a reply.
+Keep these wider than `missing`: that list is about the six fields, this one
+is for anything else worth asking. Do not repeat a question from `missing`.
 
 Never name a person or a company that the message does not name. Not as an
 example, not as a placeholder, not in a question. If you need to refer to

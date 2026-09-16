@@ -71,8 +71,32 @@ RESPONSE_SCHEMA: dict[str, Any] = {
                            "question the reader could ask.",
             "items": {"type": "string"},
         },
+        # The gaps, decided by the model rather than by the extractor's
+        # keyword rules. No span here, and there cannot be one: a gap is the
+        # absence of text, so there is nothing to quote. `question` is
+        # therefore checked as interpretive text - it may not name anyone the
+        # message does not name, but it is free to reason about what is vague.
+        "missing": {
+            "type": "array",
+            "description": "Fields this message leaves unsettled for the "
+                           "reader, each with the question that would settle "
+                           "it. Omit a field that the message does answer.",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "field": {"type": "string", "enum": list(FIELDS)},
+                    "question": {
+                        "type": "string",
+                        "description": "What the reader should ask to close "
+                                       "this gap, in their own words.",
+                    },
+                },
+                "required": ["field", "question"],
+                "additionalProperties": False,
+            },
+        },
     },
-    "required": ["summary", "claims", "unstated"],
+    "required": ["summary", "claims", "unstated", "missing"],
     "additionalProperties": False,
 }
 

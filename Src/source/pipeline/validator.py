@@ -261,7 +261,9 @@ FACT_BEARING_KEYS: frozenset[str] = frozenset({"summary"})
 # ("if they mean close of business", "is this the only ask?") because that is
 # hedging about what the message left vague. It may never introduce a PERSON or
 # an ORG, because there is nothing vague about whether a name was written.
-INTERPRETIVE_KEYS: frozenset[str] = frozenset({"reading", "unstated"})
+INTERPRETIVE_KEYS: frozenset[str] = frozenset(
+    {"reading", "unstated", "question"}
+)
 NAME_LABELS: frozenset[str] = frozenset({"PERSON", "ORG"})
 
 
@@ -404,6 +406,21 @@ _FIELD_LABELS = {
 }
 
 
+# Asked when there is no model answer to ask it better. Phrased as the reader
+# would type them, to match what the model is told to produce - the degraded
+# panel should read like a quieter version of the same panel, not a different
+# feature.
+_GAP_QUESTIONS: dict[str, str] = {
+    "purpose": "What is this actually about?",
+    "required_action": "What exactly needs to be done?",
+    "responsible_person": "Who is meant to do this - me, or someone else?",
+    "deadline": "When do you need this by?",
+    "priority": "How urgent is this against what I am already doing?",
+    "context": "Is there background here I am missing?",
+}
+_DEFAULT_GAP = "Can you say more about this?"
+
+
 def templated_output(analysis: Analysis, reasons: Iterable[str] = ()) -> dict[str, Any]:
     """Output built only from extractor spans - no model text at all.
 
@@ -439,7 +456,16 @@ def templated_output(analysis: Analysis, reasons: Iterable[str] = ()) -> dict[st
         "degraded_reason": sorted(set(reasons)),
         "message_type": analysis.message_type,
         "claims": claims,
-        "missing": list(extraction.missing),
+        # Same shape as the model's `missing`, deliberately. An earlier
+        # divergence between two degraded paths meant callers had to know
+        # which one they got; a list of bare field names here against a list
+        # of objects there would be the same bug in a new place. The wording
+        # is canned rather than generated, which is exactly what makes it
+        # safe in a path that exists because the model could not be trusted.
+        "missing": [
+            {"field": field, "question": _GAP_QUESTIONS.get(field, _DEFAULT_GAP)}
+            for field in extraction.missing
+        ],
         # Counts live in their own integer fields, never in the prose. An
         # earlier version wrote "3 items found, 2 unclear" into the summary
         # and the fallback failed its own entity check - those digits are
@@ -493,7 +519,24 @@ def validate_response(
         # Nothing survived - there is no partial answer to give.
         return templated_output(analysis, resolve_failures)
 
-    candidate = {**response, "claims": claims}
+    # A field cannot be both settled and unsettled. The prompt says so, but a
+    # panel that lists "deadline" as covered directly above a checkbox asking
+    # for the deadline reads as a broken page, so it is enforced here rather
+    # than hoped for. Claims win: they carry a verified span, and the gap
+    # entry carries nothing.
+    #
+    # Dropping a claim for being unresolvable can reopen a gap, which is why
+    # this runs against the surviving claims rather than the model's original
+    # list - a deadline claim that failed verification leaves the deadline
+    # genuinely unsettled, and the checkbox should come back.
+    settled = {c.get("field") for c in claims}
+    gaps = [
+        gap
+        for gap in (response.get("missing") or [])
+        if isinstance(gap, Mapping) and gap.get("field") not in settled
+    ]
+
+    candidate = {**response, "claims": claims, "missing": gaps}
     spans = check_spans(candidate, message)
     entities = check_entities(candidate, message)
 

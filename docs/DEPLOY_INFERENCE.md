@@ -132,7 +132,7 @@ connect.
 
 Actions → **Inference service deploy** → Run workflow.
 
-It runs the pipeline's 210 tests, checks the API's dependency list has not
+It runs the pipeline's tests, checks the API's dependency list has not
 grown, rsyncs `Src/`, `models/` and the one backend module the extractor comes
 from, builds a virtualenv, and restarts the unit.
 

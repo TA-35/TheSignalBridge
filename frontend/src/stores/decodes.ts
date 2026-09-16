@@ -75,7 +75,7 @@ export const useDecodesStore = defineStore('decodes', () => {
   }
 
   // The gaps the user ticked - which questions they judged worth asking.
-  function setAsked(id: string, asked: ElementKey[]) {
+  function setAsked(id: string, asked: string[]) {
     const record = records.value.find((r) => r.id === id)
     if (record) record.asked = [...asked]
   }

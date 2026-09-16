@@ -36,6 +36,19 @@ export interface ReviewClaim {
   reading?: string
 }
 
+/** A field the message leaves unsettled, and the question that would settle
+ *  it. Decided by the model, not by the extractor's keyword rules.
+ *
+ *  There is no span here and there cannot be: a gap is the absence of text,
+ *  so there is nothing to quote. `question` is verified for invented names
+ *  but is deliberately free to reason about what the message left vague -
+ *  a question about a missing deadline has to be able to mention times the
+ *  message never stated. */
+export interface ReviewGap {
+  field: ReviewField
+  question: string
+}
+
 /** Stage one. Extractor only, no model call - arrives in milliseconds. */
 export interface QuickReview {
   stage: 'analyse'
@@ -61,7 +74,9 @@ export interface FullReview {
   summary: string
   claims: ReviewClaim[]
   unstated?: string[]
-  missing: string[]
+  /** Same shape on the degraded path, where the questions are canned rather
+   *  than generated - one renderer, not two. */
+  missing: ReviewGap[]
   /** Present when some claims were dropped for failing verification. The
    *  response is still trustworthy - these are the ones that were not. */
   dropped_claims?: number

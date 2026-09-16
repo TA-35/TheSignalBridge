@@ -7,7 +7,7 @@ import { getPatterns } from '@/services/patternsService'
 import { reviewMessage } from '@/services/reviewService'
 import { useCardsStore } from '@/stores/cards'
 import { useDecodesStore } from '@/stores/decodes'
-import { ELEMENT_LABELS, NOT_SPECIFIED, type DecodeResult, type ElementKey } from '@/types/decode'
+import { ELEMENT_LABELS, NOT_SPECIFIED, type DecodeResult } from '@/types/decode'
 import type { Pattern, SavedCard } from '@/types/pattern'
 import type { DecodeRecord } from '@/types/decode'
 import { REVIEW_FIELD_LABELS, type FullReview, type ReviewField } from '@/types/review'
@@ -23,7 +23,12 @@ const state = reactive({
   error: '',
   loading: false,
   result: null as DecodeResult | null,
-  checked: new Set<ElementKey>(),
+  // Keyed by field name from whichever source produced the gap list -
+  // ElementKey while the extractor is answering, ReviewField once the
+  // model has. `string` is the honest type for a set spanning both, and
+  // narrowing it to one vocabulary is what made the stale-tick bug above
+  // possible to write.
+  checked: new Set<string>(),
   matchedPattern: null as Pattern | null,
   record: null as DecodeRecord | null,
   savedCard: null as SavedCard | null,
@@ -71,7 +76,19 @@ async function review() {
     void reviewMessage(text)
       .then((result) => {
         // Ignore a late reply for a message the user has moved on from.
-        if (state.message.trim() === text) state.llm = result
+        if (state.message.trim() !== text) return
+        state.llm = result
+
+        // The gap list is re-keyed when the model answers: the extractor
+        // names fields "task" and "for_whom", the model names them
+        // "required_action" and "responsible_person". A tick made during the
+        // wait is stored by field name, so without this it survives as a key
+        // matching no row - invisible in the panel, and silently absent from
+        // the copied questions. Keep the ticks that still name a live gap and
+        // drop the rest, which the user sees happen rather than discovers
+        // later in an incomplete paste.
+        const live = new Set(gaps.value.map((gap) => gap.field))
+        state.checked = new Set([...state.checked].filter((f) => live.has(f)))
       })
       .finally(() => {
         // Unguarded on purpose. The guard above stops a stale reading being
@@ -110,6 +127,18 @@ const llmClaims = computed(() => {
     }))
 })
 
+// The model's claims split by the job they do on the page. An action is
+// something to go and do; everything else is something the message settles.
+// They were rendered as one undifferentiated list before, under the extractor's
+// panels - which is why the model's output read as a footnote to spaCy rather
+// than as the answer.
+const modelActions = computed(() =>
+  llmClaims.value.filter((c) => c.field === 'required_action'),
+)
+const modelSettled = computed(() =>
+  llmClaims.value.filter((c) => c.field !== 'required_action'),
+)
+
 function reset() {
   state.message = ''
   state.error = ''
@@ -140,56 +169,73 @@ function editMessage() {
   state.result = null
 }
 
-function toggleChecked(field: ElementKey) {
+function toggleChecked(field: string) {
   if (state.checked.has(field)) state.checked.delete(field)
   else state.checked.add(field)
   // Remember which questions the user judged worth asking.
   if (state.record) decodesStore.setAsked(state.record.id, [...state.checked])
 }
 
-// "What's covered" duplicated the asks above it: the Task-To-Do row is the
-// same sentence as the first bullet, so the panel often showed one row that
-// said nothing new. Rows already stated as an ask are dropped, and the panel
-// hides entirely when none survive.
-// What the extractor found that nothing above has already said. Two things
-// are already saying it: the asks list, and - once the model answers - the
-// citation under each claim. Whatever survives both is genuinely extra, so
-// it still gets shown. Dropping the panel wholesale instead would have hidden
-// real rows: on a live message the extractor surfaced `time: "this morning"`
-// that the model never claimed.
+// What the message settles. The model's own claims when it answered - each
+// one a verified quote plus what it means - and the extractor's elements
+// otherwise.
+//
+// The extractor branch still de-duplicates against the asks list, because
+// both come from the same extraction and it repeats itself. The model branch
+// needs no such filter: its actions and its settled fields are disjoint by
+// construction, split out of one list above.
 const coveredRows = computed(() => {
+  if (modelSettled.value.length) {
+    return modelSettled.value.map((c) => ({
+      field: c.field as string,
+      label: c.label,
+      value: c.text,
+      reading: c.reading ?? '',
+    }))
+  }
   if (!state.result) return []
   const asks = new Set(todo.value.map((t) => t.text.trim().toLowerCase()))
-  const quoted = new Set(
-    llmClaims.value.map((c) => (c.text ?? '').trim().toLowerCase()).filter(Boolean),
-  )
   return state.result.covered
     .map((field) => ({
-      field,
+      field: field as string,
       label: ELEMENT_LABELS[field],
       value: state.result!.elements[field],
+      reading: '',
     }))
-    .filter((row) => {
-      const value = row.value.trim().toLowerCase()
-      if (asks.has(value)) return false
-      // Containment, not equality: the extractor and the model pick different
-      // edges of the same phrase. On a live message the extractor's deadline
-      // was "Thursday" where the model cited "end of play Thursday" - equal
-      // strings would have called those two separate findings and shown both.
-      // Guarded at 4 characters so a two-letter value cannot match by
-      // accident inside an unrelated quote.
-      return !Array.from(quoted).some(
-        (q) =>
-          q === value ||
-          (value.length >= 4 && q.includes(value)) ||
-          (q.length >= 4 && value.includes(q)),
-      )
-    })
+    .filter((row) => !asks.has(row.value.trim().toLowerCase()))
 })
 
-// One bullet per ask. Falls back to the single-task view when the offline
-// decoder answered, which has no `tasks` array.
+// The gaps, and the question that closes each. The model decides these from
+// the message; the extractor decides them from keyword rules and is often
+// wrong both ways. Both arrive in the same shape, so there is one renderer.
+const gaps = computed(() => {
+  const fromModel = state.llm?.missing ?? []
+  if (fromModel.length) {
+    return fromModel.map((g) => ({
+      field: g.field as string,
+      label: REVIEW_FIELD_LABELS[g.field] ?? g.field,
+      question: g.question,
+    }))
+  }
+  if (!state.result) return []
+  return state.result.missing.map((m) => ({
+    field: m.field as string,
+    label: ELEMENT_LABELS[m.field],
+    question: m.prompt,
+  }))
+})
+// Model first, extractor as the fallback - the same pattern for all three
+// panels below. The extractor path is not dead code: it is what the page
+// shows for the first few seconds, and what it keeps showing if the model
+// fails verification or never answers.
 const todo = computed(() => {
+  if (modelActions.value.length) {
+    return modelActions.value.map((c) => ({
+      text: c.text,
+      detail: '',
+      reading: c.reading ?? '',
+    }))
+  }
   if (!state.result) return []
 
   const tasks = state.result.tasks ?? []
@@ -200,24 +246,25 @@ const todo = computed(() => {
         task.for_whom !== NOT_SPECIFIED ? `for ${task.for_whom}` : null,
         task.time !== NOT_SPECIFIED ? `at ${task.time}` : null,
       ].filter(Boolean)
-      return { text: task.text, detail: known.join(' · ') }
+      return { text: task.text, detail: known.join(' · '), reading: '' }
     })
   }
 
   const single = state.result.elements.task
-  return single && single !== NOT_SPECIFIED ? [{ text: single, detail: '' }] : []
+  return single && single !== NOT_SPECIFIED
+    ? [{ text: single, detail: '', reading: '' }]
+    : []
 })
 
-const checkedPrompts = computed(() => {
-  if (!state.result) return []
-  return state.result.missing.filter((item) => state.checked.has(item.field))
-})
+const checkedPrompts = computed(() =>
+  gaps.value.filter((gap) => state.checked.has(gap.field)),
+)
 
 const copyState = ref<'idle' | 'copied' | 'failed'>('idle')
 let copyResetTimer: ReturnType<typeof setTimeout> | undefined
 
 async function copyPromptsToClipboard() {
-  const text = checkedPrompts.value.map((q) => q.prompt).join('\n')
+  const text = checkedPrompts.value.map((q) => q.question).join('\n')
   try {
     await navigator.clipboard.writeText(text)
     copyState.value = 'copied'
@@ -315,18 +362,11 @@ async function copyPromptsToClipboard() {
             <div v-if="state.llm" class="panel__body">
               <p v-if="state.llm.summary" class="reading__summary">{{ state.llm.summary }}</p>
 
-              <!-- Reading first, quote second. The quote is often the same
-                   phrase the decode panels above already show; what the model
-                   adds is what it means, so that leads and the quote becomes
-                   the citation underneath it. -->
-              <div v-for="(c, i) in llmClaims" :key="i" class="reading__claim">
-                <p class="reading__insight">{{ c.reading || c.text }}</p>
-                <p v-if="c.reading" class="reading__source">
-                  <span class="reading__field">{{ c.label }}</span>
-                  <span class="reading__quote">“{{ c.text }}”</span>
-                </p>
-              </div>
-
+              <!-- The claims are not listed here. Each one now sits in the
+                   panel that acts on it - actions under "asked to do",
+                   everything else under "what the message settles" - so the
+                   reading is the overview and the panels below are the
+                   detail, rather than the same list twice. -->
               <div v-if="state.llm.unstated?.length" class="reading__unstated">
                 <span class="reading__label">Questions worth asking</span>
                 <ul>
@@ -350,6 +390,7 @@ async function copyPromptsToClipboard() {
                 <li v-for="(item, i) in todo" :key="i" class="todo__item">
                   <span class="todo__text">{{ item.text }}</span>
                   <span v-if="item.detail" class="todo__detail">{{ item.detail }}</span>
+                  <span v-if="item.reading" class="todo__reading">{{ item.reading }}</span>
                 </li>
               </ul>
             </div>
@@ -358,12 +399,15 @@ async function copyPromptsToClipboard() {
           <div v-if="coveredRows.length" class="panel panel--covered">
             <div class="panel__header panel__header--covered">
               <span class="panel-dot panel-dot--covered" />
-              <strong>What's covered</strong>
+              <strong>What the message settles</strong>
             </div>
             <div class="panel__body">
               <div v-for="row in coveredRows" :key="row.field" class="row">
                 <span class="row__label">{{ row.label }}</span>
-                <span class="row__value">{{ row.value }}</span>
+                <span class="row__value">
+                  {{ row.value }}
+                  <span v-if="row.reading" class="row__reading">{{ row.reading }}</span>
+                </span>
               </div>
             </div>
           </div>
@@ -378,7 +422,7 @@ async function copyPromptsToClipboard() {
             </div>
             <div class="panel__body panel__body--flush">
               <button
-                v-for="gap in state.result.missing"
+                v-for="gap in gaps"
                 :key="gap.field"
                 type="button"
                 class="gap-row"
@@ -389,11 +433,11 @@ async function copyPromptsToClipboard() {
                   <span v-if="state.checked.has(gap.field)" class="checkbox__mark" />
                 </span>
                 <span class="gap-row__text">
-                  <strong>{{ ELEMENT_LABELS[gap.field] }} not specified</strong>
-                  <span>{{ gap.prompt }}</span>
+                  <strong>{{ gap.label }} not specified</strong>
+                  <span>{{ gap.question }}</span>
                 </span>
               </button>
-              <div v-if="!state.result.missing.length" class="gap-row gap-row--empty">
+              <div v-if="!gaps.length" class="gap-row gap-row--empty">
                 <span>Every element was stated in the message.</span>
               </div>
             </div>
@@ -411,7 +455,7 @@ async function copyPromptsToClipboard() {
             </div>
             <div class="confirm-list">
               <div v-for="q in checkedPrompts" :key="q.field" class="confirm-item">
-                {{ q.prompt }}
+                {{ q.question }}
               </div>
             </div>
           </div>
@@ -1114,6 +1158,19 @@ async function copyPromptsToClipboard() {
   display: grid; grid-template-columns: 132px 1fr; gap: 14px;
 }
 .reading__field { text-transform: lowercase; }
+
+/* The model's reading, shown under the thing it is about. Set smaller and
+   lighter than the quote above it: the quote is the message's own words and
+   the reading is commentary on them, and the type should say which is which
+   without the user having to work it out. */
+.todo__reading,
+.row__reading {
+  display: block;
+  margin-top: 3px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
 @media (max-width: 640px) {
   .reading__source { grid-template-columns: 1fr; gap: 0.15rem; }
 }

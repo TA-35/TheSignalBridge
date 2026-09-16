@@ -362,3 +362,120 @@ def test_a_quote_is_not_re_checked_for_entities():
         "summary": "ok",
         "claims": [{"field": "deadline", "text": "Friday", "span": [start, start + 6]}],
     }, MESSAGE).ok
+
+
+# --------------------------------------------------------------------------
+# Model-decided gaps
+#
+# `missing` drives the checkbox panel, which is the one part of the page the
+# user acts on. A gap has no span by definition - it is the absence of text -
+# so the span check cannot protect it and these rules do instead.
+# --------------------------------------------------------------------------
+
+def test_a_gap_question_may_hedge_about_what_the_message_left_vague(analysis):
+    """Same reasoning as `unstated`: a question about an absent deadline will
+    mention times the message never stated. That is the point of it."""
+    out = validate_response({
+        "summary": "A request.",
+        "claims": [],
+        "unstated": [],
+        "missing": [{"field": "deadline",
+                     "question": "Is Friday end of day, or before your 9am?"}],
+    }, MESSAGE, analysis)
+    assert not out["degraded"], out.get("degraded_reason")
+    assert out["missing"] == [
+        {"field": "deadline", "question": "Is Friday end of day, or before your 9am?"}
+    ]
+
+
+@pytest.mark.parametrize("name", ["Sarah", "Priya"])
+def test_an_invented_name_in_a_gap_question_is_rejected(analysis, name):
+    """The narrower check has to reach `question` too. Without it the panel
+    the user reads most closely would be the one place a fabricated colleague
+    could still appear.
+
+    Both names are caught, by different halves of the check: en_core_web_sm
+    tags Sarah PERSON and does not know Priya at all, which the capitalised
+    word fallback catches instead. Asserting on the PERSON label alone passed
+    for Sarah and failed for Priya - the rejection is what matters, not which
+    mechanism produced it."""
+    out = validate_response({
+        "summary": "A request.",
+        "claims": [],
+        "unstated": [],
+        "missing": [{"field": "responsible_person",
+                     "question": f"Should {name} handle this, or you?"}],
+    }, MESSAGE, analysis)
+    assert out["degraded"]
+    assert any(name in r for r in out["degraded_reason"])
+
+
+def test_the_limit_of_name_detection_in_a_gap_question_is_known(analysis):
+    """A name spaCy does not know, placed first in the sentence, is
+    indistinguishable from an ordinary capitalised word and gets through.
+
+    Recorded rather than fixed: the fallback cannot treat every
+    sentence-initial capital as a name without rejecting "Do you need this
+    Friday?" and most other legitimate questions. The narrower guarantee -
+    a known name anywhere, an unknown name anywhere but sentence-initial -
+    is the one actually being made, and it should fail loudly here the day
+    it changes."""
+    out = validate_response({
+        "summary": "A request.",
+        "claims": [],
+        "unstated": [],
+        "missing": [{"field": "responsible_person",
+                     "question": "Priya should handle this, or you?"}],
+    }, MESSAGE, analysis)
+    assert not out["degraded"], "behaviour changed - tighten the docs, not just this test"
+
+
+def test_a_field_cannot_be_both_claimed_and_missing(analysis):
+    """A page listing the deadline as found, directly above a checkbox asking
+    for the deadline, reads as broken. Claims win - they carry a span."""
+    start = MESSAGE.index("Friday")
+    out = validate_response({
+        "summary": "A request.",
+        "claims": [{"field": "deadline", "text": "Friday", "span_hint": start,
+                    "reading": "Friday is stated, but no time of day is."}],
+        "unstated": [],
+        "missing": [{"field": "deadline", "question": "When do you need this?"},
+                    {"field": "priority", "question": "How urgent is this?"}],
+    }, MESSAGE, analysis)
+    assert not out["degraded"], out.get("degraded_reason")
+    assert [g["field"] for g in out["missing"]] == ["priority"]
+
+
+def test_a_dropped_claim_reopens_its_gap(analysis):
+    """The exclusivity check runs against surviving claims, not the model's
+    original list. A deadline claim that fails verification leaves the
+    deadline genuinely unsettled, so the checkbox has to come back - keying
+    off the unverified claim would silently swallow it.
+    Needs a claim that survives alongside the one that fails: when nothing
+    resolves there is no partial answer and the whole response falls back to
+    the extractor, which is a different path with its own gap list."""
+    start = MESSAGE.index("urgent")
+    out = validate_response({
+        "summary": "A request.",
+        "claims": [
+            {"field": "priority", "text": "urgent", "span_hint": start,
+             "reading": "Stated outright rather than implied."},
+            {"field": "deadline", "text": "next Tuesday", "span_hint": 0,
+             "reading": "A date that is not in the message at all."},
+        ],
+        "unstated": [],
+        "missing": [{"field": "deadline", "question": "When do you need this?"}],
+    }, MESSAGE, analysis)
+    assert not out["degraded"], out.get("degraded_reason")
+    assert [c["field"] for c in out["claims"]] == ["priority"]
+    assert [g["field"] for g in out["missing"]] == ["deadline"]
+
+
+def test_the_degraded_fallback_answers_in_the_same_shape(analysis):
+    """Two shapes for one panel means the frontend needs two renderers, and
+    whichever one is exercised less is the one that breaks."""
+    out = templated_output(analysis, ["forced"])
+    assert out["degraded"]
+    for gap in out["missing"]:
+        assert set(gap) == {"field", "question"}
+        assert gap["question"].strip()
