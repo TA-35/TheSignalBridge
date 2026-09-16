@@ -29,8 +29,16 @@ carry - these are what the reader will be left guessing about):
 {comments}
 Return JSON matching the schema you were given.
 
-Every claim needs a `field`, and it must be exactly one of these -
-no other value, and never blank:
+`summary` must not be empty - two sentences at most, addressed to the writer.
+
+`reading` on each claim says what a READER would take from those words, and
+where that differs from what the writer probably meant. Restating the quote
+is not a reading.
+
+`unstated` must be real questions in plain words, never field names - the
+things a reader would have to ask after receiving this.
+
+Every claim needs a `field`, exactly one of these:
 {fields}
 
 `summary` must not be empty. Two sentences at most.
