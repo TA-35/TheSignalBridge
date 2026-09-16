@@ -352,10 +352,20 @@ def test_a_message_at_the_limit_is_still_processed():
 
 def test_the_pipeline_limit_matches_the_deployed_api():
     """Two limits that disagree would mean the API accepts what the pipeline
-    rejects, or vice versa."""
+    rejects, or vice versa.
+
+    Skipped where the API source is not present. The inference deploy ships
+    only the pipeline, its models and the one backend module the extractor
+    needs - not the Flask routes - so this cross-component check can only run
+    from a full checkout. It does run in CI, which is where a drift between
+    the two constants would actually be introduced.
+    """
     import re, pathlib
-    route = pathlib.Path("backend/app/routes/decode.py").read_text()
-    api_limit = int(re.search(r"MAX_MESSAGE_LENGTH\s*=\s*(\d+)", route).group(1))
+    route = pathlib.Path("backend/app/routes/decode.py")
+    if not route.is_file():
+        pytest.skip("API source not present - this is a full-checkout check")
+    api_limit = int(re.search(r"MAX_MESSAGE_LENGTH\s*=\s*(\d+)",
+                              route.read_text()).group(1))
     assert load().max_message_chars == api_limit
 
 
