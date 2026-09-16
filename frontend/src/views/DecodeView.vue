@@ -74,7 +74,10 @@ async function review() {
         if (state.message.trim() === text) state.llm = result
       })
       .finally(() => {
-        if (state.message.trim() === text) state.llmLoading = false
+        // Unguarded on purpose. The guard above stops a stale reading being
+        // shown; this flag must clear either way, or editing the message
+        // mid-request leaves the spinner running forever.
+        state.llmLoading = false
       })
   } catch (err) {
     // The decoder decides what counts as a message - one rule, server-side,
