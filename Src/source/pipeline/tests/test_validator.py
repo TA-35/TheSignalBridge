@@ -262,3 +262,45 @@ def test_a_fully_clean_response_reports_no_drops(analysis):
     }, MESSAGE, analysis)
     assert out["degraded"] is False
     assert "dropped_claims" not in out
+
+
+# --------------------------------------------------------------------------
+# What the entity check covers, and deliberately does not
+# --------------------------------------------------------------------------
+
+def test_a_fabricated_date_in_the_summary_is_still_caught():
+    """The case the whole check exists for. Unchanged by the scoping."""
+    assert not check_entities({"summary": "They need it by Tuesday."}, MESSAGE).ok
+
+
+def test_interpretive_language_in_a_reading_is_not_an_invented_fact():
+    """A reading reasons about ambiguity; that is what it is for. 'the
+    business day' is not a claim the message said so - it degraded a real
+    response once the prompt started asking for interpretation."""
+    assert check_entities({
+        "summary": "A request with a deadline.",
+        "claims": [{"field": "deadline", "text": "Friday", "span": [43, 49],
+                    "reading": "Friday is stated but not a time - if they mean "
+                               "close of business day you have until 5."}],
+    }, MESSAGE).ok
+
+
+def test_questions_about_what_is_missing_are_not_checked():
+    """`unstated` lists what the message does NOT say. Flagging it for
+    containing things absent from the message inverts its purpose - 'is Sarah
+    the only one?' was rejected for an invented CARDINAL."""
+    assert check_entities({
+        "summary": "A request.",
+        "unstated": ["Who else is expecting this - is Sarah the only one?",
+                     "Do they mean Tuesday or the end of the week?"],
+    }, MESSAGE).ok
+
+
+def test_a_quote_is_not_re_checked_for_entities():
+    """claims[].text is proven verbatim by span resolution; re-checking it
+    can only produce false positives."""
+    start = MESSAGE.index("Friday")
+    assert check_entities({
+        "summary": "ok",
+        "claims": [{"field": "deadline", "text": "Friday", "span": [start, start + 6]}],
+    }, MESSAGE).ok

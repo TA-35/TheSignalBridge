@@ -226,17 +226,52 @@ def _variants(entity: str) -> set[str]:
     return {v for v in out if v}
 
 
-def iter_text(node: Any) -> Iterable[str]:
-    """Every string in the response, wherever it is nested."""
+# Which parts of the response assert facts about the message, and so must not
+# contain anything the message lacks.
+#
+# Not all of it does, and checking the rest is a category error that showed up
+# the moment the prompt started asking for interpretation rather than
+# extraction:
+#
+#   summary  - asserts what the message is doing. A fabricated date here is
+#              exactly the failure this check exists to catch. CHECKED.
+#   text     - a verbatim quote. Already proven verbatim by span resolution,
+#              so re-checking its entities can only produce false positives.
+#   reading  - explains what a quote means, and legitimately reasons about
+#              what is ambiguous: "if they mean close of business day, you
+#              have until 5". "the business day" is not a claim the message
+#              said that. NOT CHECKED.
+#   unstated - questions about what the message does NOT say. Flagging it for
+#              containing things absent from the message inverts its purpose:
+#              "is Sarah the only one?" was rejected for an invented CARDINAL.
+#              NOT CHECKED.
+#
+# The guarantee that matters is unchanged: every claim still resolves to an
+# exact span, and the summary still cannot invent a fact.
+FACT_BEARING_KEYS: frozenset[str] = frozenset({"summary"})
+
+
+def iter_text(node: Any, _top: bool = True) -> Iterable[str]:
+    """Every string that asserts something about the message.
+
+    At the top level this selects only the fact-bearing keys. Nested values
+    below one of those keys are yielded whole, so a summary shaped as a list
+    or object is still covered.
+    """
+    if _top and isinstance(node, Mapping):
+        for key in FACT_BEARING_KEYS:
+            if key in node:
+                yield from iter_text(node[key], _top=False)
+        return
     if isinstance(node, str):
         yield node
     elif isinstance(node, Mapping):
         for key, value in node.items():
             if key != "span":
-                yield from iter_text(value)
+                yield from iter_text(value, _top=False)
     elif isinstance(node, (list, tuple)):
         for value in node:
-            yield from iter_text(value)
+            yield from iter_text(value, _top=False)
 
 
 # en_core_web_sm's NER is the weak link in this check. Measured on the model
