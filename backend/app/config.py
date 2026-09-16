@@ -51,4 +51,12 @@ class Config:
     # Stage one is local work only, so a short timeout is right; stage two
     # waits on a model and needs room.
     INFERENCE_QUICK_TIMEOUT = float(os.environ.get("INFERENCE_QUICK_TIMEOUT", "5"))
-    INFERENCE_TIMEOUT = float(os.environ.get("INFERENCE_TIMEOUT", "30"))
+    # 90s, not 30. The reading prompt asks the model to interpret rather than
+    # restate, which roughly doubled generation time - measured 15-30s per
+    # call, so a 30s proxy timeout cut off the slower half and returned
+    # degraded output for a response that was on its way.
+    #
+    # Must stay above PIPELINE_LLM_TIMEOUT on the inference host, so the model
+    # call is what gives up first. When the proxy times out instead, the
+    # inference service carries on generating a response nobody will read.
+    INFERENCE_TIMEOUT = float(os.environ.get("INFERENCE_TIMEOUT", "90"))
