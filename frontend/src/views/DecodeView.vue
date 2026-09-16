@@ -270,11 +270,42 @@ const checkedPrompts = computed(() =>
   gaps.value.filter((gap) => state.checked.has(gap.field)),
 )
 
+// The message the user actually sends, assembled the moment they tick.
+//
+// The questions in it are the model's, written from their message. The
+// greeting, opener and sign-off are fixed strings, and that is deliberate
+// rather than lazy: there is nothing in the received message that licenses a
+// name, and inventing one is the single thing this whole pipeline refuses to
+// do. "Hi" addresses anyone; "Hi Sarah" is a fabrication the user would send
+// under their own name.
+//
+// The opener avoids "before I get started" for the same reason the panel
+// headings avoid it - not every decoded message is a task assigned to the
+// reader, and an update or a thank-you note would make that phrasing read as
+// a non-sequitur.
+const replyDraft = computed(() => {
+  const questions = checkedPrompts.value.map((q) => q.question.trim()).filter(Boolean)
+  if (!questions.length) return ''
+
+  const opener =
+    questions.length === 1
+      ? 'One thing I wanted to check:'
+      : questions.length === 2
+        ? 'A couple of things I wanted to check:'
+        : 'A few things I wanted to check:'
+
+  // A single question reads better inline than as a one-item bullet list.
+  const body =
+    questions.length === 1 ? questions[0] : questions.map((q) => `- ${q}`).join('\n')
+
+  return `Hi,\n\n${opener}\n\n${body}\n\nThanks!`
+})
+
 const copyState = ref<'idle' | 'copied' | 'failed'>('idle')
 let copyResetTimer: ReturnType<typeof setTimeout> | undefined
 
-async function copyPromptsToClipboard() {
-  const text = checkedPrompts.value.map((q) => q.question).join('\n')
+async function copyDraftToClipboard() {
+  const text = replyDraft.value
   try {
     await navigator.clipboard.writeText(text)
     copyState.value = 'copied'
@@ -456,18 +487,18 @@ async function copyPromptsToClipboard() {
 
           <div v-if="checkedPrompts.length" class="panel panel--confirm">
             <div class="confirm-header">
-              <strong>Before you reply, ask</strong>
-              <button type="button" class="copy-btn" @click="copyPromptsToClipboard">
+              <strong>Your reply</strong>
+              <button type="button" class="copy-btn" @click="copyDraftToClipboard">
                 <Check v-if="copyState === 'copied'" :size="14" :stroke-width="2" aria-hidden="true" />
                 <Copy v-else :size="14" :stroke-width="2" aria-hidden="true" />
                 {{ copyState === 'copied' ? 'Copied' : copyState === 'failed' ? "Couldn't copy" : 'Copy' }}
               </button>
             </div>
-            <div class="confirm-list">
-              <div v-for="q in checkedPrompts" :key="q.field" class="confirm-item">
-                {{ q.question }}
-              </div>
-            </div>
+            <!-- A <pre> because the draft is newline-formatted text meant to
+                 be pasted somewhere else exactly as it reads here. Styled back
+                 to the body font so it looks like a message rather than code,
+                 and wrapped so a long question does not scroll sideways. -->
+            <pre class="draft">{{ replyDraft }}</pre>
           </div>
 
           <div v-if="!state.matchedPattern" class="notice">
@@ -966,6 +997,17 @@ async function copyPromptsToClipboard() {
   color: var(--color-text-muted);
 }
 
+.draft {
+  margin: 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--color-text);
+}
+
 .panel--confirm {
   border: 1px solid var(--color-border);
   background: var(--color-surface-soft);
@@ -1005,20 +1047,6 @@ async function copyPromptsToClipboard() {
 
 .copy-btn:hover {
   border-color: var(--color-primary-border);
-}
-
-.confirm-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.confirm-item {
-  padding-left: 14px;
-  border-left: 2px solid var(--color-primary-soft-border);
-  font-size: 14px;
-  line-height: 1.55;
-  color: #4a453e;
 }
 
 .disclaimer {
