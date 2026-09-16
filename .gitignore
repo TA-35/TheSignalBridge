@@ -42,13 +42,22 @@ data/processed/*.jsonl
 *.ipynb_checkpoints/
 .ipynb_checkpoints/
 
-# SSH keys - never commit
+# SSH keys - never commit.
+# The existing rules named specific filenames, which meant a key called
+# anything else - ci_deploy_key, found untracked and stageable in this repo -
+# slipped straight past them. These rules match by shape as well as by name.
 documents
 documents.pub
 *.pem
 *.key
 id_ed25519*
 id_rsa*
+*deploy_key*
+*_key
+*_key.pub
+# scp/ssh sometimes writes a file named after the host it was pointed at
+ubuntu@*
+*@*.*.*.*
 
 # Flask instance folder (local sqlite db)
 backend/instance/
@@ -65,6 +74,14 @@ backend/instance/
 # committed. Ignoring all of models/ silently hides a retrain's new files.
 models/enron_tone_distilbert/
 models/enron_tone_checkpoints/
+
+# The question-conditioned circa variant: 64MB, and never reached in
+# production because the adapter only selects it when a question is supplied
+# and neither user flow collects one. Committed weights are permanent, so the
+# one that does not run stays out. Regenerate it the day a flow starts asking
+# "what are you replying to?":
+#     python Src/source/pipeline/train_circa_weights.py question_answer
+models/circa_nn_v2_iteration1/
 models/**/*.bin
 models/**/*.safetensors
 models/**/*.pt

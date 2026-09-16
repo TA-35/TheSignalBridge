@@ -1,0 +1,122 @@
+[
+  {
+    "id": "req-01",
+    "expected_type": "request",
+    "why": "plain direct ask with an explicit deadline",
+    "message": "PLACEHOLDER - a direct request naming what is needed and by when."
+  },
+  {
+    "id": "req-02",
+    "expected_type": "request",
+    "why": "softened ask, real deadline hidden in context",
+    "message": "PLACEHOLDER - a request softened with 'when you get a chance' that still has a real deadline."
+  },
+  {
+    "id": "req-03",
+    "expected_type": "request",
+    "why": "ask with no deadline at all",
+    "message": "PLACEHOLDER - a request with no deadline, to check deadline is reported missing."
+  },
+  {
+    "id": "req-04",
+    "expected_type": "request",
+    "why": "ask with no named owner",
+    "message": "PLACEHOLDER - a request that never says who should do it."
+  },
+  {
+    "id": "req-05",
+    "expected_type": "request",
+    "why": "two asks in one message",
+    "message": "PLACEHOLDER - a message containing two separate asks with different urgencies."
+  },
+  {
+    "id": "upd-01",
+    "expected_type": "update",
+    "why": "plain status update, nothing required of the reader",
+    "message": "PLACEHOLDER - an FYI status update that asks for nothing."
+  },
+  {
+    "id": "upd-02",
+    "expected_type": "update",
+    "why": "update with an ask buried at the end",
+    "message": "PLACEHOLDER - an update that turns into a request in its final sentence."
+  },
+  {
+    "id": "upd-03",
+    "expected_type": "update",
+    "why": "update referencing a prior conversation",
+    "message": "PLACEHOLDER - an update that assumes the reader remembers an earlier thread."
+  },
+  {
+    "id": "upd-04",
+    "expected_type": "update",
+    "why": "update with a deadline that is informational, not a demand",
+    "message": "PLACEHOLDER - an update mentioning a date that is not a deadline for the reader."
+  },
+  {
+    "id": "upd-05",
+    "expected_type": "update",
+    "why": "bad-news update with the impact left implicit",
+    "message": "PLACEHOLDER - an update reporting a slip without saying what it affects."
+  },
+  {
+    "id": "com-01",
+    "expected_type": "commitment",
+    "why": "clear promise with a date",
+    "message": "PLACEHOLDER - a commitment to do something by a stated date."
+  },
+  {
+    "id": "com-02",
+    "expected_type": "commitment",
+    "why": "promise with no date",
+    "message": "PLACEHOLDER - a commitment with no timeframe, to check deadline is reported missing."
+  },
+  {
+    "id": "com-03",
+    "expected_type": "commitment",
+    "why": "hedged promise",
+    "message": "PLACEHOLDER - a commitment hedged enough that it may not read as one."
+  },
+  {
+    "id": "com-04",
+    "expected_type": "commitment",
+    "why": "promise conditional on someone else",
+    "message": "PLACEHOLDER - a commitment that depends on another person acting first."
+  },
+  {
+    "id": "soc-01",
+    "expected_type": "social",
+    "why": "pure thanks - must not be told it lacks a deadline",
+    "message": "PLACEHOLDER - a short thank-you and nothing else."
+  },
+  {
+    "id": "soc-02",
+    "expected_type": "social",
+    "why": "congratulations with a short tail",
+    "message": "PLACEHOLDER - a congratulations message with a few extra words."
+  },
+  {
+    "id": "soc-03",
+    "expected_type": "social",
+    "why": "friendly check-in with no ask",
+    "message": "PLACEHOLDER - a warm check-in that asks for nothing."
+  },
+  {
+    "id": "soc-04",
+    "expected_type": "social",
+    "why": "thanks wrapped around a real ask - should classify as request",
+    "message": "PLACEHOLDER - opens with thanks but contains a genuine ask."
+  },
+  {
+    "id": "edge-01",
+    "expected_type": "request",
+    "why": "two words - shortest input the pipeline must survive",
+    "message": "do it"
+  },
+  {
+    "id": "edge-02",
+    "expected_type": "request",
+    "why": "five paragraphs - longest input, buried ask",
+    "message": "PLACEHOLDER - five paragraph message. Replace this whole string.\n\nSecond paragraph. Long enough that the extractor has to choose between several candidate spans rather than finding one obvious answer.\n\nThird paragraph. Should contain a buried ask, so we can see whether the action is still found when it is not in the opening line.\n\nFourth paragraph. Should contain background that is context, not instruction, to check the two are not conflated.\n\nFifth paragraph. Should trail off without restating the ask, which is the shape that makes long messages hard to read."
+  }
+]

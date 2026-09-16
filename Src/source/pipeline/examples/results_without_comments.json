@@ -1,0 +1,1032 @@
+{
+  "summary": {
+    "examples": 20,
+    "message_type_correct": 8,
+    "degraded": 20,
+    "clean": 0,
+    "mean_prompt_chars": 1463
+  },
+  "config": {
+    "model": "claude-opus-5",
+    "include_model_comments": false,
+    "dry_run": true
+  },
+  "records": [
+    {
+      "id": "req-01",
+      "expected_type": "request",
+      "detected_type": "update",
+      "type_matches": false,
+      "found": [],
+      "missing": [
+        "purpose",
+        "context"
+      ],
+      "comments": [
+        {
+          "model": "politeness",
+          "label": "medium",
+          "confidence": 1.0,
+          "note": "politeness score -0.006 (negative is blunt, positive is polite; low/medium/high cut at -0.205 and +0.312); trained on Wikipedia and Stack Exchange requests, not workplace email; test Pearson 0.47"
+        },
+        {
+          "model": "tone",
+          "label": "unknown",
+          "confidence": 0.0,
+          "note": "model unavailable: ModuleNotFoundError"
+        },
+        {
+          "model": "circa",
+          "label": "indirect",
+          "confidence": 0.32978192464887457,
+          "note": "p(indirect)=0.33 against a validation-tuned threshold of 0.27; trained on casual social question-answer pairs (Circa), not workplace email; in-domain indirect F1 0.61; confidence capped at 0.6 as out of domain"
+        }
+      ],
+      "prompt_chars": 1415,
+      "result": {
+        "degraded": true,
+        "degraded_reason": [
+          "dry run - no LLM call"
+        ],
+        "message_type": "update",
+        "claims": [],
+        "missing": [
+          "purpose",
+          "context"
+        ],
+        "found_count": 0,
+        "missing_count": 2,
+        "summary": "Showing only what could be read directly from the message."
+      }
+    },
+    {
+      "id": "req-02",
+      "expected_type": "request",
+      "detected_type": "request",
+      "type_matches": true,
+      "found": [
+        "priority",
+        "required_action"
+      ],
+      "missing": [
+        "purpose",
+        "responsible_person",
+        "deadline"
+      ],
+      "comments": [
+        {
+          "model": "politeness",
+          "label": "high",
+          "confidence": 1.0,
+          "note": "politeness score +0.317 (negative is blunt, positive is polite; low/medium/high cut at -0.205 and +0.312); trained on Wikipedia and Stack Exchange requests, not workplace email; test Pearson 0.47"
+        },
+        {
+          "model": "tone",
+          "label": "unknown",
+          "confidence": 0.0,
+          "note": "model unavailable: ModuleNotFoundError"
+        },
+        {
+          "model": "circa",
+          "label": "indirect",
+          "confidence": 0.40927666692874914,
+          "note": "p(indirect)=0.41 against a validation-tuned threshold of 0.27; trained on casual social question-answer pairs (Circa), not workplace email; in-domain indirect F1 0.61; confidence capped at 0.6 as out of domain"
+        }
+      ],
+      "prompt_chars": 1599,
+      "result": {
+        "degraded": true,
+        "degraded_reason": [
+          "dry run - no LLM call"
+        ],
+        "message_type": "request",
+        "claims": [
+          {
+            "field": "required_action",
+            "label": "What needs doing",
+            "text": "PLACEHOLDER - a request softened with 'when you get a chance' that still has a real deadline",
+            "span": [
+              0,
+              92
+            ]
+          },
+          {
+            "field": "priority",
+            "label": "Priority",
+            "text": "when you get a chance",
+            "span": [
+              39,
+              60
+            ]
+          }
+        ],
+        "missing": [
+          "purpose",
+          "responsible_person",
+          "deadline"
+        ],
+        "found_count": 2,
+        "missing_count": 3,
+        "summary": "Showing only what could be read directly from the message."
+      }
+    },
+    {
+      "id": "req-03",
+      "expected_type": "request",
+      "detected_type": "update",
+      "type_matches": false,
+      "found": [],
+      "missing": [
+        "purpose",
+        "context"
+      ],
+      "comments": [
+        {
+          "model": "politeness",
+          "label": "high",
+          "confidence": 1.0,
+          "note": "politeness score +0.351 (negative is blunt, positive is polite; low/medium/high cut at -0.205 and +0.312); trained on Wikipedia and Stack Exchange requests, not workplace email; test Pearson 0.47"
+        },
+        {
+          "model": "tone",
+          "label": "unknown",
+          "confidence": 0.0,
+          "note": "model unavailable: ModuleNotFoundError"
+        },
+        {
+          "model": "circa",
+          "label": "direct",
+          "confidence": 0.6,
+          "note": "p(indirect)=0.20 against a validation-tuned threshold of 0.27; trained on casual social question-answer pairs (Circa), not workplace email; in-domain indirect F1 0.61; confidence capped at 0.6 as out of domain"
+        }
+      ],
+      "prompt_chars": 1430,
+      "result": {
+        "degraded": true,
+        "degraded_reason": [
+          "dry run - no LLM call"
+        ],
+        "message_type": "update",
+        "claims": [],
+        "missing": [
+          "purpose",
+          "context"
+        ],
+        "found_count": 0,
+        "missing_count": 2,
+        "summary": "Showing only what could be read directly from the message."
+      }
+    },
+    {
+      "id": "req-04",
+      "expected_type": "request",
+      "detected_type": "request",
+      "type_matches": true,
+      "found": [
+        "required_action"
+      ],
+      "missing": [
+        "purpose",
+        "responsible_person",
+        "deadline"
+      ],
+      "comments": [
+        {
+          "model": "politeness",
+          "label": "low",
+          "confidence": 1.0,
+          "note": "politeness score -0.272 (negative is blunt, positive is polite; low/medium/high cut at -0.205 and +0.312); trained on Wikipedia and Stack Exchange requests, not workplace email; test Pearson 0.47"
+        },
+        {
+          "model": "tone",
+          "label": "unknown",
+          "confidence": 0.0,
+          "note": "model unavailable: ModuleNotFoundError"
+        },
+        {
+          "model": "circa",
+          "label": "direct",
+          "confidence": 0.6,
+          "note": "p(indirect)=0.20 against a validation-tuned threshold of 0.27; trained on casual social question-answer pairs (Circa), not workplace email; in-domain indirect F1 0.61; confidence capped at 0.6 as out of domain"
+        }
+      ],
+      "prompt_chars": 1474,
+      "result": {
+        "degraded": true,
+        "degraded_reason": [
+          "dry run - no LLM call"
+        ],
+        "message_type": "request",
+        "claims": [
+          {
+            "field": "required_action",
+            "label": "What needs doing",
+            "text": "PLACEHOLDER - a request that never says who should do it",
+            "span": [
+              0,
+              56
+            ]
+          }
+        ],
+        "missing": [
+          "purpose",
+          "responsible_person",
+          "deadline"
+        ],
+        "found_count": 1,
+        "missing_count": 3,
+        "summary": "Showing only what could be read directly from the message."
+      }
+    },
+    {
+      "id": "req-05",
+      "expected_type": "request",
+      "detected_type": "update",
+      "type_matches": false,
+      "found": [],
+      "missing": [
+        "purpose",
+        "context"
+      ],
+      "comments": [
+        {
+          "model": "politeness",
+          "label": "medium",
+          "confidence": 1.0,
+          "note": "politeness score +0.052 (negative is blunt, positive is polite; low/medium/high cut at -0.205 and +0.312); trained on Wikipedia and Stack Exchange requests, not workplace email; test Pearson 0.47"
+        },
+        {
+          "model": "tone",
+          "label": "unknown",
+          "confidence": 0.0,
+          "note": "model unavailable: ModuleNotFoundError"
+        },
+        {
+          "model": "circa",
+          "label": "direct",
+          "confidence": 0.6,
+          "note": "p(indirect)=0.20 against a validation-tuned threshold of 0.27; trained on casual social question-answer pairs (Circa), not workplace email; in-domain indirect F1 0.61; confidence capped at 0.6 as out of domain"
+        }
+      ],
+      "prompt_chars": 1428,
+      "result": {
+        "degraded": true,
+        "degraded_reason": [
+          "dry run - no LLM call"
+        ],
+        "message_type": "update",
+        "claims": [],
+        "missing": [
+          "purpose",
+          "context"
+        ],
+        "found_count": 0,
+        "missing_count": 2,
+        "summary": "Showing only what could be read directly from the message."
+      }
+    },
+    {
+      "id": "upd-01",
+      "expected_type": "update",
+      "detected_type": "update",
+      "type_matches": true,
+      "found": [],
+      "missing": [
+        "purpose",
+        "context"
+      ],
+      "comments": [
+        {
+          "model": "politeness",
+          "label": "medium",
+          "confidence": 1.0,
+          "note": "politeness score +0.010 (negative is blunt, positive is polite; low/medium/high cut at -0.205 and +0.312); trained on Wikipedia and Stack Exchange requests, not workplace email; test Pearson 0.47"
+        },
+        {
+          "model": "tone",
+          "label": "unknown",
+          "confidence": 0.0,
+          "note": "model unavailable: ModuleNotFoundError"
+        },
+        {
+          "model": "circa",
+          "label": "direct",
+          "confidence": 0.6,
+          "note": "p(indirect)=0.06 against a validation-tuned threshold of 0.27; trained on casual social question-answer pairs (Circa), not workplace email; in-domain indirect F1 0.61; confidence capped at 0.6 as out of domain"
+        }
+      ],
+      "prompt_chars": 1407,
+      "result": {
+        "degraded": true,
+        "degraded_reason": [
+          "dry run - no LLM call"
+        ],
+        "message_type": "update",
+        "claims": [],
+        "missing": [
+          "purpose",
+          "context"
+        ],
+        "found_count": 0,
+        "missing_count": 2,
+        "summary": "Showing only what could be read directly from the message."
+      }
+    },
+    {
+      "id": "upd-02",
+      "expected_type": "update",
+      "detected_type": "update",
+      "type_matches": true,
+      "found": [],
+      "missing": [
+        "purpose",
+        "context"
+      ],
+      "comments": [
+        {
+          "model": "politeness",
+          "label": "medium",
+          "confidence": 1.0,
+          "note": "politeness score +0.206 (negative is blunt, positive is polite; low/medium/high cut at -0.205 and +0.312); trained on Wikipedia and Stack Exchange requests, not workplace email; test Pearson 0.47"
+        },
+        {
+          "model": "tone",
+          "label": "unknown",
+          "confidence": 0.0,
+          "note": "model unavailable: ModuleNotFoundError"
+        },
+        {
+          "model": "circa",
+          "label": "direct",
+          "confidence": 0.6,
+          "note": "p(indirect)=0.05 against a validation-tuned threshold of 0.27; trained on casual social question-answer pairs (Circa), not workplace email; in-domain indirect F1 0.61; confidence capped at 0.6 as out of domain"
+        }
+      ],
+      "prompt_chars": 1422,
+      "result": {
+        "degraded": true,
+        "degraded_reason": [
+          "dry run - no LLM call"
+        ],
+        "message_type": "update",
+        "claims": [],
+        "missing": [
+          "purpose",
+          "context"
+        ],
+        "found_count": 0,
+        "missing_count": 2,
+        "summary": "Showing only what could be read directly from the message."
+      }
+    },
+    {
+      "id": "upd-03",
+      "expected_type": "update",
+      "detected_type": "update",
+      "type_matches": true,
+      "found": [],
+      "missing": [
+        "purpose",
+        "context"
+      ],
+      "comments": [
+        {
+          "model": "politeness",
+          "label": "medium",
+          "confidence": 1.0,
+          "note": "politeness score +0.141 (negative is blunt, positive is polite; low/medium/high cut at -0.205 and +0.312); trained on Wikipedia and Stack Exchange requests, not workplace email; test Pearson 0.47"
+        },
+        {
+          "model": "tone",
+          "label": "unknown",
+          "confidence": 0.0,
+          "note": "model unavailable: ModuleNotFoundError"
+        },
+        {
+          "model": "circa",
+          "label": "direct",
+          "confidence": 0.6,
+          "note": "p(indirect)=0.08 against a validation-tuned threshold of 0.27; trained on casual social question-answer pairs (Circa), not workplace email; in-domain indirect F1 0.61; confidence capped at 0.6 as out of domain"
+        }
+      ],
+      "prompt_chars": 1426,
+      "result": {
+        "degraded": true,
+        "degraded_reason": [
+          "dry run - no LLM call"
+        ],
+        "message_type": "update",
+        "claims": [],
+        "missing": [
+          "purpose",
+          "context"
+        ],
+        "found_count": 0,
+        "missing_count": 2,
+        "summary": "Showing only what could be read directly from the message."
+      }
+    },
+    {
+      "id": "upd-04",
+      "expected_type": "update",
+      "detected_type": "update",
+      "type_matches": true,
+      "found": [],
+      "missing": [
+        "purpose",
+        "context"
+      ],
+      "comments": [
+        {
+          "model": "politeness",
+          "label": "medium",
+          "confidence": 1.0,
+          "note": "politeness score +0.290 (negative is blunt, positive is polite; low/medium/high cut at -0.205 and +0.312); trained on Wikipedia and Stack Exchange requests, not workplace email; test Pearson 0.47"
+        },
+        {
+          "model": "tone",
+          "label": "unknown",
+          "confidence": 0.0,
+          "note": "model unavailable: ModuleNotFoundError"
+        },
+        {
+          "model": "circa",
+          "label": "direct",
+          "confidence": 0.6,
+          "note": "p(indirect)=0.07 against a validation-tuned threshold of 0.27; trained on casual social question-answer pairs (Circa), not workplace email; in-domain indirect F1 0.61; confidence capped at 0.6 as out of domain"
+        }
+      ],
+      "prompt_chars": 1430,
+      "result": {
+        "degraded": true,
+        "degraded_reason": [
+          "dry run - no LLM call"
+        ],
+        "message_type": "update",
+        "claims": [],
+        "missing": [
+          "purpose",
+          "context"
+        ],
+        "found_count": 0,
+        "missing_count": 2,
+        "summary": "Showing only what could be read directly from the message."
+      }
+    },
+    {
+      "id": "upd-05",
+      "expected_type": "update",
+      "detected_type": "update",
+      "type_matches": true,
+      "found": [],
+      "missing": [
+        "purpose",
+        "context"
+      ],
+      "comments": [
+        {
+          "model": "politeness",
+          "label": "medium",
+          "confidence": 1.0,
+          "note": "politeness score +0.047 (negative is blunt, positive is polite; low/medium/high cut at -0.205 and +0.312); trained on Wikipedia and Stack Exchange requests, not workplace email; test Pearson 0.47"
+        },
+        {
+          "model": "tone",
+          "label": "unknown",
+          "confidence": 0.0,
+          "note": "model unavailable: ModuleNotFoundError"
+        },
+        {
+          "model": "circa",
+          "label": "indirect",
+          "confidence": 0.3370925755794823,
+          "note": "p(indirect)=0.34 against a validation-tuned threshold of 0.27; trained on casual social question-answer pairs (Circa), not workplace email; in-domain indirect F1 0.61; confidence capped at 0.6 as out of domain"
+        }
+      ],
+      "prompt_chars": 1422,
+      "result": {
+        "degraded": true,
+        "degraded_reason": [
+          "dry run - no LLM call"
+        ],
+        "message_type": "update",
+        "claims": [],
+        "missing": [
+          "purpose",
+          "context"
+        ],
+        "found_count": 0,
+        "missing_count": 2,
+        "summary": "Showing only what could be read directly from the message."
+      }
+    },
+    {
+      "id": "com-01",
+      "expected_type": "commitment",
+      "detected_type": "update",
+      "type_matches": false,
+      "found": [],
+      "missing": [
+        "purpose",
+        "context"
+      ],
+      "comments": [
+        {
+          "model": "politeness",
+          "label": "medium",
+          "confidence": 1.0,
+          "note": "politeness score -0.137 (negative is blunt, positive is polite; low/medium/high cut at -0.205 and +0.312); trained on Wikipedia and Stack Exchange requests, not workplace email; test Pearson 0.47"
+        },
+        {
+          "model": "tone",
+          "label": "unknown",
+          "confidence": 0.0,
+          "note": "model unavailable: ModuleNotFoundError"
+        },
+        {
+          "model": "circa",
+          "label": "direct",
+          "confidence": 0.6,
+          "note": "p(indirect)=0.10 against a validation-tuned threshold of 0.27; trained on casual social question-answer pairs (Circa), not workplace email; in-domain indirect F1 0.61; confidence capped at 0.6 as out of domain"
+        }
+      ],
+      "prompt_chars": 1410,
+      "result": {
+        "degraded": true,
+        "degraded_reason": [
+          "dry run - no LLM call"
+        ],
+        "message_type": "update",
+        "claims": [],
+        "missing": [
+          "purpose",
+          "context"
+        ],
+        "found_count": 0,
+        "missing_count": 2,
+        "summary": "Showing only what could be read directly from the message."
+      }
+    },
+    {
+      "id": "com-02",
+      "expected_type": "commitment",
+      "detected_type": "update",
+      "type_matches": false,
+      "found": [],
+      "missing": [
+        "purpose",
+        "context"
+      ],
+      "comments": [
+        {
+          "model": "politeness",
+          "label": "medium",
+          "confidence": 1.0,
+          "note": "politeness score +0.186 (negative is blunt, positive is polite; low/medium/high cut at -0.205 and +0.312); trained on Wikipedia and Stack Exchange requests, not workplace email; test Pearson 0.47"
+        },
+        {
+          "model": "tone",
+          "label": "unknown",
+          "confidence": 0.0,
+          "note": "model unavailable: ModuleNotFoundError"
+        },
+        {
+          "model": "circa",
+          "label": "direct",
+          "confidence": 0.6,
+          "note": "p(indirect)=0.17 against a validation-tuned threshold of 0.27; trained on casual social question-answer pairs (Circa), not workplace email; in-domain indirect F1 0.61; confidence capped at 0.6 as out of domain"
+        }
+      ],
+      "prompt_chars": 1434,
+      "result": {
+        "degraded": true,
+        "degraded_reason": [
+          "dry run - no LLM call"
+        ],
+        "message_type": "update",
+        "claims": [],
+        "missing": [
+          "purpose",
+          "context"
+        ],
+        "found_count": 0,
+        "missing_count": 2,
+        "summary": "Showing only what could be read directly from the message."
+      }
+    },
+    {
+      "id": "com-03",
+      "expected_type": "commitment",
+      "detected_type": "update",
+      "type_matches": false,
+      "found": [],
+      "missing": [
+        "purpose",
+        "context"
+      ],
+      "comments": [
+        {
+          "model": "politeness",
+          "label": "medium",
+          "confidence": 1.0,
+          "note": "politeness score +0.030 (negative is blunt, positive is polite; low/medium/high cut at -0.205 and +0.312); trained on Wikipedia and Stack Exchange requests, not workplace email; test Pearson 0.47"
+        },
+        {
+          "model": "tone",
+          "label": "unknown",
+          "confidence": 0.0,
+          "note": "model unavailable: ModuleNotFoundError"
+        },
+        {
+          "model": "circa",
+          "label": "direct",
+          "confidence": 0.6,
+          "note": "p(indirect)=0.21 against a validation-tuned threshold of 0.27; trained on casual social question-answer pairs (Circa), not workplace email; in-domain indirect F1 0.61; confidence capped at 0.6 as out of domain"
+        }
+      ],
+      "prompt_chars": 1419,
+      "result": {
+        "degraded": true,
+        "degraded_reason": [
+          "dry run - no LLM call"
+        ],
+        "message_type": "update",
+        "claims": [],
+        "missing": [
+          "purpose",
+          "context"
+        ],
+        "found_count": 0,
+        "missing_count": 2,
+        "summary": "Showing only what could be read directly from the message."
+      }
+    },
+    {
+      "id": "com-04",
+      "expected_type": "commitment",
+      "detected_type": "update",
+      "type_matches": false,
+      "found": [],
+      "missing": [
+        "purpose",
+        "context"
+      ],
+      "comments": [
+        {
+          "model": "politeness",
+          "label": "low",
+          "confidence": 1.0,
+          "note": "politeness score -0.251 (negative is blunt, positive is polite; low/medium/high cut at -0.205 and +0.312); trained on Wikipedia and Stack Exchange requests, not workplace email; test Pearson 0.47"
+        },
+        {
+          "model": "tone",
+          "label": "unknown",
+          "confidence": 0.0,
+          "note": "model unavailable: ModuleNotFoundError"
+        },
+        {
+          "model": "circa",
+          "label": "indirect",
+          "confidence": 0.6,
+          "note": "p(indirect)=0.82 against a validation-tuned threshold of 0.27; trained on casual social question-answer pairs (Circa), not workplace email; in-domain indirect F1 0.61; confidence capped at 0.6 as out of domain"
+        }
+      ],
+      "prompt_chars": 1421,
+      "result": {
+        "degraded": true,
+        "degraded_reason": [
+          "dry run - no LLM call"
+        ],
+        "message_type": "update",
+        "claims": [],
+        "missing": [
+          "purpose",
+          "context"
+        ],
+        "found_count": 0,
+        "missing_count": 2,
+        "summary": "Showing only what could be read directly from the message."
+      }
+    },
+    {
+      "id": "soc-01",
+      "expected_type": "social",
+      "detected_type": "update",
+      "type_matches": false,
+      "found": [],
+      "missing": [
+        "purpose",
+        "context"
+      ],
+      "comments": [
+        {
+          "model": "politeness",
+          "label": "high",
+          "confidence": 1.0,
+          "note": "politeness score +0.439 (negative is blunt, positive is polite; low/medium/high cut at -0.205 and +0.312); trained on Wikipedia and Stack Exchange requests, not workplace email; test Pearson 0.47"
+        },
+        {
+          "model": "tone",
+          "label": "unknown",
+          "confidence": 0.0,
+          "note": "model unavailable: ModuleNotFoundError"
+        },
+        {
+          "model": "circa",
+          "label": "direct",
+          "confidence": 0.6,
+          "note": "p(indirect)=0.24 against a validation-tuned threshold of 0.27; trained on casual social question-answer pairs (Circa), not workplace email; in-domain indirect F1 0.61; confidence capped at 0.6 as out of domain"
+        }
+      ],
+      "prompt_chars": 1399,
+      "result": {
+        "degraded": true,
+        "degraded_reason": [
+          "dry run - no LLM call"
+        ],
+        "message_type": "update",
+        "claims": [],
+        "missing": [
+          "purpose",
+          "context"
+        ],
+        "found_count": 0,
+        "missing_count": 2,
+        "summary": "Showing only what could be read directly from the message."
+      }
+    },
+    {
+      "id": "soc-02",
+      "expected_type": "social",
+      "detected_type": "request",
+      "type_matches": false,
+      "found": [
+        "required_action"
+      ],
+      "missing": [
+        "purpose",
+        "responsible_person",
+        "deadline"
+      ],
+      "comments": [
+        {
+          "model": "politeness",
+          "label": "high",
+          "confidence": 1.0,
+          "note": "politeness score +0.468 (negative is blunt, positive is polite; low/medium/high cut at -0.205 and +0.312); trained on Wikipedia and Stack Exchange requests, not workplace email; test Pearson 0.47"
+        },
+        {
+          "model": "tone",
+          "label": "unknown",
+          "confidence": 0.0,
+          "note": "model unavailable: ModuleNotFoundError"
+        },
+        {
+          "model": "circa",
+          "label": "direct",
+          "confidence": 0.6,
+          "note": "p(indirect)=0.10 against a validation-tuned threshold of 0.27; trained on casual social question-answer pairs (Circa), not workplace email; in-domain indirect F1 0.61; confidence capped at 0.6 as out of domain"
+        }
+      ],
+      "prompt_chars": 1486,
+      "result": {
+        "degraded": true,
+        "degraded_reason": [
+          "dry run - no LLM call"
+        ],
+        "message_type": "request",
+        "claims": [
+          {
+            "field": "required_action",
+            "label": "What needs doing",
+            "text": "PLACEHOLDER - a congratulations message with a few extra words",
+            "span": [
+              0,
+              62
+            ]
+          }
+        ],
+        "missing": [
+          "purpose",
+          "responsible_person",
+          "deadline"
+        ],
+        "found_count": 1,
+        "missing_count": 3,
+        "summary": "Showing only what could be read directly from the message."
+      }
+    },
+    {
+      "id": "soc-03",
+      "expected_type": "social",
+      "detected_type": "update",
+      "type_matches": false,
+      "found": [],
+      "missing": [
+        "purpose",
+        "context"
+      ],
+      "comments": [
+        {
+          "model": "politeness",
+          "label": "high",
+          "confidence": 1.0,
+          "note": "politeness score +0.473 (negative is blunt, positive is polite; low/medium/high cut at -0.205 and +0.312); trained on Wikipedia and Stack Exchange requests, not workplace email; test Pearson 0.47"
+        },
+        {
+          "model": "tone",
+          "label": "unknown",
+          "confidence": 0.0,
+          "note": "model unavailable: ModuleNotFoundError"
+        },
+        {
+          "model": "circa",
+          "label": "direct",
+          "confidence": 0.6,
+          "note": "p(indirect)=0.17 against a validation-tuned threshold of 0.27; trained on casual social question-answer pairs (Circa), not workplace email; in-domain indirect F1 0.61; confidence capped at 0.6 as out of domain"
+        }
+      ],
+      "prompt_chars": 1402,
+      "result": {
+        "degraded": true,
+        "degraded_reason": [
+          "dry run - no LLM call"
+        ],
+        "message_type": "update",
+        "claims": [],
+        "missing": [
+          "purpose",
+          "context"
+        ],
+        "found_count": 0,
+        "missing_count": 2,
+        "summary": "Showing only what could be read directly from the message."
+      }
+    },
+    {
+      "id": "soc-04",
+      "expected_type": "social",
+      "detected_type": "update",
+      "type_matches": false,
+      "found": [],
+      "missing": [
+        "purpose",
+        "context"
+      ],
+      "comments": [
+        {
+          "model": "politeness",
+          "label": "high",
+          "confidence": 1.0,
+          "note": "politeness score +0.865 (negative is blunt, positive is polite; low/medium/high cut at -0.205 and +0.312); trained on Wikipedia and Stack Exchange requests, not workplace email; test Pearson 0.47"
+        },
+        {
+          "model": "tone",
+          "label": "unknown",
+          "confidence": 0.0,
+          "note": "model unavailable: ModuleNotFoundError"
+        },
+        {
+          "model": "circa",
+          "label": "direct",
+          "confidence": 0.6,
+          "note": "p(indirect)=0.11 against a validation-tuned threshold of 0.27; trained on casual social question-answer pairs (Circa), not workplace email; in-domain indirect F1 0.61; confidence capped at 0.6 as out of domain"
+        }
+      ],
+      "prompt_chars": 1409,
+      "result": {
+        "degraded": true,
+        "degraded_reason": [
+          "dry run - no LLM call"
+        ],
+        "message_type": "update",
+        "claims": [],
+        "missing": [
+          "purpose",
+          "context"
+        ],
+        "found_count": 0,
+        "missing_count": 2,
+        "summary": "Showing only what could be read directly from the message."
+      }
+    },
+    {
+      "id": "edge-01",
+      "expected_type": "request",
+      "detected_type": "request",
+      "type_matches": true,
+      "found": [],
+      "missing": [
+        "purpose",
+        "required_action",
+        "responsible_person",
+        "deadline"
+      ],
+      "comments": [
+        {
+          "model": "politeness",
+          "label": "medium",
+          "confidence": 0.3,
+          "note": "politeness score -0.169 (negative is blunt, positive is polite; low/medium/high cut at -0.205 and +0.312); trained on Wikipedia and Stack Exchange requests, not workplace email; test Pearson 0.47; confidence lowered - model warned: short_input"
+        },
+        {
+          "model": "tone",
+          "label": "unknown",
+          "confidence": 0.0,
+          "note": "model unavailable: ModuleNotFoundError"
+        },
+        {
+          "model": "circa",
+          "label": "direct",
+          "confidence": 0.6,
+          "note": "p(indirect)=0.15 against a validation-tuned threshold of 0.27; trained on casual social question-answer pairs (Circa), not workplace email; in-domain indirect F1 0.61; confidence capped at 0.6 as out of domain"
+        }
+      ],
+      "prompt_chars": 1400,
+      "result": {
+        "degraded": true,
+        "degraded_reason": [
+          "dry run - no LLM call"
+        ],
+        "message_type": "request",
+        "claims": [],
+        "missing": [
+          "purpose",
+          "required_action",
+          "responsible_person",
+          "deadline"
+        ],
+        "found_count": 0,
+        "missing_count": 4,
+        "summary": "Showing only what could be read directly from the message."
+      }
+    },
+    {
+      "id": "edge-02",
+      "expected_type": "request",
+      "detected_type": "update",
+      "type_matches": false,
+      "found": [
+        "purpose",
+        "required_action"
+      ],
+      "missing": [
+        "context"
+      ],
+      "comments": [
+        {
+          "model": "politeness",
+          "label": "medium",
+          "confidence": 1.0,
+          "note": "politeness score -0.099 (negative is blunt, positive is polite; low/medium/high cut at -0.205 and +0.312); trained on Wikipedia and Stack Exchange requests, not workplace email; test Pearson 0.47"
+        },
+        {
+          "model": "tone",
+          "label": "unknown",
+          "confidence": 0.0,
+          "note": "model unavailable: ModuleNotFoundError"
+        },
+        {
+          "model": "circa",
+          "label": "direct",
+          "confidence": 0.6,
+          "note": "p(indirect)=0.14 against a validation-tuned threshold of 0.27; trained on casual social question-answer pairs (Circa), not workplace email; in-domain indirect F1 0.61; confidence capped at 0.6 as out of domain"
+        }
+      ],
+      "prompt_chars": 2031,
+      "result": {
+        "degraded": true,
+        "degraded_reason": [
+          "dry run - no LLM call"
+        ],
+        "message_type": "update",
+        "claims": [
+          {
+            "field": "required_action",
+            "label": "What needs doing",
+            "text": "Replace this whole string",
+            "span": [
+              38,
+              63
+            ]
+          },
+          {
+            "field": "purpose",
+            "label": "Purpose",
+            "text": "so we can see whether the action is still found when it is not in the opening line",
+            "span": [
+              248,
+              330
+            ]
+          }
+        ],
+        "missing": [
+          "context"
+        ],
+        "found_count": 2,
+        "missing_count": 1,
+        "summary": "Showing only what could be read directly from the message."
+      }
+    }
+  ]
+}

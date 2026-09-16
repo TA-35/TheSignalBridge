@@ -42,3 +42,13 @@ class Config:
     # covers the largest legitimate payload (a ~5000-character message,
     # worst-case UTF-8, plus JSON overhead) with room to spare.
     MAX_CONTENT_LENGTH = 100_000
+
+    # Where the pipeline inference service listens. Empty means the feature
+    # is off: /api/review returns a degraded response and everything else
+    # carries on exactly as before. That default matters - a deploy that has
+    # not been given this value must not break the site.
+    INFERENCE_URL = os.environ.get("INFERENCE_URL", "")
+    # Stage one is local work only, so a short timeout is right; stage two
+    # waits on a model and needs room.
+    INFERENCE_QUICK_TIMEOUT = float(os.environ.get("INFERENCE_QUICK_TIMEOUT", "5"))
+    INFERENCE_TIMEOUT = float(os.environ.get("INFERENCE_TIMEOUT", "30"))

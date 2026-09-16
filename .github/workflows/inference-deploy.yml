@@ -1,0 +1,102 @@
+name: Inference service deploy
+
+# Separate from backend-deploy.yml on purpose. That workflow rsyncs only
+# backend/ and restarts the API; this one ships the pipeline, its models and
+# its own virtualenv to a different directory and restarts a different unit.
+# Neither touches the other, so a failure here cannot take the API down.
+#
+# Manual trigger, matching the other two workflows in this repo.
+
+on:
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: "Deploy without running the test suite (not recommended)"
+        type: boolean
+        default: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # The pipeline's tests mock every model call, so they need no key, no
+      # network and no GPU - the same constraint the backend tests satisfy.
+      - name: Install and test
+        if: ${{ !inputs.skip_tests }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r Src/source/pipeline/requirements.txt pytest
+          python -m pytest Src/source/pipeline/tests -q
+
+      - name: Guard - the API's dependency list must not have grown
+        run: |
+          # The API reaches this service over HTTP using only the standard
+          # library. If backend/requirements.txt ever gains one of these, the
+          # pipeline has been imported into the API by mistake and the 1GB
+          # box will not fit it.
+          for pkg in scikit-learn joblib openai anthropic pandas; do
+            if grep -qi "^${pkg}" backend/requirements.txt; then
+              echo "::error::$pkg appeared in backend/requirements.txt - the"
+              echo "::error::inference stack must stay out of the API process."
+              exit 1
+            fi
+          done
+          echo "API dependency list is clean."
+
+      - name: Push pipeline, models and weights to EC2
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.INFERENCE_HOST }} >> ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key ubuntu@${{ secrets.INFERENCE_HOST }} \
+            'mkdir -p ~/inference'
+          # Everything the service imports: the pipeline, the teammates'
+          # model code it wraps, the saved weights, and the backend module it
+          # borrows the span extractor from.
+          rsync -az --delete \
+            --exclude '__pycache__' --exclude '.pytest_cache' --exclude '.env' \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            Src/ ubuntu@${{ secrets.INFERENCE_HOST }}:~/inference/Src/
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            models/ ubuntu@${{ secrets.INFERENCE_HOST }}:~/inference/models/
+          rsync -az \
+            --exclude '__pycache__' \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            backend/app/services/extraction.py \
+            ubuntu@${{ secrets.INFERENCE_HOST }}:~/inference/backend/app/services/
+
+      - name: Install dependencies and restart
+        run: |
+          ssh -i ~/.ssh/deploy_key ubuntu@${{ secrets.INFERENCE_HOST }} '
+            set -e
+            cd ~/inference
+            test -d .venv || python3 -m venv .venv
+            .venv/bin/pip install --quiet --upgrade pip
+            .venv/bin/pip install --quiet -r Src/source/pipeline/requirements.txt
+            sudo systemctl restart inference
+          '
+
+      - name: Smoke test - the service answers and knows its model
+        run: |
+          ssh -i ~/.ssh/deploy_key ubuntu@${{ secrets.INFERENCE_HOST }} '
+            for i in $(seq 1 30); do
+              curl -sf http://127.0.0.1:8100/health && break || sleep 2
+            done
+            curl -sf http://127.0.0.1:8100/health | grep -q "\"status\": *\"ok\"" \
+              || { echo "health check failed"; exit 1; }
+          '
+
+      - name: Smoke test - the API can still serve without this service
+        run: |
+          # The whole point of the degraded path: even if this deploy is
+          # broken, the site keeps working. Verified against the live API,
+          # which this workflow never touches.
+          curl -sf https://api.thesignalbridge.com/api/patterns > /dev/null
+          echo "API unaffected."

@@ -1,0 +1,29 @@
+# Inference service dependencies.
+#
+# Deliberately separate from backend/requirements.txt. The API box is a
+# t3.micro (1024MB) running three gunicorn workers; this stack measures
+# ~505MB resident per process, so importing it into the API would need
+# ~1435MB and would not fit. The API reaches this service over HTTP using
+# only the standard library, so its dependency list is untouched.
+#
+# Measured footprint, cumulative:
+#   spacy + en_core_web_sm   121 MB
+#   scikit-learn/scipy/joblib 136 MB
+#   politeness weights        157 MB
+#   circa weights              49 MB
+#   openai SDK                 31 MB
+
+flask==3.0.3
+gunicorn==22.0.0
+numpy>=2.0
+spacy==3.8.16
+https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
+scikit-learn>=1.5
+joblib>=1.4
+python-dotenv==1.0.1
+
+# LLM transport. openai covers every OpenAI-compatible endpoint, which is how
+# Kimi is reached both on Moonshot and on NVIDIA NIM.
+openai>=1.50
+# Only needed when PIPELINE_LLM_PROVIDER=anthropic.
+# anthropic>=1.0
