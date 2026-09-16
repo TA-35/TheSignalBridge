@@ -110,6 +110,14 @@ const llmClaims = computed(() => {
     }))
 })
 
+// Whether the model actually said something usable. A degraded reading is
+// the verifier having dropped claims it could not trace to the message, so
+// it is exactly the case where the extractor's own panel still earns its
+// place - hence this gates that panel rather than the reading itself.
+const hasReading = computed(
+  () => !!state.llm && !state.llm.degraded && llmClaims.value.length > 0,
+)
+
 function reset() {
   state.message = ''
   state.error = ''
@@ -262,67 +270,9 @@ async function copyPromptsToClipboard() {
         </div>
 
         <div class="findings">
-          <div v-if="todo.length" class="panel panel--todo">
-            <div class="panel__header panel__header--todo">
-              <span class="panel-dot panel-dot--todo" />
-              <strong>What you're being asked to do</strong>
-            </div>
-            <div class="panel__body">
-              <ul class="todo">
-                <li v-for="(item, i) in todo" :key="i" class="todo__item">
-                  <span class="todo__text">{{ item.text }}</span>
-                  <span v-if="item.detail" class="todo__detail">{{ item.detail }}</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div v-if="coveredRows.length" class="panel panel--covered">
-            <div class="panel__header panel__header--covered">
-              <span class="panel-dot panel-dot--covered" />
-              <strong>What's covered</strong>
-            </div>
-            <div class="panel__body">
-              <div v-for="row in coveredRows" :key="row.field" class="row">
-                <span class="row__label">{{ row.label }}</span>
-                <span class="row__value">{{ row.value }}</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel panel--missing">
-            <div class="panel__header panel__header--missing">
-              <div class="panel__header-title">
-                <span class="panel-dot panel-dot--missing" />
-                <strong>What's missing</strong>
-              </div>
-              <span class="hint">tick what matters to you</span>
-            </div>
-            <div class="panel__body panel__body--flush">
-              <button
-                v-for="gap in state.result.missing"
-                :key="gap.field"
-                type="button"
-                class="gap-row"
-                :class="{ 'gap-row--checked': state.checked.has(gap.field) }"
-                @click="toggleChecked(gap.field)"
-              >
-                <span class="checkbox" :class="{ 'checkbox--checked': state.checked.has(gap.field) }">
-                  <span v-if="state.checked.has(gap.field)" class="checkbox__mark" />
-                </span>
-                <span class="gap-row__text">
-                  <strong>{{ ELEMENT_LABELS[gap.field] }} not specified</strong>
-                  <span>{{ gap.prompt }}</span>
-                </span>
-              </button>
-              <div v-if="!state.result.missing.length" class="gap-row gap-row--empty">
-                <span>Every element was stated in the message.</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- The model-backed reading. Appears only once it arrives, so the
-               decode above is never held up waiting for it. Every claim here
+          <!-- The model leads. It is the part of this page that reads the
+               message rather than extracting from it, so it goes first and
+               the extraction below becomes its supporting detail. Every claim
                was verified server-side against the original message; anything
                that could not be traced back was dropped before it got here. -->
           <div v-if="state.llmLoading || state.llm" class="panel panel--reading">
@@ -373,6 +323,66 @@ async function copyPromptsToClipboard() {
               </p>
             </div>
           </div>
+
+          <div v-if="todo.length" class="panel panel--todo">
+            <div class="panel__header panel__header--todo">
+              <span class="panel-dot panel-dot--todo" />
+              <strong>What you're being asked to do</strong>
+            </div>
+            <div class="panel__body">
+              <ul class="todo">
+                <li v-for="(item, i) in todo" :key="i" class="todo__item">
+                  <span class="todo__text">{{ item.text }}</span>
+                  <span v-if="item.detail" class="todo__detail">{{ item.detail }}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div v-if="coveredRows.length && !hasReading" class="panel panel--covered">
+            <div class="panel__header panel__header--covered">
+              <span class="panel-dot panel-dot--covered" />
+              <strong>What's covered</strong>
+            </div>
+            <div class="panel__body">
+              <div v-for="row in coveredRows" :key="row.field" class="row">
+                <span class="row__label">{{ row.label }}</span>
+                <span class="row__value">{{ row.value }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel panel--missing">
+            <div class="panel__header panel__header--missing">
+              <div class="panel__header-title">
+                <span class="panel-dot panel-dot--missing" />
+                <strong>What's missing</strong>
+              </div>
+              <span class="hint">tick what matters to you</span>
+            </div>
+            <div class="panel__body panel__body--flush">
+              <button
+                v-for="gap in state.result.missing"
+                :key="gap.field"
+                type="button"
+                class="gap-row"
+                :class="{ 'gap-row--checked': state.checked.has(gap.field) }"
+                @click="toggleChecked(gap.field)"
+              >
+                <span class="checkbox" :class="{ 'checkbox--checked': state.checked.has(gap.field) }">
+                  <span v-if="state.checked.has(gap.field)" class="checkbox__mark" />
+                </span>
+                <span class="gap-row__text">
+                  <strong>{{ ELEMENT_LABELS[gap.field] }} not specified</strong>
+                  <span>{{ gap.prompt }}</span>
+                </span>
+              </button>
+              <div v-if="!state.result.missing.length" class="gap-row gap-row--empty">
+                <span>Every element was stated in the message.</span>
+              </div>
+            </div>
+          </div>
+
 
           <div v-if="checkedPrompts.length" class="panel panel--confirm">
             <div class="confirm-header">
@@ -694,8 +704,8 @@ async function copyPromptsToClipboard() {
   overflow: hidden;
 }
 
-/* The bullet list is the headline answer - it spans both columns above
-   the covered/missing split. */
+/* The asks, directly extracted. Sits under the model's reading now, so it
+   is the concrete checklist rather than the headline. */
 .panel--todo {
   grid-column: 1 / -1;
   border: 1px solid var(--color-primary-soft-border);
@@ -1050,17 +1060,31 @@ async function copyPromptsToClipboard() {
   color: var(--color-text-muted);
 }
 
-/* A closer reading - the model-backed panel. Muted next to the decode panels
-   on purpose: it arrives later and is advisory, so it should not compete with
-   the findings the user already has. */
-.panel--reading { border-color: var(--border, #e3e3e3); }
+/* A closer reading - the model-backed panel, and the lead of this page.
+   It is the only panel that interprets rather than extracts, so it carries
+   the accent rule and the largest type. The extraction panels below it are
+   deliberately quieter. */
+.panel--reading {
+  border: 1px solid var(--color-primary-soft-border);
+  border-left: 3px solid #7c6cf0;
+}
 .panel__header--reading { display: flex; align-items: center; gap: 0.5rem; }
 .panel-dot--reading { background: #7c6cf0; }
 .reading__status {
   margin-left: auto; font-size: 0.78rem; opacity: 0.7; font-weight: 500;
 }
 .reading__status--degraded { color: #a8632b; opacity: 1; cursor: help; }
-.reading__summary { margin: 0 0 0.85rem; line-height: 1.5; }
+/* The summary is the one-line answer to "what is this message actually
+   asking of me", so it is set larger than body copy and separated by a rule
+   from the per-field claims that justify it. */
+.reading__summary {
+  margin: 0 0 0.9rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--border-subtle, #f0f0f0);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--color-text);
+}
 .reading__claim {
   padding: 0.6rem 0; border-top: 1px solid var(--border-subtle, #f0f0f0);
 }
