@@ -15,7 +15,7 @@ def create_app(config_class=Config):
 
     CORS(app, origins=app.config.get("CORS_ORIGINS", []))
 
-    if app.config.get("SQLALCHEMY_DATABASE_URI"):
+    if app.config.get("SQLALCHEMY_DATABASE_URI") is not None:
         db.init_app(app)
         migrate.init_app(app, db)
 
