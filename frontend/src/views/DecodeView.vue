@@ -4,11 +4,13 @@ import { Check, Copy } from '@lucide/vue'
 import { decodeMessage, EmptyMessageError, MAX_MESSAGE_LENGTH, MessageTooLongError } from '@/services/decodeService'
 import { findLocalPatternMatch } from '@/services/localPatterns'
 import { getPatterns } from '@/services/patternsService'
+import { reviewMessage } from '@/services/reviewService'
 import { useCardsStore } from '@/stores/cards'
 import { useDecodesStore } from '@/stores/decodes'
 import { ELEMENT_LABELS, NOT_SPECIFIED, type DecodeResult, type ElementKey } from '@/types/decode'
 import type { Pattern, SavedCard } from '@/types/pattern'
 import type { DecodeRecord } from '@/types/decode'
+import { REVIEW_FIELD_LABELS, type FullReview, type ReviewField } from '@/types/review'
 
 const cardsStore = useCardsStore()
 const decodesStore = useDecodesStore()
@@ -26,6 +28,11 @@ const state = reactive({
   record: null as DecodeRecord | null,
   savedCard: null as SavedCard | null,
   showSaved: false,
+  // The model-backed reading. Arrives seconds after the instant decode above,
+  // so it is tracked separately and rendered only once it lands - the page is
+  // never blocked waiting for it.
+  llm: null as FullReview | null,
+  llmLoading: false,
 })
 
 async function review() {
@@ -54,6 +61,21 @@ async function review() {
     // Keep the decode so the work survives the session and a card can point
     // back at the message. Local only - see stores/decodes.ts.
     state.record = decodesStore.save(text, state.result, state.matchedPattern?.id ?? null)
+    
+    // Deliberately not awaited. The decode above is already on screen; this
+    // takes seconds and fills in the closer reading when it arrives. It
+    // resolves to a degraded result rather than throwing, so it can never
+    // break a decode that already worked.
+    state.llm = null
+    state.llmLoading = true
+    void reviewMessage(text)
+      .then((result) => {
+        // Ignore a late reply for a message the user has moved on from.
+        if (state.message.trim() === text) state.llm = result
+      })
+      .finally(() => {
+        if (state.message.trim() === text) state.llmLoading = false
+      })
   } catch (err) {
     // The decoder decides what counts as a message - one rule, server-side,
     // mirrored offline. See decodeService.
@@ -71,10 +93,27 @@ async function review() {
   }
 }
 
+/** Claims worth showing: those with a reading, in a stable field order. */
+const llmClaims = computed(() => {
+  const order: ReviewField[] = [
+    'purpose', 'required_action', 'responsible_person', 'deadline', 'priority', 'context',
+  ]
+  return [...(state.llm?.claims ?? [])]
+    .filter((c) => c.text?.trim())
+    .sort((a, b) => order.indexOf(a.field) - order.indexOf(b.field))
+    .map((c) => ({
+      ...c,
+      label: REVIEW_FIELD_LABELS[c.field] ?? c.field,
+    }))
+})
+
 function reset() {
   state.message = ''
   state.error = ''
   state.result = null
+  // The closer reading belongs to the message that was cleared.
+  state.llm = null
+  state.llmLoading = false
   state.checked = new Set()
   state.matchedPattern = null
   state.record = null
@@ -273,6 +312,44 @@ async function copyPromptsToClipboard() {
               <div v-if="!state.result.missing.length" class="gap-row gap-row--empty">
                 <span>Every element was stated in the message.</span>
               </div>
+            </div>
+          </div>
+
+          <!-- The model-backed reading. Appears only once it arrives, so the
+               decode above is never held up waiting for it. Every claim here
+               was verified server-side against the original message; anything
+               that could not be traced back was dropped before it got here. -->
+          <div v-if="state.llmLoading || state.llm" class="panel panel--reading">
+            <div class="panel__header panel__header--reading">
+              <span class="panel-dot panel-dot--reading" />
+              <strong>A closer reading</strong>
+              <span v-if="state.llmLoading" class="reading__status">reading…</span>
+              <span
+                v-else-if="state.llm?.degraded"
+                class="reading__status reading__status--degraded"
+                title="The model's answer could not be verified against your message, so only what was read directly from the text is shown."
+              >limited</span>
+            </div>
+
+            <div v-if="state.llm" class="panel__body">
+              <p v-if="state.llm.summary" class="reading__summary">{{ state.llm.summary }}</p>
+
+              <div v-for="(c, i) in llmClaims" :key="i" class="reading__claim">
+                <span class="reading__label">{{ c.label }}</span>
+                <span class="reading__quote">“{{ c.text }}”</span>
+                <span v-if="c.reading" class="reading__note">{{ c.reading }}</span>
+              </div>
+
+              <div v-if="state.llm.unstated?.length" class="reading__unstated">
+                <span class="reading__label">Worth asking</span>
+                <ul>
+                  <li v-for="(q, i) in state.llm.unstated" :key="i">{{ q }}</li>
+                </ul>
+              </div>
+
+              <p v-if="state.llm.degraded" class="reading__degraded-note">
+                Showing only what could be read directly from your message.
+              </p>
             </div>
           </div>
 
@@ -950,5 +1027,37 @@ async function copyPromptsToClipboard() {
   font-size: 13.5px;
   line-height: 1.6;
   color: var(--color-text-muted);
+}
+
+/* A closer reading - the model-backed panel. Muted next to the decode panels
+   on purpose: it arrives later and is advisory, so it should not compete with
+   the findings the user already has. */
+.panel--reading { border-color: var(--border, #e3e3e3); }
+.panel__header--reading { display: flex; align-items: center; gap: 0.5rem; }
+.panel-dot--reading { background: #7c6cf0; }
+.reading__status {
+  margin-left: auto; font-size: 0.78rem; opacity: 0.7; font-weight: 500;
+}
+.reading__status--degraded { color: #a8632b; opacity: 1; cursor: help; }
+.reading__summary { margin: 0 0 0.85rem; line-height: 1.5; }
+.reading__claim {
+  display: grid; grid-template-columns: 8.5rem 1fr; gap: 0.15rem 0.75rem;
+  padding: 0.45rem 0; border-top: 1px solid var(--border-subtle, #f0f0f0);
+}
+.reading__claim:first-of-type { border-top: 0; }
+.reading__label { font-size: 0.8rem; opacity: 0.68; }
+.reading__quote { font-style: italic; }
+.reading__note {
+  grid-column: 2; font-size: 0.85rem; opacity: 0.72; line-height: 1.45;
+}
+.reading__unstated { margin-top: 0.9rem; }
+.reading__unstated ul { margin: 0.35rem 0 0; padding-left: 1.1rem; }
+.reading__unstated li { margin-bottom: 0.3rem; line-height: 1.45; }
+.reading__degraded-note {
+  margin: 0.85rem 0 0; font-size: 0.85rem; opacity: 0.65;
+}
+@media (max-width: 640px) {
+  .reading__claim { grid-template-columns: 1fr; }
+  .reading__note { grid-column: 1; }
 }
 </style>
