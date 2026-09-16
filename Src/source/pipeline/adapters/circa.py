@@ -90,8 +90,19 @@ def _load(variant: str) -> tuple[Any, Any, float]:
 
 
 def _choose_variant(question: str | None) -> str:
-    """v2 when there is a real question to give it, answer-only otherwise."""
-    if question and question.strip():
+    """v2 when there is a real question AND weights to run it with.
+
+    The weights check is not redundant. models/circa_nn_v2_iteration1/ is
+    gitignored - 64MB for a variant no user flow can reach - so it is absent
+    from every fresh checkout and from the inference host. Choosing it there
+    means predict() finds no weights and returns the unavailable stub, losing
+    the circa signal entirely; without the check a caller that supplies a
+    question gets *less* than one that does not.
+
+    Measured with v2 removed: question supplied -> label 'unknown',
+    confidence 0.0. With the check -> answer_only, a real answer.
+    """
+    if question and question.strip() and _bundle_file("question_answer").exists():
         return "question_answer"
     return "answer_only"
 

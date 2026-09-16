@@ -162,3 +162,22 @@ def test_circa_still_stubs_when_the_chosen_variant_has_no_weights(monkeypatch, t
     out = circa.predict("Sure, sounds good.")
     assert is_unavailable(out)
     assert "no saved weights" in out["note"]
+
+
+def test_a_question_without_v2_weights_falls_back_rather_than_stubbing(monkeypatch, tmp_path):
+    """v2 is gitignored, so it is absent from every fresh checkout and from
+    the inference host. Selecting it there loses the circa signal entirely -
+    a caller supplying a question would get less than one that does not.
+
+    This pins the weights check in _choose_variant: it was removed once as a
+    redundant-looking condition, which turned a working fallback into
+    'model unavailable' wherever the optional weights are not present.
+    """
+    monkeypatch.setitem(circa.VARIANTS, "question_answer",
+                        {**circa.VARIANTS["question_answer"], "dir": tmp_path / "absent"})
+    out = circa.predict("Yeah, maybe later.", question="Coming Friday?")
+    if is_unavailable(out) and "answer_only" not in out["note"]:
+        assert out["note"].startswith("model unavailable") is False, (
+            "a missing optional variant must fall back, not stub out")
+    assert not is_unavailable(out), "should have fallen back to answer_only"
+    assert "answer_only" in out["note"]
