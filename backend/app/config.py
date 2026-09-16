@@ -31,7 +31,7 @@ class Config:
     # Fail to start instead of running unsafely.
     SECRET_KEY = _require_env("SECRET_KEY")
 
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", "")
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     CORS_ORIGINS = _split_env_list("CORS_ORIGINS")
