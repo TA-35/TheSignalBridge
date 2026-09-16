@@ -110,14 +110,6 @@ const llmClaims = computed(() => {
     }))
 })
 
-// Whether the model actually said something usable. A degraded reading is
-// the verifier having dropped claims it could not trace to the message, so
-// it is exactly the case where the extractor's own panel still earns its
-// place - hence this gates that panel rather than the reading itself.
-const hasReading = computed(
-  () => !!state.llm && !state.llm.degraded && llmClaims.value.length > 0,
-)
-
 function reset() {
   state.message = ''
   state.error = ''
@@ -159,16 +151,40 @@ function toggleChecked(field: ElementKey) {
 // same sentence as the first bullet, so the panel often showed one row that
 // said nothing new. Rows already stated as an ask are dropped, and the panel
 // hides entirely when none survive.
+// What the extractor found that nothing above has already said. Two things
+// are already saying it: the asks list, and - once the model answers - the
+// citation under each claim. Whatever survives both is genuinely extra, so
+// it still gets shown. Dropping the panel wholesale instead would have hidden
+// real rows: on a live message the extractor surfaced `time: "this morning"`
+// that the model never claimed.
 const coveredRows = computed(() => {
   if (!state.result) return []
   const asks = new Set(todo.value.map((t) => t.text.trim().toLowerCase()))
+  const quoted = new Set(
+    llmClaims.value.map((c) => (c.text ?? '').trim().toLowerCase()).filter(Boolean),
+  )
   return state.result.covered
     .map((field) => ({
       field,
       label: ELEMENT_LABELS[field],
       value: state.result!.elements[field],
     }))
-    .filter((row) => !asks.has(row.value.trim().toLowerCase()))
+    .filter((row) => {
+      const value = row.value.trim().toLowerCase()
+      if (asks.has(value)) return false
+      // Containment, not equality: the extractor and the model pick different
+      // edges of the same phrase. On a live message the extractor's deadline
+      // was "Thursday" where the model cited "end of play Thursday" - equal
+      // strings would have called those two separate findings and shown both.
+      // Guarded at 4 characters so a two-letter value cannot match by
+      // accident inside an unrelated quote.
+      return !Array.from(quoted).some(
+        (q) =>
+          q === value ||
+          (value.length >= 4 && q.includes(value)) ||
+          (q.length >= 4 && value.includes(q)),
+      )
+    })
 })
 
 // One bullet per ask. Falls back to the single-task view when the offline
@@ -339,7 +355,7 @@ async function copyPromptsToClipboard() {
             </div>
           </div>
 
-          <div v-if="coveredRows.length && !hasReading" class="panel panel--covered">
+          <div v-if="coveredRows.length" class="panel panel--covered">
             <div class="panel__header panel__header--covered">
               <span class="panel-dot panel-dot--covered" />
               <strong>What's covered</strong>
