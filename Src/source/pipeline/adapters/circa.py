@@ -91,7 +91,7 @@ def _load(variant: str) -> tuple[Any, Any, float]:
 
 def _choose_variant(question: str | None) -> str:
     """v2 when there is a real question to give it, answer-only otherwise."""
-    if question and question.strip() and _bundle_file("question_answer").exists():
+    if question and question.strip():
         return "question_answer"
     return "answer_only"
 
