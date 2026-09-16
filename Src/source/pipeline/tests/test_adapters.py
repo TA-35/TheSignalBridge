@@ -2,6 +2,13 @@
 
 The contract exists so the pipeline survives a broken model, so what matters
 most is that every adapter degrades instead of raising.
+
+A note on the skips. Where weights may be absent, the guard checks for the
+FILE, never for an unavailable result. Guarding on the result means a genuine
+adapter failure makes the test excuse itself rather than fail - and it bit
+once: a test skipped on is_unavailable() stopped skipping when the adapter was
+fixed to fall back, and failed in CI while passing on any machine that had the
+optional weights.
 """
 from __future__ import annotations
 
@@ -67,11 +74,12 @@ def test_tone_stubs_when_torch_is_missing(monkeypatch):
 
 def test_politeness_confidence_is_a_proxy_not_the_score():
     """The score is signed and unbounded; confidence must stay a 0-1 trust value."""
+    if not (politeness._WEIGHTS / "politeness_mlp.npz").exists():
+        pytest.skip("politeness weights not present")
     out = politeness.predict(
         "Would you mind taking a look at the deck when you have a moment? Thank you."
     )
-    if is_unavailable(out):
-        pytest.skip("politeness weights not present")
+    assert not is_unavailable(out), "weights are present, so this must not stub"
     assert 0.0 <= out["confidence"] <= 1.0
     assert out["label"] in {"low", "medium", "high"}
     # The raw score is preserved for the LLM, just not in `confidence`.
@@ -79,9 +87,10 @@ def test_politeness_confidence_is_a_proxy_not_the_score():
 
 
 def test_politeness_lowers_confidence_on_short_input():
-    short = politeness.predict("do it")
-    if is_unavailable(short):
+    if not (politeness._WEIGHTS / "politeness_mlp.npz").exists():
         pytest.skip("politeness weights not present")
+    short = politeness.predict("do it")
+    assert not is_unavailable(short), "weights are present, so this must not stub"
     assert short["confidence"] == politeness._SHORT_INPUT_CONFIDENCE
     assert "confidence lowered" in short["note"]
 
@@ -127,21 +136,31 @@ def test_tone_passes_reliable_classes_through_untouched(monkeypatch):
 def test_circa_uses_answer_only_when_no_question_is_available():
     """The default path: our flows have no question, and answer-only is the
     better model on that input (0.610 vs v2's 0.590 with a blank question)."""
-    out = circa.predict("Yeah, I might be around later if things wrap up early.")
-    if is_unavailable(out):
+    if not circa._bundle_file("answer_only").exists():
         pytest.skip("circa weights not present")
+    out = circa.predict("Yeah, I might be around later if things wrap up early.")
+    assert not is_unavailable(out), "weights are present, so this must not stub"
     assert "circa_nn.py" in out["note"]
     assert "answer_only" in out["note"]
 
 
 def test_circa_switches_to_v2_when_a_question_is_supplied():
-    """v2 activates on its own the day a flow starts collecting a question."""
+    """v2 activates on its own the day a flow starts collecting a question.
+
+    Skipped where the v2 weights are absent, which is every fresh checkout and
+    CI - they are gitignored at 64MB for a variant no user flow reaches.
+
+    The precondition is the weights file, not an unavailable result. An earlier
+    version guarded on is_unavailable(), which held only while a missing v2
+    produced the stub; once the adapter was fixed to fall back to answer_only,
+    that guard stopped firing and the test failed in CI while passing on any
+    machine that happened to have the weights."""
+    if not circa._bundle_file("question_answer").exists():
+        pytest.skip("circa v2 weights not present (gitignored)")
     out = circa.predict(
         "Yeah, I might be around later if things wrap up early.",
         question="Are you coming to drinks on Friday?",
     )
-    if is_unavailable(out):
-        pytest.skip("circa v2 weights not present")
     validate(out)
     assert "circa_nn_v2.py" in out["note"]
     assert "0.647" in out["note"]
@@ -150,9 +169,10 @@ def test_circa_switches_to_v2_when_a_question_is_supplied():
 @pytest.mark.parametrize("question", [None, "", "   "])
 def test_a_blank_question_does_not_trigger_v2(question):
     """Serving v2 a blank question measures 0.590 - worse than not using it."""
-    out = circa.predict("Sure, sounds good.", question=question)
-    if is_unavailable(out):
+    if not circa._bundle_file("answer_only").exists():
         pytest.skip("circa weights not present")
+    out = circa.predict("Sure, sounds good.", question=question)
+    assert not is_unavailable(out), "weights are present, so this must not stub"
     assert "answer_only" in out["note"]
 
 
