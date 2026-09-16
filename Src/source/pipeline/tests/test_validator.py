@@ -285,15 +285,73 @@ def test_interpretive_language_in_a_reading_is_not_an_invented_fact():
     }, MESSAGE).ok
 
 
-def test_questions_about_what_is_missing_are_not_checked():
-    """`unstated` lists what the message does NOT say. Flagging it for
-    containing things absent from the message inverts its purpose - 'is Sarah
-    the only one?' was rejected for an invented CARDINAL."""
+def test_hedging_about_time_and_quantity_is_allowed_in_questions():
+    """`unstated` lists what the message does NOT say, so flagging it for
+    containing absent dates or counts inverts its purpose. 'the only one' was
+    rejected once as an invented CARDINAL."""
     assert check_entities({
         "summary": "A request.",
-        "unstated": ["Who else is expecting this - is Sarah the only one?",
+        "unstated": ["Is this the only ask, or is more coming?",
                      "Do they mean Tuesday or the end of the week?"],
     }, MESSAGE).ok
+
+
+def test_an_invented_name_in_a_question_is_still_rejected():
+    """Exempting interpretive fields entirely was too broad. A live run on a
+    message containing no names produced 'is Sarah the only one?' - a
+    fabricated colleague shown to the reader as though the message named them.
+
+    Hedging about time is interpretation. Inventing a person is not: there is
+    nothing vague about whether a name was written."""
+    result = check_entities({
+        "summary": "A request.",
+        "unstated": ["Who else is expecting this - is Sarah the only one?"],
+    }, MESSAGE)
+    assert not result.ok
+    assert any("PERSON" in f for f in result.failures)
+
+
+def test_an_invented_name_in_a_reading_is_rejected():
+    result = check_entities({
+        "summary": "A request.",
+        "claims": [{"field": "deadline", "text": "Friday", "span": [43, 49],
+                    "reading": "This assumes Priya has already seen it."}],
+    }, MESSAGE)
+    assert not result.ok
+
+
+@pytest.mark.parametrize("question,caught", [
+    ("Is Priya the only one who needs this?", True),   # mid-sentence, NER misses
+    ("Ask Sarah whether she has it.", True),           # mid-sentence, NER catches
+    ("Sarah will need this first.", True),             # sentence start, NER catches
+    ("Priya will need this first.", False),            # sentence start, NER misses
+])
+def test_the_limit_of_name_detection_is_known(question, caught):
+    """Maps exactly where the two passes stop, rather than claiming they are
+    exhaustive.
+
+    The capitalised-word net skips sentence-initial tokens - it has to, or
+    every sentence opener would be flagged - so a name spaCy does not
+    recognise AND that starts a sentence escapes both passes. Measured on
+    en_core_web_sm: 'Sarah' is tagged PERSON and caught anywhere; 'Priya' is
+    not tagged at all and is caught only mid-sentence.
+
+    The residual risk is narrow and one-directional: a fabricated name can
+    only slip through in that one position. Closing it would mean flagging
+    every capitalised word at the start of every sentence, which would degrade
+    almost every response.
+    """
+    result = check_entities({"summary": "A request.", "unstated": [question]},
+                            MESSAGE)
+    assert (not result.ok) is caught
+
+
+def test_a_name_that_is_in_the_message_is_fine_anywhere():
+    msg = "Hi Sarah, could you send the report by Friday?"
+    assert check_entities({
+        "summary": "A request to Sarah.",
+        "unstated": ["Is Sarah the only person who needs to act?"],
+    }, msg).ok
 
 
 def test_a_quote_is_not_re_checked_for_entities():

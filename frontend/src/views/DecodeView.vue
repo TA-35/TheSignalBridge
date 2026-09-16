@@ -147,13 +147,20 @@ function toggleChecked(field: ElementKey) {
   if (state.record) decodesStore.setAsked(state.record.id, [...state.checked])
 }
 
+// "What's covered" duplicated the asks above it: the Task-To-Do row is the
+// same sentence as the first bullet, so the panel often showed one row that
+// said nothing new. Rows already stated as an ask are dropped, and the panel
+// hides entirely when none survive.
 const coveredRows = computed(() => {
   if (!state.result) return []
-  return state.result.covered.map((field) => ({
-    field,
-    label: ELEMENT_LABELS[field],
-    value: state.result!.elements[field],
-  }))
+  const asks = new Set(todo.value.map((t) => t.text.trim().toLowerCase()))
+  return state.result.covered
+    .map((field) => ({
+      field,
+      label: ELEMENT_LABELS[field],
+      value: state.result!.elements[field],
+    }))
+    .filter((row) => !asks.has(row.value.trim().toLowerCase()))
 })
 
 // One bullet per ask. Falls back to the single-task view when the offline
@@ -270,7 +277,7 @@ async function copyPromptsToClipboard() {
             </div>
           </div>
 
-          <div class="panel panel--covered">
+          <div v-if="coveredRows.length" class="panel panel--covered">
             <div class="panel__header panel__header--covered">
               <span class="panel-dot panel-dot--covered" />
               <strong>What's covered</strong>
@@ -279,10 +286,6 @@ async function copyPromptsToClipboard() {
               <div v-for="row in coveredRows" :key="row.field" class="row">
                 <span class="row__label">{{ row.label }}</span>
                 <span class="row__value">{{ row.value }}</span>
-              </div>
-              <div v-if="!coveredRows.length" class="row">
-                <span class="row__label">—</span>
-                <span class="row__value row__value--muted">{{ NOT_SPECIFIED }} for every element</span>
               </div>
             </div>
           </div>
@@ -332,6 +335,15 @@ async function copyPromptsToClipboard() {
                 class="reading__status reading__status--degraded"
                 title="The model's answer could not be verified against your message, so only what was read directly from the text is shown."
               >limited</span>
+            </div>
+
+            <!-- The model takes seconds. An empty bordered box under a
+                 header reads as broken, so hold the shape with placeholder
+                 lines until real content replaces them. -->
+            <div v-if="state.llmLoading && !state.llm" class="panel__body">
+              <div class="skeleton skeleton--wide" />
+              <div class="skeleton skeleton--wide" />
+              <div class="skeleton" />
             </div>
 
             <div v-if="state.llm" class="panel__body">
@@ -1054,11 +1066,38 @@ async function copyPromptsToClipboard() {
 }
 .reading__claim:first-of-type { border-top: 0; padding-top: 0.2rem; }
 .reading__insight { margin: 0; line-height: 1.5; }
+/* Same 132px label column as .row above, so the citation's field name lines
+   up with "Task-To-Do" and "Time not specified" rather than sitting at its
+   own arbitrary indent. */
 .reading__source {
-  margin: 0.3rem 0 0; font-size: 0.83rem; opacity: 0.6;
-  display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: baseline;
+  margin: 0.35rem 0 0; font-size: 13px; color: var(--color-text-faint);
+  display: grid; grid-template-columns: 132px 1fr; gap: 14px;
 }
 .reading__field { text-transform: lowercase; }
+@media (max-width: 640px) {
+  .reading__source { grid-template-columns: 1fr; gap: 0.15rem; }
+}
+
+/* Placeholder lines while the model is still working. */
+.skeleton {
+  height: 0.85rem; border-radius: 4px; width: 58%;
+  margin: 0.55rem 0;
+  background: linear-gradient(90deg,
+    var(--color-surface-sunken, #f0ebe2) 25%,
+    rgba(255, 255, 255, 0.55) 50%,
+    var(--color-surface-sunken, #f0ebe2) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-sweep 1.4s ease-in-out infinite;
+}
+.skeleton--wide { width: 100%; }
+.skeleton:first-child { margin-top: 0; }
+@keyframes skeleton-sweep {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+}
 .reading__quote { font-style: italic; }
 .reading__label { font-size: 0.8rem; opacity: 0.68; }
 .reading__unstated { margin-top: 0.9rem; }

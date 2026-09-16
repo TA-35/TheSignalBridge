@@ -250,6 +250,33 @@ def _variants(entity: str) -> set[str]:
 # exact span, and the summary still cannot invent a fact.
 FACT_BEARING_KEYS: frozenset[str] = frozenset({"summary"})
 
+# Interpretive fields get a narrower check rather than none.
+#
+# Exempting them entirely was too broad. A real run on a message with no names
+# in it produced the question "is Sarah the only one?" - a fabricated person
+# presented to the reader as though the message named them. Constraint 2 lists
+# names explicitly, and no amount of interpretive licence covers inventing one.
+#
+# The distinction that holds: a reading may reason about time and quantity
+# ("if they mean close of business", "is this the only ask?") because that is
+# hedging about what the message left vague. It may never introduce a PERSON or
+# an ORG, because there is nothing vague about whether a name was written.
+INTERPRETIVE_KEYS: frozenset[str] = frozenset({"reading", "unstated"})
+NAME_LABELS: frozenset[str] = frozenset({"PERSON", "ORG"})
+
+
+def _iter_interpretive_text(node: Any) -> Iterable[str]:
+    """Every string under an interpretive key, at any depth."""
+    if isinstance(node, Mapping):
+        for key, value in node.items():
+            if key in INTERPRETIVE_KEYS:
+                yield from iter_text(value, _top=False)
+            elif key != "span":
+                yield from _iter_interpretive_text(value)
+    elif isinstance(node, (list, tuple)):
+        for value in node:
+            yield from _iter_interpretive_text(value)
+
 
 def iter_text(node: Any, _top: bool = True) -> Iterable[str]:
     """Every string that asserts something about the message.
@@ -314,6 +341,27 @@ def check_entities(response: Any, message: str) -> ValidationResult:
 
     def present(value: str) -> bool:
         return any(v in haystack or v in haystack_tight for v in _variants(value))
+
+    # Names, anywhere they appear in interpretive text.
+    #
+    # Both passes, for the same reason the summary needs both: en_core_web_sm
+    # tags "Sarah" as PERSON but returns nothing at all for a bare "Priya", so
+    # NER alone would catch one invented colleague and miss another.
+    for text in _iter_interpretive_text(response):
+        if not text.strip():
+            continue
+        doc = nlp(text)
+        for ent in doc.ents:
+            if ent.label_ in NAME_LABELS and not present(ent.text):
+                failures.append(f"invented {ent.label_} in interpretation: "
+                                f"{ent.text!r}")
+        for token in doc:
+            if token.is_sent_start or not _CAPITALISED_RE.fullmatch(token.text):
+                continue
+            if token.text.lower() in _CAPITALISED_ALLOWED or present(token.text):
+                continue
+            failures.append(f"unverified capitalised word in interpretation: "
+                            f"{token.text!r}")
 
     for text in iter_text(response):
         if not text.strip():
