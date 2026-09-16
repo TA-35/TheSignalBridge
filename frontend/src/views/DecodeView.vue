@@ -337,14 +337,20 @@ async function copyPromptsToClipboard() {
             <div v-if="state.llm" class="panel__body">
               <p v-if="state.llm.summary" class="reading__summary">{{ state.llm.summary }}</p>
 
+              <!-- Reading first, quote second. The quote is often the same
+                   phrase the decode panels above already show; what the model
+                   adds is what it means, so that leads and the quote becomes
+                   the citation underneath it. -->
               <div v-for="(c, i) in llmClaims" :key="i" class="reading__claim">
-                <span class="reading__label">{{ c.label }}</span>
-                <span class="reading__quote">“{{ c.text }}”</span>
-                <span v-if="c.reading" class="reading__note">{{ c.reading }}</span>
+                <p class="reading__insight">{{ c.reading || c.text }}</p>
+                <p v-if="c.reading" class="reading__source">
+                  <span class="reading__field">{{ c.label }}</span>
+                  <span class="reading__quote">“{{ c.text }}”</span>
+                </p>
               </div>
 
               <div v-if="state.llm.unstated?.length" class="reading__unstated">
-                <span class="reading__label">Worth asking</span>
+                <span class="reading__label">Questions worth asking</span>
                 <ul>
                   <li v-for="(q, i) in state.llm.unstated" :key="i">{{ q }}</li>
                 </ul>
@@ -1044,15 +1050,17 @@ async function copyPromptsToClipboard() {
 .reading__status--degraded { color: #a8632b; opacity: 1; cursor: help; }
 .reading__summary { margin: 0 0 0.85rem; line-height: 1.5; }
 .reading__claim {
-  display: grid; grid-template-columns: 8.5rem 1fr; gap: 0.15rem 0.75rem;
-  padding: 0.45rem 0; border-top: 1px solid var(--border-subtle, #f0f0f0);
+  padding: 0.6rem 0; border-top: 1px solid var(--border-subtle, #f0f0f0);
 }
-.reading__claim:first-of-type { border-top: 0; }
-.reading__label { font-size: 0.8rem; opacity: 0.68; }
+.reading__claim:first-of-type { border-top: 0; padding-top: 0.2rem; }
+.reading__insight { margin: 0; line-height: 1.5; }
+.reading__source {
+  margin: 0.3rem 0 0; font-size: 0.83rem; opacity: 0.6;
+  display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: baseline;
+}
+.reading__field { text-transform: lowercase; }
 .reading__quote { font-style: italic; }
-.reading__note {
-  grid-column: 2; font-size: 0.85rem; opacity: 0.72; line-height: 1.45;
-}
+.reading__label { font-size: 0.8rem; opacity: 0.68; }
 .reading__unstated { margin-top: 0.9rem; }
 .reading__unstated ul { margin: 0.35rem 0 0; padding-left: 1.1rem; }
 .reading__unstated li { margin-bottom: 0.3rem; line-height: 1.45; }

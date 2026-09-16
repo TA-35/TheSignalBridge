@@ -62,6 +62,42 @@ def _strip_fences(text: str) -> str:
 REQUIRED_KEYS = ("summary", "claims", "unstated")
 
 
+def _coerce_shape(data: dict[str, Any]) -> dict[str, Any]:
+    """Nudge a nearly-right response into the declared shape.
+
+    Endpoints do not all enforce the schema they are given. llama-3.2-11b on
+    NVIDIA ignores the `field` enum and, observed live, returned `summary` as
+    a list of two sentences rather than a string - which the frontend would
+    have rendered complete with brackets and quotes.
+
+    Coerce rather than reject: a summary split across two sentences is a
+    formatting difference, not a wrong answer, and discarding good claims over
+    it would be the same mistake as failing a whole response for one
+    unverifiable quote. Anything that cannot be coerced is left alone for the
+    validator to judge.
+    """
+    summary = data.get("summary")
+    if isinstance(summary, (list, tuple)):
+        data["summary"] = " ".join(str(s).strip() for s in summary if str(s).strip())
+    elif summary is not None and not isinstance(summary, str):
+        data["summary"] = str(summary)
+
+    for key in ("claims", "unstated"):
+        value = data.get(key)
+        if value is None:
+            data[key] = []
+        elif not isinstance(value, (list, tuple)):
+            # A single item where a list was asked for.
+            data[key] = [value]
+        else:
+            data[key] = list(value)
+
+    # `unstated` is rendered as plain text; anything else would print as an
+    # object in the UI.
+    data["unstated"] = [str(u).strip() for u in data["unstated"] if str(u).strip()]
+    return data
+
+
 @dataclass
 class LLMResult:
     """A parsed response, plus how much work it took to get it."""
@@ -265,6 +301,7 @@ def complete(
         missing = [k for k in REQUIRED_KEYS if k not in data]
         if missing:
             data = {**{"summary": "", "claims": [], "unstated": []}, **data}
+        data = _coerce_shape(data)
 
         return LLMResult(data=data, attempts=attempts,
                          model=config.model, provider=config.provider)

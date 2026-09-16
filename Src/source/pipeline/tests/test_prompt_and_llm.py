@@ -418,3 +418,36 @@ def test_a_valid_numeric_setting_is_still_honoured(monkeypatch):
     from Src.source.pipeline.config import LLMConfig
     monkeypatch.setenv("PIPELINE_LLM_TIMEOUT", "123")
     assert LLMConfig().timeout_seconds == 123.0
+
+
+# --------------------------------------------------------------------------
+# Shape coercion - endpoints do not all enforce the schema they are given
+# --------------------------------------------------------------------------
+
+def test_a_summary_returned_as_a_list_is_joined():
+    """Observed live: llama returned summary as two sentences in an array,
+    which the frontend would have rendered with brackets and quotes."""
+    payload = json.dumps({"summary": ["First sentence.", "Second sentence."],
+                          "claims": [], "unstated": []})
+    data = complete("p", LLMConfig(), caller=lambda p, c: payload).data
+    assert data["summary"] == "First sentence. Second sentence."
+
+
+def test_a_single_item_where_a_list_was_asked_for_is_wrapped():
+    payload = json.dumps({"summary": "ok", "claims": [], "unstated": "One question?"})
+    assert complete("p", LLMConfig(), caller=lambda p, c: payload).data["unstated"] \
+        == ["One question?"]
+
+
+def test_unstated_entries_are_plain_strings():
+    payload = json.dumps({"summary": "ok", "claims": [],
+                          "unstated": ["  spaced  ", "", "real question?"]})
+    out = complete("p", LLMConfig(), caller=lambda p, c: payload).data["unstated"]
+    assert out == ["spaced", "real question?"]
+
+
+def test_a_well_formed_response_is_untouched():
+    payload = json.dumps({"summary": "A summary.", "claims": [],
+                          "unstated": ["A question?"]})
+    data = complete("p", LLMConfig(), caller=lambda p, c: payload).data
+    assert data["summary"] == "A summary." and data["unstated"] == ["A question?"]
