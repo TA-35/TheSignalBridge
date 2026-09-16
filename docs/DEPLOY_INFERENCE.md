@@ -32,8 +32,14 @@ So it gets its own host, and the API reaches it over HTTP.
 `t3.micro` (1 GB) will work but leaves little headroom. Same VPC and region as
 the API box (`ap-southeast-2`), so the API can reach it privately.
 
-Security group: allow **8100/tcp from the API box's security group only**. It
-must not be reachable from the internet — there is no authentication on it.
+Security group, two rules:
+
+- **22/tcp inbound** — so GitHub Actions can deploy. The runners have no fixed
+  IP range worth allowlisting, so this matches how the API box is already
+  reached.
+- **8100/tcp inbound from the API box's security group only** — never
+  `0.0.0.0/0`. The service has **no authentication**; anything that can reach
+  port 8100 can spend your model credits.
 
 On the new host:
 
@@ -85,9 +91,25 @@ Repo → Settings → Secrets and variables → Actions → New repository secre
 
 | Name | Value |
 |---|---|
-| `INFERENCE_HOST` | the new host's private IP or DNS name |
+| `INFERENCE_HOST` | the instance's **public** DNS name or public IP |
 
-`EC2_SSH_PRIVATE_KEY` already exists and is reused. No other secret is needed.
+**Public, not private.** GitHub Actions runners live on GitHub's
+infrastructure, outside your VPC, so they can only SSH to an address reachable
+from the internet. The existing `EC2_SSH_PRIVATE_KEY` secret is reused and no
+other secret is needed.
+
+This is the opposite of `INFERENCE_URL` in step 4, and mixing them up is the
+easiest mistake here:
+
+| Setting | Used by | Address | Reason |
+|---|---|---|---|
+| `INFERENCE_HOST` | GitHub Actions, at deploy time | **public** | the runner is outside the VPC |
+| `INFERENCE_URL` | the API box, at request time | **private** | keeps model traffic off the internet |
+
+Prefer the public **DNS name** over the public IP: a stopped and restarted
+instance gets a new public IP unless you attach an Elastic IP, and the secret
+would then be stale with no obvious symptom beyond the deploy failing to
+connect.
 
 ---
 
@@ -149,12 +171,17 @@ is up but wedged. Every review then waits 30 seconds before degrading.
 So: finish step 3 and see a green health check before doing this. And if
 reviews suddenly get slow, suspect this first.
 
-On the **API** box:
+On the **API** box, using the inference instance's **private** IP (the
+`10.x.x.x` or `172.31.x.x` address, not the public one from step 2):
 
 ```sh
-echo 'INFERENCE_URL=http://<inference-host>:8100' >> ~/app/.env
+# find it from the API box - the private address is what stays inside the VPC
+echo 'INFERENCE_URL=http://10.0.1.23:8100' >> ~/app/.env   # your private IP
 sudo systemctl restart backend
 ```
+
+Using the public address here would route every review out to the internet and
+back, adding latency and exposing traffic that has no reason to leave the VPC.
 
 Verify from anywhere:
 
