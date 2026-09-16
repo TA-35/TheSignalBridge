@@ -4,9 +4,9 @@ After=network.target
 
 [Service]
 Type=simple
-User=ubuntu
-WorkingDirectory=/home/ubuntu/inference
-EnvironmentFile=/home/ubuntu/inference/.env
+User=__USER__
+WorkingDirectory=__HOME__/inference
+EnvironmentFile=__HOME__/inference/.env
 
 # One worker on purpose. Each worker loads spaCy, scikit-learn and both model
 # bundles independently - measured at ~505MB resident - so a second worker
@@ -17,7 +17,7 @@ EnvironmentFile=/home/ubuntu/inference/.env
 # --timeout 120 because a single review can take 5-9 seconds and gunicorn's
 # 30s default would kill a slow one mid-flight. --preload so the models load
 # once before forking rather than once per worker.
-ExecStart=/home/ubuntu/inference/.venv/bin/gunicorn \
+ExecStart=__HOME__/inference/.venv/bin/gunicorn \
     --workers 1 --threads 4 --timeout 120 --preload \
     --bind 127.0.0.1:8100 \
     'Src.source.pipeline.service:create_service()'

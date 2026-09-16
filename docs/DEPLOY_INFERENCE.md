@@ -41,15 +41,34 @@ Security group, two rules:
   `0.0.0.0/0`. The service has **no authentication**; anything that can reach
   port 8100 can spend your model credits.
 
+**Either Ubuntu or Amazon Linux works.** The deploy detects which login user
+the host uses and installs packages with whichever package manager is present,
+so you are not locked to one AMI. Two things follow from the choice:
+
+| | Ubuntu 24.04 | Amazon Linux 2023 |
+|---|---|---|
+| Login user | `ubuntu` | `ec2-user` |
+| Packages | `apt` | `dnf` |
+
+Using the wrong username gives `Permission denied (publickey)` — **identical
+to an unauthorised key**, which is a genuinely confusing hour if you do not
+know to check. The API box is Ubuntu, so matching it keeps one OS in play.
+
 On the new host:
 
 ```sh
-sudo apt update && sudo apt install -y python3-venv python3-pip rsync
 mkdir -p ~/inference
 ```
 
 Add the CI deploy key's **public** half to `~/.ssh/authorized_keys` — the same
-key the backend deploy uses, stored as the `EC2_SSH_PRIVATE_KEY` secret.
+key the backend deploy uses, stored as the `EC2_SSH_PRIVATE_KEY` secret. The
+easiest way is to paste it into the launch wizard's user-data at create time;
+otherwise use **EC2 Instance Connect** (console → Connect), which needs no
+local key at all.
+
+> An EC2 key pair's private half **cannot be regenerated** — AWS creates it
+> once and never stores it. If the `.pem` is lost, Instance Connect or a
+> relaunch are the ways back in.
 
 ### Create the environment file
 
@@ -72,16 +91,12 @@ Using Moonshot directly instead? `MOONSHOT_API_KEY=sk-…` and
 endpoint fails as `AuthenticationError`, which reads like a bad key but is a
 wrong address — the prefix tells you which you have.
 
-### Install the service unit
+### The service unit
 
-```sh
-scp infra/systemd/inference.service ubuntu@<inference-host>:/tmp/ && \
-  ssh ubuntu@<inference-host> "sudo mv /tmp/inference.service /etc/systemd/system/"
-sudo systemctl daemon-reload
-sudo systemctl enable inference
-```
-
-Don't start it yet — there is no code on the host until step 3.
+Nothing to do here — the deploy installs it. `infra/systemd/inference.service.template`
+carries `__USER__` and `__HOME__` placeholders that the workflow fills in for
+whichever OS it found, because the unit has to name a login user and its home
+directory and those differ between the two.
 
 ---
 
