@@ -10,7 +10,7 @@ import { useDecodesStore } from '@/stores/decodes'
 import { ELEMENT_LABELS, NOT_SPECIFIED, type DecodeResult } from '@/types/decode'
 import type { Pattern, SavedCard } from '@/types/pattern'
 import type { DecodeRecord } from '@/types/decode'
-import { REVIEW_FIELD_LABELS, type FullReview, type ReviewField } from '@/types/review'
+import { REVIEW_FIELD_LABELS, type FullReview, type ReviewField, type ReviewGap } from '@/types/review'
 
 const cardsStore = useCardsStore()
 const decodesStore = useDecodesStore()
@@ -209,7 +209,17 @@ const coveredRows = computed(() => {
 // the message; the extractor decides them from keyword rules and is often
 // wrong both ways. Both arrive in the same shape, so there is one renderer.
 const gaps = computed(() => {
-  const fromModel = state.llm?.missing ?? []
+  // Shape-checked, not just presence-checked. The previous inference build
+  // returned `missing` as a list of bare field names, so during a rollout
+  // where the frontend is ahead of the service this reads `g.field` off a
+  // string and renders a row with no label and no question. Anything that is
+  // not {field, question} is ignored, which falls through to the extractor -
+  // the same thing that happens when the model has not answered yet.
+  const fromModel = (state.llm?.missing ?? []).filter(
+    (g): g is ReviewGap =>
+      !!g && typeof g === 'object' && !!(g as ReviewGap).field
+      && !!(g as ReviewGap).question,
+  )
   if (fromModel.length) {
     return fromModel.map((g) => ({
       field: g.field as string,
