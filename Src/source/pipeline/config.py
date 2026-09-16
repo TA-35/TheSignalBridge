@@ -7,6 +7,7 @@ the API, should be an env var, not a pull request.
 from __future__ import annotations
 
 import os
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -35,6 +36,26 @@ def _load_env_files() -> None:
 
 
 _load_env_files()
+
+
+def _number(name: str, default: str, cast):
+    """Read a numeric setting, falling back to the default if it is malformed.
+
+    A single stray character crashed the whole config: PIPELINE_LLM_TIMEOUT
+    was typed as "900v" and float() raised, taking down 46 tests and - had it
+    happened in the inference host's .env - the service itself, with a
+    ValueError that says nothing about which variable is at fault.
+
+    Configuration should degrade, not explode. A bad value is reported on
+    stderr, names the variable, and the documented default is used instead.
+    """
+    raw = os.environ.get(name, default)
+    try:
+        return cast(raw)
+    except (TypeError, ValueError):
+        print(f"warning: {name}={raw!r} is not a valid number; "
+              f"using the default {default!r}", file=sys.stderr)
+        return cast(default)
 
 
 def _flag(name: str, default: bool) -> bool:
@@ -129,14 +150,14 @@ class LLMConfig:
         os.environ.get("PIPELINE_LLM_BASE_URL") or _provider_default("base_url")))
     api_key: str | None = field(default_factory=_api_key)
     max_tokens: int = field(
-        default_factory=lambda: int(os.environ.get("PIPELINE_LLM_MAX_TOKENS", "8000")))
+        default_factory=lambda: _number("PIPELINE_LLM_MAX_TOKENS", "8000", int))
     # low | medium | high | xhigh | max. This is a bounded extraction job over
     # a short message, not open-ended reasoning, so the default is deliberately
     # below the API's own default of high.
     effort: str = field(
         default_factory=lambda: os.environ.get("PIPELINE_LLM_EFFORT", "medium"))
     timeout_seconds: float = field(
-        default_factory=lambda: float(os.environ.get("PIPELINE_LLM_TIMEOUT", "600")))
+        default_factory=lambda: _number("PIPELINE_LLM_TIMEOUT", "600", float))
 
     # SDK-level retries on 5xx/429, separate from json_retries. The SDKs
     # default to 2, which multiplies against the timeout: 900s x 3 attempts
@@ -144,10 +165,10 @@ class LLMConfig:
     # NVIDIA InternalServerError - that was a retry chain, not a slow model.
     # One retry is enough to ride out a blip without stalling a whole sweep.
     max_retries: int = field(
-        default_factory=lambda: int(os.environ.get("PIPELINE_LLM_MAX_RETRIES", "1")))
+        default_factory=lambda: _number("PIPELINE_LLM_MAX_RETRIES", "1", int))
     # One retry on malformed JSON, per the brief.
     json_retries: int = field(
-        default_factory=lambda: int(os.environ.get("PIPELINE_LLM_JSON_RETRIES", "1")))
+        default_factory=lambda: _number("PIPELINE_LLM_JSON_RETRIES", "1", int))
 
     # Stream the response. On by default: a reasoning model can take minutes
     # to first byte, and a non-streaming request just holds an open socket

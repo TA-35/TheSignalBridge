@@ -402,3 +402,19 @@ def test_response_format_can_be_stepped_down_without_a_code_change():
     """Not every OpenAI-compatible endpoint enforces strict schemas."""
     assert LLMConfig().response_format == "json_schema"
     assert LLMConfig(response_format="json_object").response_format == "json_object"
+
+
+def test_a_malformed_numeric_setting_falls_back_instead_of_crashing(monkeypatch, capsys):
+    """A stray character in a .env took down 46 tests and would have stopped
+    the inference service booting, with a ValueError naming no variable."""
+    from Src.source.pipeline.config import LLMConfig
+    monkeypatch.setenv("PIPELINE_LLM_TIMEOUT", "900v")
+    cfg = LLMConfig()
+    assert cfg.timeout_seconds == 600.0
+    assert "PIPELINE_LLM_TIMEOUT" in capsys.readouterr().err
+
+
+def test_a_valid_numeric_setting_is_still_honoured(monkeypatch):
+    from Src.source.pipeline.config import LLMConfig
+    monkeypatch.setenv("PIPELINE_LLM_TIMEOUT", "123")
+    assert LLMConfig().timeout_seconds == 123.0
