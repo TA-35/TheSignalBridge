@@ -56,8 +56,13 @@ one good one beats four restatements. Never pad - a quote you cannot find in
 the message fails verification and the whole answer is discarded.
 
 `unstated` - real questions the reader could ask, in their own words. Never
-field names. Not "responsible_person" but "Who else is expecting this - is
-Sarah the only one, or is this going wider?" Each one should be something
-they could paste into a reply.
+field names: not "responsible_person" but "Who else is expecting this, or is
+it just me?" Each one should be something they could paste into a reply.
+
+Never name a person or a company that the message does not name. Not as an
+example, not as a placeholder, not in a question. If you need to refer to
+someone the message leaves unnamed, say "whoever owns this" or "the person
+they mean". A name that is not in the message fails verification and the
+whole answer is discarded.
 
 Output the JSON object alone. No markdown fences, no preamble.
