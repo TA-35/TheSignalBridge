@@ -26,7 +26,22 @@ import urllib.request
 
 from flask import Blueprint, current_app, jsonify, request
 
+from ..limiter import limiter
+
 bp = Blueprint("review", __name__)
+
+# Per-IP limits. Only /review costs money - it is the one that reaches the
+# model - so it carries the tight limit and the cheap endpoints carry loose
+# ones. Remember the x3 worker ceiling described in app/limiter.py when
+# reading these: "30 per hour" is a floor on what a client can do, and
+# roughly 90 is the worst case.
+#
+# 30/hour is well clear of real use. A person reviewing their inbox works
+# through a handful of messages in a sitting, and each review takes 5-15s
+# of model time, so sustaining even the per-minute limit by hand is not
+# possible. A script hitting it in a loop is exactly what this stops.
+MODEL_CALL_LIMITS = "5 per minute; 30 per hour"
+CHEAP_LIMITS = "30 per minute; 300 per hour"
 
 # Kept in sync with MAX_MESSAGE_LENGTH in routes/decode.py and with
 # PIPELINE_MAX_MESSAGE_CHARS in the pipeline. All three guard the same thing;
@@ -114,6 +129,7 @@ def _proxy(path: str, timeout_key: str, default_timeout: float):
 
 
 @bp.post("/quick")
+@limiter.limit(CHEAP_LIMITS)
 def review_quick():
     """Stage one: extractor only, no model call. Milliseconds.
 
@@ -124,12 +140,18 @@ def review_quick():
 
 
 @bp.post("")
+@limiter.limit(MODEL_CALL_LIMITS)
 def review_full():
     """Stage two: the full pipeline including the LLM. Seconds."""
     return _proxy("/review", "INFERENCE_TIMEOUT", 30.0)
 
 
+# Exempt: this is how a deploy and any future monitor check whether the
+# inference service is up. Rate limiting the health check means the thing
+# you reach for when the site looks broken is the thing that stops
+# answering first.
 @bp.get("/health")
+@limiter.exempt
 def review_health():
     """Whether the inference service is reachable from this box.
 

@@ -75,6 +75,18 @@ watch(
         <RouterView />
       </div>
     </main>
+
+    <!-- Exists so the privacy policy is reachable from every page. A policy
+         nobody can find is the same as not having one, and this is the only
+         page on the site a reader might go looking for rather than navigate
+         to. Kept out of the main nav because it is not a destination people
+         use the product through. -->
+    <footer class="site-footer">
+      <div class="site-footer__inner">
+        <span class="site-footer__note">A student project for FIT5120, Monash University.</span>
+        <RouterLink to="/privacy" class="site-footer__link">Privacy</RouterLink>
+      </div>
+    </footer>
   </div>
 </template>
 
@@ -214,6 +226,48 @@ watch(
 
   .main {
     padding: 24px 18px 32px;
+  }
+}
+
+.site-footer {
+  border-top: 1px solid var(--color-primary-soft-border);
+  margin-top: 48px;
+}
+
+.site-footer__inner {
+  max-width: var(--layout-max, 1100px);
+  margin: 0 auto;
+  padding: 18px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.site-footer__note,
+.site-footer__link {
+  /* muted, not faint: faint is 2.96:1 on this background and fails WCAG AA
+     for text at this size. */
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.site-footer__link {
+  color: var(--color-primary-strong-text);
+  text-decoration: none;
+}
+
+.site-footer__link:hover,
+.site-footer__link:focus-visible {
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .site-footer__inner {
+    padding: 16px 18px;
+    justify-content: center;
+    text-align: center;
   }
 }
 </style>

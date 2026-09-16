@@ -36,6 +36,12 @@ class Config:
 
     CORS_ORIGINS = _split_env_list("CORS_ORIGINS")
 
+    # Rate limiting, on by default. Deliberately NOT read here: a class body
+    # runs once at import, so the value would be frozen before any test could
+    # change it - the same trap that bit PipelineConfig's dataclass defaults.
+    # register_rate_limiting() reads the environment when the app is built.
+    # See app/limiter.py.
+
     # Backstop against oversized request bodies in general, on top of the
     # /api/decode route's own message-length check - this one rejects the
     # request before Flask even reads/parses the body. 100 KB comfortably

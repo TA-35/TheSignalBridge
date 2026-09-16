@@ -2,6 +2,8 @@ from flask import Blueprint, jsonify, request
 
 from ..services import ai_decoder
 
+from ..limiter import limiter
+
 bp = Blueprint("decode", __name__)
 
 # Kept in sync with MAX_MESSAGE_LENGTH in
@@ -12,6 +14,9 @@ MAX_MESSAGE_LENGTH = 5000
 
 
 @bp.post("")
+# Cheap - spaCy only, ~6ms, no model call. Loose enough not to
+# interfere with someone decoding message after message.
+@limiter.limit("30 per minute; 300 per hour")
 def decode_message():
     data = request.get_json(silent=True) or {}
     message = data.get("message", "")
