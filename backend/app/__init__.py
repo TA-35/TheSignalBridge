@@ -15,8 +15,9 @@ def create_app(config_class=Config):
 
     CORS(app, origins=app.config.get("CORS_ORIGINS", []))
 
-    db.init_app(app)
-    migrate.init_app(app, db)
+    if app.config.get("SQLALCHEMY_DATABASE_URI"):
+        db.init_app(app)
+        migrate.init_app(app, db)
 
     from .routes import register_blueprints
     register_blueprints(app)
