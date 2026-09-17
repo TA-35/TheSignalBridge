@@ -74,13 +74,16 @@ const FEATURES: FeatureCard[] = [
       <div class="hero-panel">
         <h1 class="hero-title">Clear communication, <br />with no hidden "surprises".</h1>
         <p class="hero-subtitle">
-          Analyze incoming messages to spot unstated expectations 
-          and subtext. And, audit your own drafts to ensure your 
-          true intent comes through every time.
+          Analyse incoming messages to spot unstated expectations and subtext, and see
+          the exact words each reading came from. Drafting help is coming next.
         </p>
         <div class="actions">
           <RouterLink to="/decode" class="btn btn--primary">Decode a message</RouterLink>
-          <RouterLink to="/compose" class="btn btn--secondary">Compose a message</RouterLink>
+          <!-- Pointed at /compose, which is an unbuilt stub: the most
+               prominent secondary action on the site led to a page reading
+               "Coming Soon...". The library is a real destination that serves
+               the same visitor - someone not yet ready to paste anything. -->
+          <RouterLink to="/library" class="btn btn--secondary">Browse the pattern library</RouterLink>
         </div>
       </div>
     </div>
@@ -149,12 +152,52 @@ const FEATURES: FeatureCard[] = [
   z-index: 0;
 }
 
-/* Darkens the photo so the white text stays readable over it. */
+/* Darkens the photo so the white text stays readable over it.
+   ---------------------------------------------------------------------------
+   The first version faded 0.5 -> 0.1 across the full viewport, which is the
+   same direction the text runs, so every line ended where the scrim was
+   weakest. Measured against the composited pixels, the worst point under the
+   title was 2.01:1 and under the subtitle 2.12:1, with roughly a fifth of each
+   line below its threshold - over the pale shirt and table on the right.
+
+   White on a photo is only as good as the darkest guarantee underneath it. At
+   0.62 alpha even a pure-white pixel composites to 6.2:1, so the text band is
+   held at or above that and the photo is only allowed to come back up in the
+   right-hand margin, where no text reaches.
+
+   The tiers exist because the text panel is a fixed 620px while the viewport
+   is not: the narrower the window, the further across the gradient the text
+   runs, so the fade has to flatten as the window shrinks. */
 .hero-scrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.1) 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.74) 0%,
+    rgba(0, 0, 0, 0.66) 52%,
+    rgba(0, 0, 0, 0.3) 82%,
+    rgba(0, 0, 0, 0.12) 100%
+  );
   z-index: 1;
+}
+
+@media (max-width: 1100px) {
+  .hero-scrim {
+    background: linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.74) 0%,
+      rgba(0, 0, 0, 0.68) 76%,
+      rgba(0, 0, 0, 0.5) 100%
+    );
+  }
+}
+
+/* Below this the text runs the full width of the screen, so there is no
+   longer a right-hand margin to give the photograph back. */
+@media (max-width: 720px) {
+  .hero-scrim {
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.74) 0%, rgba(0, 0, 0, 0.68) 100%);
+  }
 }
 
 /* Dissolves the photo into the page background instead of cutting to it on
@@ -198,14 +241,21 @@ const FEATURES: FeatureCard[] = [
   font-weight: 500;
   letter-spacing: -0.02em;
   margin: 0;
+  /* Literal white rather than a token: this text is never on the page
+     surface, only ever on the scrim, which is the same darkness in both
+     appearances. The shadow is margin against the photo's bright patches,
+     not a style. */
   color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 .hero-subtitle {
   margin: 0;
   font-size: 16.5px;
   line-height: 1.62;
-  color: rgba(255, 255, 255, 0.88);
+  /* Was 0.88 alpha, which spent contrast this text could not afford. */
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 @media (max-width: 720px) {
@@ -228,27 +278,6 @@ const FEATURES: FeatureCard[] = [
   font-size: 15px;
   font-weight: 500;
   cursor: pointer;
-}
-
-.btn--primary {
-  border: 1px solid var(--color-primary-border);
-  background: var(--color-primary);
-  color: var(--color-frame);
-}
-
-.btn--primary:hover {
-  background: var(--color-primary-hover);
-}
-
-.btn--secondary {
-  padding: 13px 20px;
-  border: 1px solid var(--color-border-strong);
-  background: var(--color-frame);
-  color: #4a453e;
-}
-
-.btn--secondary:hover {
-  background: #f6f2ea;
 }
 
 .moments {

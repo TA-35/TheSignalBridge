@@ -73,7 +73,11 @@ const visible = computed(() => {
     const q = searchQuery.value.trim().toLowerCase()
     return patterns.value.filter((p) => p.name.toLowerCase().includes(q))
   }
-  return activeCategory.value ? patterns.value.filter((p) => p.category === activeCategory.value) : []
+  // No category selected is "Overview", and Overview now shows everything.
+  // It used to return [], so the sidebar highlighted Overview as the current
+  // item while the pane said "Pick a category to start" - the nav claiming a
+  // choice had been made and the content denying it.
+  return activeCategory.value ? patterns.value.filter((p) => p.category === activeCategory.value) : patterns.value
 })
 
 function addToCards(pattern: Pattern) {
@@ -95,7 +99,7 @@ function explore(pattern: Pattern) {
 <template>
   <div class="library">
     <div class="header">
-      <h2>Pattern library</h2>
+      <h1>Pattern library</h1>
       <p>Common phrases, and what they actually mean.</p>
     </div>
 
@@ -103,7 +107,7 @@ function explore(pattern: Pattern) {
       <Search :size="16" :stroke-width="2" class="search__icon" aria-hidden="true" />
       <input
         v-model="searchQuery"
-        type="text"
+        type="search"
         class="search__input"
         placeholder="Search by phrase…"
         aria-label="Search the pattern library by phrase"
@@ -113,8 +117,12 @@ function explore(pattern: Pattern) {
       </button>
     </div>
 
+    <!-- The sidebar's counterpart below 860px, where it is the only way to
+         change category - so it needs the name the sidebar gets from being a
+         labelled <nav>. -->
     <select
       class="category-select"
+      aria-label="Filter patterns by category"
       :value="activeCategory ?? ''"
       @change="selectCategory(($event.target as HTMLSelectElement).value || null)"
     >
@@ -125,11 +133,12 @@ function explore(pattern: Pattern) {
     <p v-if="loading" class="status">Loading the pattern library…</p>
 
     <div v-else class="layout">
-      <nav class="sidebar">
+      <nav class="sidebar" aria-label="Pattern categories">
         <button
           type="button"
           class="sidebar-item"
           :class="{ 'sidebar-item--active': !activeCategory }"
+          :aria-current="!activeCategory ? 'true' : undefined"
           @click="selectCategory(null)"
         >
           <Compass :size="17" :stroke-width="1.75" aria-hidden="true" />
@@ -141,6 +150,7 @@ function explore(pattern: Pattern) {
           type="button"
           class="sidebar-item"
           :class="{ 'sidebar-item--active': activeCategory === cat.name }"
+          :aria-current="activeCategory === cat.name ? 'true' : undefined"
           @click="selectCategory(cat.name)"
         >
           <component :is="cat.icon" :size="17" :stroke-width="1.75" aria-hidden="true" />
@@ -150,18 +160,20 @@ function explore(pattern: Pattern) {
       </nav>
 
       <div class="content">
-        <div v-if="!isSearching && !activeCategory" class="intro">
-          <strong>Pick a category to start</strong>
-          <p>
-            Pick a category to see real examples and what they actually imply.
-          </p>
+        <div v-if="!visible.length && !isSearching" class="intro">
+          <strong>No patterns yet</strong>
+          <p>The library could not be loaded. Try again in a moment.</p>
         </div>
 
         <p v-else-if="isSearching && !visible.length" class="status">No phrases match "{{ searchQuery }}".</p>
 
         <div v-else class="grid">
           <div v-for="item in visible" :key="item.id" class="item" @click="explore(item)">
-            <span class="item__tag">{{ item.category }}</span>
+            <!-- Inside a single category every card carried the same tag,
+                 which told the reader nothing they had not just clicked. It
+                 earns its place in Overview and in search results, where the
+                 cards genuinely span categories. -->
+            <span v-if="!activeCategory" class="item__tag">{{ item.category }}</span>
             <strong class="item__name">{{ item.name }}</strong>
             <div class="item__actions">
               <button
@@ -189,7 +201,7 @@ function explore(pattern: Pattern) {
   gap: 20px;
 }
 
-.header h2 {
+.header h1 {
   font-family: var(--font-serif);
   font-size: 26px;
   font-weight: 500;
@@ -328,8 +340,10 @@ function explore(pattern: Pattern) {
   min-width: 0;
 }
 
+/* Solid, like every other surface in the app. The dashed border was the only
+   one on the site and read as an unfinished placeholder. */
 .intro {
-  border: 1px dashed var(--color-border-strong);
+  border: 1px solid var(--color-border-soft);
   border-radius: var(--radius-md);
   background: var(--color-surface-soft);
   padding: 40px 28px;
@@ -376,11 +390,12 @@ function explore(pattern: Pattern) {
   background: var(--color-surface-soft);
 }
 
+/* 10.5px on --color-text-faint was 3.5:1 and under the 11px floor. */
 .item__tag {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 11.5px;
   letter-spacing: 0.08em;
-  color: var(--color-text-faint);
+  color: var(--color-text-muted);
 }
 
 .item__name {
@@ -403,19 +418,6 @@ function explore(pattern: Pattern) {
   border-radius: 8px;
   font-size: 12.5px;
   cursor: pointer;
-}
-
-.btn--outline {
-  border: 1px solid var(--color-border-strong);
-  background: var(--color-frame);
-  color: var(--color-text-muted);
-}
-
-.btn--saved {
-  border: 1px solid var(--color-primary-soft-border);
-  background: var(--color-primary-soft-bg);
-  color: var(--color-primary-strong-text);
-  cursor: default;
 }
 
 .explore {

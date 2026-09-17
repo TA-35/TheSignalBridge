@@ -1,10 +1,15 @@
-import { reactive, watchEffect } from 'vue'
+import { computed, onScopeDispose, reactive, ref, watchEffect } from 'vue'
 import { defineStore } from 'pinia'
 
 const STORAGE_KEY = 'readtheroom.settings'
 
 export type Typeface = 'default' | 'hyperlegible'
-export type Appearance = 'light' | 'dark'
+// 'system' is the default and follows the OS. The previous default was a
+// hardcoded 'light', so someone whose machine is in dark mode got a light site
+// until they found this page - which is the exact thing an in-app appearance
+// setting is warned about: it looks like the app ignoring them.
+export type Appearance = 'system' | 'light' | 'dark'
+export type ResolvedAppearance = 'light' | 'dark'
 export type Accent = 'sage' | 'ocean' | 'lavender' | 'slate'
 export type TextSize = 'small' | 'standard' | 'large'
 
@@ -18,7 +23,7 @@ interface Settings {
 
 const DEFAULTS: Settings = {
   typeface: 'default',
-  appearance: 'light',
+  appearance: 'system',
   accent: 'sage',
   textSize: 'standard',
   boldText: false,
@@ -36,14 +41,38 @@ function load(): Settings {
 // Comfort preferences
 // Applied globally via `data-*` attributes on <html> so any component's CSS
 // can key off them without prop-drilling.
+const DARK_QUERY = '(prefers-color-scheme: dark)'
+
 export const useSettingsStore = defineStore('settings', () => {
   const settings = reactive<Settings>(load())
+
+  // What the OS currently says, kept live: someone who switches their machine
+  // to dark at sunset should see this follow without a reload.
+  const mql = typeof window !== 'undefined' && window.matchMedia
+    ? window.matchMedia(DARK_QUERY)
+    : null
+  const systemDark = ref(mql?.matches ?? false)
+
+  if (mql) {
+    const onChange = (event: MediaQueryListEvent) => {
+      systemDark.value = event.matches
+    }
+    mql.addEventListener('change', onChange)
+    onScopeDispose(() => mql.removeEventListener('change', onChange))
+  }
+
+  // What is actually painted. Everything that needs to branch on light vs dark
+  // - the wordmark asset, for one - has to read this and not `settings`,
+  // because 'system' is a preference, not an appearance.
+  const appearance = computed<ResolvedAppearance>(() =>
+    settings.appearance === 'system' ? (systemDark.value ? 'dark' : 'light') : settings.appearance,
+  )
 
   watchEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
     const root = document.documentElement
     root.dataset.typeface = settings.typeface
-    root.dataset.appearance = settings.appearance
+    root.dataset.appearance = appearance.value
     root.dataset.accent = settings.accent
     root.dataset.textSize = settings.textSize
     root.dataset.boldText = String(settings.boldText)
@@ -53,5 +82,5 @@ export const useSettingsStore = defineStore('settings', () => {
     Object.assign(settings, DEFAULTS)
   }
 
-  return { settings, reset }
+  return { settings, appearance, reset }
 })

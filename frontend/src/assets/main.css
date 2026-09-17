@@ -1,4 +1,5 @@
 @import './tokens.css';
+@import './buttons.css';
 
 * {
   box-sizing: border-box;
@@ -20,8 +21,12 @@ body {
   min-height: 100vh;
 }
 
+/* --color-primary is 4.05:1 against the page background, which is under the
+   4.5:1 that body-sized text needs - and inline links in prose are exactly
+   body-sized. The strong variant of the same hue is 7.7:1 and reads as the
+   same colour. */
 a {
-  color: var(--color-primary);
+  color: var(--color-primary-strong-text);
   text-decoration: none;
 }
 

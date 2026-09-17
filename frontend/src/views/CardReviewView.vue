@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ArrowLeft, Check } from '@lucide/vue'
 import { useCardsStore } from '@/stores/cards'
 import { getPatterns } from '@/services/patternsService'
 import type { Pattern } from '@/types/pattern'
@@ -57,7 +58,10 @@ const index = computed(() => orderedIds.value.indexOf(currentId.value))
 const backTo = computed(() =>
   isPreview.value ? { path: '/library', query: previewCategory.value ? { category: previewCategory.value } : {} } : '/study',
 )
-const backLabel = computed(() => (isPreview.value ? '← Back to Library' : '← Back to Study'))
+// The arrow is an <ArrowLeft> beside this, not a character inside it: the rest
+// of the app draws its icons with Lucide, and Study was using an ASCII "->"
+// for the same job.
+const backLabel = computed(() => (isPreview.value ? 'Back to Library' : 'Back to Study'))
 
 watch(
   currentId,
@@ -91,17 +95,23 @@ function saveToStudy() {
 <template>
   <div v-if="card" class="review">
     <div class="topline">
-      <RouterLink :to="backTo" class="back">{{ backLabel }}</RouterLink>
+      <RouterLink :to="backTo" class="back">
+        <ArrowLeft :size="15" :stroke-width="2" aria-hidden="true" />
+        {{ backLabel }}
+      </RouterLink>
       <span class="pos">card {{ index + 1 }} of {{ orderedIds.length }}</span>
     </div>
 
     <div class="card">
       <span v-if="card.category" class="tag">{{ card.category }}</span>
-      <strong class="name">{{ card.name }}</strong>
+      <!-- The phrase being studied is what this page is about, so it is the
+           page's heading. This screen previously had no heading element at
+           all, which left a screen reader nothing to navigate by. -->
+      <h1 class="name">{{ card.name }}</h1>
 
       <p v-if="card.excerpt" class="excerpt">{{ card.excerpt }}</p>
 
-      <div class="reveal" :class="{ 'reveal--open': flipped }">
+      <div id="card-reveal" class="reveal" :class="{ 'reveal--open': flipped }">
         <div class="reveal__inner">
           <template v-if="card.implies">
             <div class="block">
@@ -133,7 +143,13 @@ function saveToStudy() {
 
     <div class="controls">
       <button type="button" class="btn btn--secondary" @click="step(-1)">Previous</button>
-      <button type="button" class="btn btn--primary flip" @click="flipped = !flipped">
+      <button
+        type="button"
+        class="btn btn--primary flip"
+        :aria-expanded="flipped"
+        aria-controls="card-reveal"
+        @click="flipped = !flipped"
+      >
         {{ flipped ? "That's enough for now" : 'Explore this idea' }}
       </button>
       <button type="button" class="btn btn--secondary" @click="step(1)">Next</button>
@@ -147,7 +163,8 @@ function saveToStudy() {
       :disabled="alreadySaved"
       @click="saveToStudy"
     >
-      {{ alreadySaved ? 'Saved to Study ✓' : 'Save to Study' }}
+      <Check v-if="alreadySaved" :size="14" :stroke-width="2" aria-hidden="true" />
+      {{ alreadySaved ? 'Saved to Study' : 'Save to Study' }}
     </button>
   </div>
 </template>
@@ -168,15 +185,25 @@ function saveToStudy() {
   gap: 12px;
 }
 
+/* Was 13.5px on --color-primary: 4.05:1, just under the 4.5:1 this size
+   needs. The strong variant of the same hue clears it at 7.7:1. The padding
+   is what takes the target from 18px tall to a reachable one. */
 .back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
   font-size: 13.5px;
-  color: var(--color-primary);
+  font-weight: 500;
+  color: var(--color-primary-strong-text);
 }
 
+/* --color-text-faint measures 2.96:1 on the page background. It is never a
+   safe colour for text at any size this app uses. */
 .pos {
   font-family: var(--font-mono);
-  font-size: 11.5px;
-  color: var(--color-text-faint);
+  font-size: 12px;
+  color: var(--color-text-muted);
 }
 
 .card {
@@ -193,12 +220,14 @@ function saveToStudy() {
 
 .tag {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 11.5px;
   letter-spacing: 0.09em;
-  color: var(--color-text-faint);
+  color: var(--color-text-muted);
 }
 
+/* An <h1> now, so it arrives with the browser's own heading margins. */
 .name {
+  margin: 0;
   font-family: var(--font-serif);
   font-size: 28px;
   font-weight: 500;
@@ -236,11 +265,14 @@ function saveToStudy() {
   gap: 7px;
 }
 
+/* The worst text on the site before this: 10.5px at 2.55:1, on the two labels
+   that say what you are reading. Below the 11px floor as well as the contrast
+   one, and hardcoded to a light-mode green so dark mode never touched it. */
 .block__label {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 12px;
   letter-spacing: 0.09em;
-  color: #8ca79a;
+  color: var(--color-primary-strong-text);
 }
 
 .block__text {
@@ -251,7 +283,7 @@ function saveToStudy() {
 
 .rule {
   height: 1px;
-  background: #e5ede9;
+  background: var(--color-border-soft);
 }
 
 .controls {
@@ -269,32 +301,10 @@ function saveToStudy() {
   cursor: pointer;
 }
 
-.btn--secondary {
-  border: 1px solid var(--color-border-strong);
-  background: var(--color-frame);
-  color: #4a453e;
-}
-
-.btn--primary {
-  border: 1px solid var(--color-primary-border);
-  background: var(--color-primary);
-  color: var(--color-frame);
-}
-
-.btn--outline {
-  border: 1px solid var(--color-border-strong);
-  background: var(--color-frame);
-  color: #4a453e;
-}
-
-.btn--saved {
-  border: 1px solid var(--color-primary-soft-border);
-  background: var(--color-primary-soft-bg);
-  color: var(--color-primary-strong-text);
-  cursor: default;
-}
-
 .save-to-study {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   padding: 11px 20px;
   font-weight: 500;
 }

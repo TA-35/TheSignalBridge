@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ChevronRight } from '@lucide/vue'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCardsStore } from '@/stores/cards'
@@ -30,7 +31,7 @@ function open(id: string) {
 <template>
   <div class="study">
     <div class="header">
-      <h2>Study</h2>
+      <h1>Study</h1>
       <p>Cards you've kept from the library and from messages you've reviewed. Open one to refresh what it means.</p>
     </div>
 
@@ -49,7 +50,14 @@ function open(id: string) {
           <strong>{{ card.name }}</strong>
           <span class="meta">{{ card.meta }}</span>
         </span>
-        <span class="explore">See more -></span>
+        <!-- A cue, not a control. This was a bordered, filled pill reading
+             "See more ->" sitting INSIDE the row's own <button>, so it looked
+             like the thing to click when the whole row already was. The label
+             also now matches the Library's wording for the same destination. -->
+        <span class="explore">
+          See what this means
+          <ChevronRight :size="15" :stroke-width="2" aria-hidden="true" />
+        </span>
       </button>
     </div>
   </div>
@@ -67,7 +75,7 @@ function open(id: string) {
   flex-direction: column;
 }
 
-.header h2 {
+.header h1 {
   font-family: var(--font-serif);
   font-size: 26px;
   font-weight: 500;
@@ -121,18 +129,6 @@ function open(id: string) {
   cursor: pointer;
 }
 
-.btn--primary {
-  border: 1px solid var(--color-primary-border);
-  background: var(--color-primary);
-  color: var(--color-frame);
-}
-
-.btn--secondary {
-  border: 1px solid var(--color-border-strong);
-  background: var(--color-frame);
-  color: #4a453e;
-}
-
 .list {
   display: flex;
   flex-direction: column;
@@ -170,21 +166,28 @@ function open(id: string) {
   color: var(--color-text);
 }
 
+/* --color-text-faint is 3.5:1 on the card surface and 2.96:1 on the page.
+   The !important was there to win against a parent rule, not to pick this
+   colour, so it survives the swap. */
 .meta {
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--color-text-faint) !important;
+  font-size: 11.5px;
+  color: var(--color-text-muted) !important;
 }
 
 .explore {
-  padding: 8px 13px;
-  border-radius: 8px;
-  border: 1px solid var(--color-primary-soft-border);
-  background: var(--color-primary-soft-bg);
-  font-size: 12.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--color-primary-strong-text);
   white-space: nowrap;
+}
+
+.card-row:hover .explore {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .card-row:hover .explore {
