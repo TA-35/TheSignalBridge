@@ -966,15 +966,34 @@ async function copyDraftToClipboard() {
   font-size: 15.5px;
   line-height: 1.68;
   color: var(--color-text);
-  outline: none;
+}
+
+/* The browser's default placeholder is the text colour at its own alpha,
+   which lands at 3.28:1 on the dark surface - under the 4.5:1 this size
+   needs. Set explicitly instead of inherited. `opacity: 1` is not
+   redundant: Firefox applies an opacity of its own otherwise. */
+.input-area__box::placeholder {
+  color: var(--color-text-muted);
+  opacity: 1;
 }
 
 .input-area__box:focus {
   border-color: var(--color-primary);
 }
 
-.input-area__box--error {
-  border-color: #d8c9b8;
+/* #d8c9b8 measured 1.21:1 against the resting border - the field looked
+   identical either way - and it was a light-mode literal, so dark mode got a
+   pale neutral that read as nothing in particular.
+   The :focus pairing matters too: `.input-area__box:focus` and this rule are
+   the same specificity, so without it the error state was only ever visible
+   once you had tabbed away from the field. */
+.input-area__box--error,
+.input-area__box--error:focus {
+  /* -text, not -solid: the solid variant is a fill colour and sits at 3.01:1
+     against the dark surface, which is only just enough for a non-text
+     indicator. The text variant is the light one in dark mode, so the border
+     is emphatic in both appearances rather than only in light. */
+  border-color: var(--color-danger-text);
 }
 
 .input-area__footer {

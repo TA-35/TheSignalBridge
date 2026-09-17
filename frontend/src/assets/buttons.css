@@ -89,9 +89,13 @@
 /* One focus ring for every control in the app.
    The browser's own ring is amber, which is legible but reads as a foreign
    object in a sage/paper palette. This keeps the same job and the same
-   thickness, in the accent colour. */
+   thickness, in the accent colour.
+
+   No border-radius here on purpose. Setting it would reshape the element for
+   as long as it held focus - a square field would round its corners on focus
+   and square them again on blur. Outlines already follow whatever radius the
+   element itself has, so there is nothing to restate. */
 :where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
-  border-radius: var(--radius-sm);
 }
