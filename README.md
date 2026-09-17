@@ -1,4 +1,4 @@
-# TheSignalBridge_iteration_1
+# TheSignalBridge
 
 A local-first web app that separates what a workplace message *actually says* from what it *leaves unsaid*, and turns each decode into a reusable, judgement-free lesson in workplace communication.
 
@@ -85,4 +85,4 @@ python scripts/seed_patterns.py     # load the pattern library
 
 ## Architecture Diagram
 
-![](docs/pics/system%20architectural%20design.png)
+![](docs/pics/System%20architecture%20diagram.png)
