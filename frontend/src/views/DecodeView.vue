@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { Check, Copy } from '@lucide/vue'
 import { decodeMessage, EmptyMessageError, MAX_MESSAGE_LENGTH, MessageTooLongError } from '@/services/decodeService'
 import { findLocalPatternMatch } from '@/services/localPatterns'
@@ -23,111 +23,6 @@ const decodesStore = useDecodesStore()
 
 const SAMPLE =
   "Hi,\n\nWhen you get a chance, could you take a look at the Q3 deck and tighten up the numbers section? Would be great to have it before the leadership sync.\n\nAlso, loop in whoever owns the pricing slide if that's easier.\n\nThanks!"
-
-// --- The worked example on the intake screen ------------------------------
-// Someone landing here has no idea what "decode" means, and the box alone
-// does not tell them. Rather than describe the feature, this shows it: the
-// same sample message, the same highlight, the same rule that every finding
-// has to point at real words.
-//
-// The phrases are located in SAMPLE by search rather than written out with
-// offsets, so editing the sample cannot leave a finding pointing at the
-// wrong characters. Anything that does not appear verbatim is dropped -
-// which is the rule the real pipeline follows for model claims.
-interface DemoFinding {
-  key: string
-  label: string
-  /** null where the finding is an absence, which highlights nothing. */
-  phrase: string | null
-  note: string
-}
-
-const DEMO_FINDINGS: DemoFinding[] = [
-  {
-    key: 'ask',
-    label: 'What you are being asked to do',
-    phrase: 'take a look at the Q3 deck and tighten up the numbers section',
-    note: 'Two jobs, not one. Easy to do half of this and think you are finished.',
-  },
-  {
-    key: 'second',
-    label: 'A second ask, further down',
-    phrase: 'loop in whoever owns the pricing slide',
-    note: 'Arrives after the message already sounds finished. The one people miss.',
-  },
-  {
-    key: 'when',
-    label: 'The only mention of timing',
-    phrase: 'before the leadership sync',
-    note: 'Not a date. If you do not know when the sync is, you have no deadline yet.',
-  },
-  {
-    key: 'missing',
-    label: 'What the message never says',
-    phrase: null,
-    note: 'Nothing says when, who, or how finished. That is what makes it hard to answer.',
-  },
-]
-
-const demoFindings = DEMO_FINDINGS.filter((f) => f.phrase === null || SAMPLE.includes(f.phrase))
-
-const activeDemo = ref(demoFindings[0]?.key ?? '')
-
-const activeDemoFinding = computed(() => demoFindings.find((f) => f.key === activeDemo.value) ?? null)
-
-const demoParts = computed(() => {
-  const phrase = activeDemoFinding.value?.phrase ?? null
-  if (!phrase) return [{ text: SAMPLE, hit: false }]
-  const start = SAMPLE.indexOf(phrase)
-  if (start < 0) return [{ text: SAMPLE, hit: false }]
-  return [
-    { text: SAMPLE.slice(0, start), hit: false },
-    { text: SAMPLE.slice(start, start + phrase.length), hit: true },
-    { text: SAMPLE.slice(start + phrase.length), hit: false },
-  ]
-})
-
-// A guided pass through the four findings, for someone who does not yet know
-// there is anything to click. Deliberately opt-in and never auto-started:
-// motion that begins on its own is the kind that overwhelms rather than
-// explains, and a static page at rest is also what a first paint should be.
-// Stoppable at any moment, and any click takes the reader back over.
-const WALK_MS = 3600
-const walking = ref(false)
-let walkTimer: ReturnType<typeof setInterval> | null = null
-
-function stopWalk() {
-  walking.value = false
-  if (walkTimer !== null) {
-    clearInterval(walkTimer)
-    walkTimer = null
-  }
-}
-
-function startWalk() {
-  const first = demoFindings[0]
-  if (!first) return
-  stopWalk()
-  walking.value = true
-  activeDemo.value = first.key
-  walkTimer = setInterval(() => {
-    const next = demoFindings[demoFindings.findIndex((f) => f.key === activeDemo.value) + 1]
-    if (!next) {
-      stopWalk()
-      return
-    }
-    activeDemo.value = next.key
-  }, WALK_MS)
-}
-
-// A stray interval outliving the component would keep mutating state that is
-// no longer rendered.
-onBeforeUnmount(stopWalk)
-
-function showDemo(key: string) {
-  stopWalk()
-  activeDemo.value = key
-}
 
 const state = reactive({
   message: '',
@@ -658,113 +553,43 @@ async function copyDraftToClipboard() {
 <template>
   <div class="decode">
     <div v-if="!state.result" class="intake">
-      <div class="intake__form">
-        <div class="intro">
-          <h2>Paste the message</h2>
-          <p>An email, a Slack message, a note from your manager...</p>
-        </div>
-
-        <div class="input-area">
-          <textarea
-            v-model="state.message"
-            placeholder="Hi, when you get a chance, could you take a look at…"
-            spellcheck="false"
-            :class="{ 'input-area__box--error': !!state.error }"
-            :aria-invalid="!!state.error"
-            :aria-describedby="state.error ? 'decode-error' : undefined"
-            class="input-area__box"
-          />
-          <div class="input-area__footer">
-            <button type="button" class="link-button" @click="loadSample">Use a sample message</button>
-            <span class="char-count" :class="{ 'char-count--over': state.message.length > MAX_MESSAGE_LENGTH }">
-              {{ state.message.length }} / {{ MAX_MESSAGE_LENGTH }}
-            </span>
-          </div>
-        </div>
-
-        <div v-if="state.error" id="decode-error" class="error-banner" role="alert">
-          <span class="error-dot" />
-          <div>
-            <strong>Please enter an actual message</strong>
-            <p>{{ state.error }}</p>
-          </div>
-        </div>
-
-        <div class="actions">
-          <button type="button" class="btn btn--primary" :disabled="state.loading" @click="review">
-            {{ state.loading ? 'Decoding...' : 'Decode Message' }}
-          </button>
-          <button type="button" class="btn btn--secondary" @click="reset">Reset</button>
-        </div>
-
+      <div class="intro">
+        <h2>Paste the message</h2>
+        <p>An email, a Slack message, a note from your manager...</p>
       </div>
 
-      <!-- Beside the input on a wide screen, under it on a narrow one. The
-           column to the right of a 720px textarea was dead space on every
-           visit; putting the explanation there costs the input no vertical
-           room, so someone who already knows what this page does is not made
-           to scroll past it. It disappears once there is a result, because by
-           then it is in the way. -->
-      <section class="explain" aria-labelledby="explain-title">
-        <!-- The same .intro component the left column uses, so the two
-             headings sit on one baseline at one size instead of being two
-             different header treatments side by side. -->
-        <div class="intro">
-          <h3 id="explain-title">Know what a message is actually asking</h3>
-          <p>
-            Indirect messages leave you re-reading and guessing. This points at the words
-            that carry the ask, and names what the message never says.
-          </p>
+      <div class="input-area">
+        <textarea
+          v-model="state.message"
+          placeholder="Hi, when you get a chance, could you take a look at…"
+          spellcheck="false"
+          :class="{ 'input-area__box--error': !!state.error }"
+          :aria-invalid="!!state.error"
+          :aria-describedby="state.error ? 'decode-error' : undefined"
+          class="input-area__box"
+        />
+        <div class="input-area__footer">
+          <button type="button" class="link-button" @click="loadSample">Use a sample message</button>
+          <span class="char-count" :class="{ 'char-count--over': state.message.length > MAX_MESSAGE_LENGTH }">
+            {{ state.message.length }} / {{ MAX_MESSAGE_LENGTH }}
+          </span>
         </div>
+      </div>
 
-        <!-- Same two-column split, same panel and same card as the results
-             screen, so what someone sees here is a rehearsal of what they
-             get after they press Decode, not a separate marketing layout. -->
-        <div class="demo">
-          <div class="original-panel original-panel--demo">
-            <p class="original-panel__label">Example message</p>
-            <!-- Keyed on the active finding, not just the index, so switching
-                 findings builds a new <mark> and the sweep actually replays
-                 instead of the node being reused in place. -->
-            <p class="original-text">
-              <template v-for="(part, i) in demoParts" :key="activeDemo + '-' + i">
-                <mark v-if="part.hit" class="demo__hit">{{ part.text }}</mark>
-                <template v-else>{{ part.text }}</template>
-              </template>
-            </p>
-          </div>
-
-          <div class="card">
-            <div class="card__head card__head--static">
-              <span class="card__title">What it finds</span>
-              <button type="button" class="walk" @click="walking ? stopWalk() : startWalk()">
-                {{ walking ? 'Stop' : 'Show me each one' }}
-              </button>
-            </div>
-            <button
-              v-for="finding in demoFindings"
-              :key="finding.key"
-              type="button"
-              class="gap"
-              :class="{ 'gap--on': finding.key === activeDemo }"
-              :aria-pressed="finding.key === activeDemo"
-              @click="showDemo(finding.key)"
-            >
-              <span class="demo__mark" aria-hidden="true" />
-              <span class="gap__label">{{ finding.label }}</span>
-            </button>
-            <p :key="activeDemo" class="demo__note" aria-live="polite">
-              {{ activeDemoFinding?.note }}
-            </p>
-          </div>
+      <div v-if="state.error" id="decode-error" class="error-banner" role="alert">
+        <span class="error-dot" />
+        <div>
+          <strong>Please enter an actual message</strong>
+          <p>{{ state.error }}</p>
         </div>
+      </div>
 
-        <p class="explain__foot">
-          Made for people who find indirect messages hard to read. It can be wrong, and
-          says so when it is unsure. Nothing you paste is saved &mdash;
-          <RouterLink to="/privacy">where it goes</RouterLink>.
-        </p>
-      </section>
+      <div class="actions">
+        <button type="button" class="btn btn--primary" :disabled="state.loading" @click="review">
+          {{ state.loading ? 'Decoding...' : 'Decode Message' }}
+        </button>
+        <button type="button" class="btn btn--secondary" @click="reset">Reset</button>
+      </div>
     </div>
 
     <template v-else>
@@ -1058,29 +883,11 @@ async function copyDraftToClipboard() {
   gap: 18px;
 }
 
-/* Two columns once there is room for them. A 720px input inside a 1240px
-   shell left roughly 500px of empty page to its right on every visit; the
-   explainer goes there rather than below, so it costs the input no height. */
 .intake {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 18px;
-}
-
-.intake__form {
+  max-width: 720px;
   display: flex;
   flex-direction: column;
   gap: 18px;
-  width: 100%;
-  max-width: 720px;
-}
-
-@media (min-width: 1040px) {
-  .intake {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr);
-    gap: 38px;
-    align-items: start;
-  }
 }
 
 .intro {
@@ -1089,8 +896,7 @@ async function copyDraftToClipboard() {
   gap: 8px;
 }
 
-.intro h2,
-.intro h3 {
+.intro h2 {
   font-family: var(--font-serif);
   font-size: 27px;
   font-weight: 500;
@@ -1111,39 +917,25 @@ async function copyDraftToClipboard() {
   gap: 10px;
 }
 
-/* The same surface, radius and shadow as every panel on this page, and the
-   same serif the message is set in once it is decoded - so what you type
-   already looks like what you will be reading back. A 1px square-cornered
-   field next to borderless rounded cards is what made the two halves of
-   this screen look like they came from different products. */
 .input-area__box {
   width: 100%;
   min-height: 262px;
   resize: vertical;
-  padding: 22px 24px;
-  border: 0;
-  border-radius: var(--radius-lg);
+  padding: 18px;
+  border: 1px solid var(--color-border);
   background: var(--color-surface);
-  box-shadow:
-    0 1px 2px rgba(58, 55, 51, 0.04),
-    0 14px 34px -20px rgba(58, 55, 51, 0.16);
-  font-family: var(--font-serif);
-  font-size: 16.5px;
-  line-height: 1.82;
+  font-size: 15.5px;
+  line-height: 1.68;
   color: var(--color-text);
   outline: none;
 }
 
-/* The border used to carry focus. With no border it becomes a real outline,
-   which is the more visible indicator anyway. */
-.input-area__box:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+.input-area__box:focus {
+  border-color: var(--color-primary);
 }
 
 .input-area__box--error {
-  outline: 2px solid var(--color-warn-dot);
-  outline-offset: 2px;
+  border-color: #d8c9b8;
 }
 
 .input-area__footer {
@@ -1180,8 +972,8 @@ async function copyDraftToClipboard() {
 .error-banner {
   display: flex;
   gap: 12px;
-  padding: 14px 18px;
-  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  border-radius: 10px;
   background: var(--color-warn-bg);
   border: 1px solid var(--color-warn-border);
 }
@@ -1488,159 +1280,6 @@ async function copyDraftToClipboard() {
 }
 @media (prefers-reduced-motion: reduce) {
   .skeleton { animation: none; }
-}
-
-/* ==========================================================================
-   Intake explainer
-   --------------------------------------------------------------------------
-   Same 720px measure and same left edge as the input above it, so the page
-   reads as one column rather than a tool with a brochure bolted underneath.
-   No icons, no pills, no shadowed feature cards: the demo is the only thing
-   here that gets a surface of its own, because it is the only thing that is
-   an object rather than prose.
-   ========================================================================== */
-
-/* Stacked under the input, it needs a rule to separate it. Sitting in its
-   own column it does not - the gap is the separation. */
-.explain {
-  margin-top: 26px;
-  padding-top: 22px;
-  border-top: 1px solid var(--color-border-soft);
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-@media (min-width: 1040px) {
-  .explain {
-    margin-top: 0;
-    padding-top: 0;
-    border-top: 0;
-  }
-}
-
-.explain__foot {
-  margin: 0;
-  padding: 0 2px;
-  font-size: 12.5px;
-  line-height: 1.55;
-  color: var(--color-text-muted);
-}
-
-.explain__foot a {
-  color: var(--color-primary-strong-text);
-  text-underline-offset: 3px;
-}
-
-/* Stacked, not side by side: in a single column of the intake grid there is
-   not enough width to set the message and the findings next to each other
-   without cramping both. */
-.demo {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-/* The results copy is sticky because the reader scrolls a long way past it.
-   This one sits in a short block with nothing to follow. */
-.original-panel--demo {
-  position: static;
-  padding: 22px 22px 24px;
-}
-
-/* The highlighter sweep. The mark is drawn left to right like a pen, which
-   makes the link between the finding you picked and the words it came from
-   something you watch happen rather than something you have to work out.
-   It runs once, on demand, and never loops - looping or ambient motion is
-   the kind that costs this audience attention instead of giving it.
-   `box-decoration-break: clone` keeps the sweep correct across a line wrap. */
-@keyframes demo-sweep {
-  from {
-    background-size: 0% 100%;
-  }
-  to {
-    background-size: 100% 100%;
-  }
-}
-
-@keyframes demo-fade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.demo__hit {
-  background-image: linear-gradient(0deg, #fbe9b0 0%, #fdf3d2 100%);
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-  color: #3d3a33;
-  border-radius: 2px;
-  /* Underlined as well as tinted, so the highlight survives greyscale and
-     does not depend on telling the two colours apart. Static, because a
-     text-decoration cannot be swept and a moving underline would only
-     compete with the highlight for attention. */
-  text-decoration: underline;
-  text-decoration-color: #d9a93a;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 3px;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
-  animation: demo-sweep 440ms ease-out;
-}
-
-/* The note changes at the same moment as the highlight. Without this the
-   swap is silent and easy to miss while looking at the message. */
-.demo__note {
-  animation: demo-fade 320ms ease-out;
-}
-
-.walk {
-  margin-left: auto;
-  padding: 2px 0;
-  background: none;
-  border: 0;
-  font-family: var(--font-sans);
-  font-size: 12.5px;
-  color: var(--color-primary-strong-text);
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  white-space: nowrap;
-}
-
-.walk:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-/* Selection is a drawn bar as well as the row tint, so which row is active
-   survives greyscale and does not rely on colour perception. */
-.demo__mark {
-  flex: 0 0 3px;
-  align-self: stretch;
-  min-height: 17px;
-  border-radius: 2px;
-  background: var(--color-border-strong);
-}
-
-.gap--on .demo__mark {
-  background: var(--color-primary);
-}
-
-/* Held open so switching findings never shifts the card below it, but only
-   by the two lines the notes actually run to. */
-.demo__note {
-  margin: 0;
-  padding: 12px 24px 18px;
-  min-height: 3.4em;
-  font-family: var(--font-serif);
-  font-size: 14.5px;
-  line-height: 1.6;
-  color: var(--color-text-muted);
 }
 
 /* ==========================================================================
@@ -2073,17 +1712,9 @@ button.card__head:hover .card__fold { color: var(--color-primary); }
   .ask, .gap, .fact { padding-left: 18px; padding-right: 18px; }
 }
 
-/* Reduced motion takes the movement, not the meaning: the highlight and the
-   note still change, they just arrive instead of animating. The walkthrough
-   keeps working - it is pacing rather than motion, and it has a Stop. */
 @media (prefers-reduced-motion: reduce) {
   .ask, .gap, .fact, .tick, .tone-pick__opt, .card__fold, .ask__main {
     transition: none;
-  }
-
-  .demo__hit,
-  .demo__note {
-    animation: none;
   }
 }
 </style>
