@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { Check, Copy } from '@lucide/vue'
 import { decodeMessage, EmptyMessageError, MAX_MESSAGE_LENGTH, MessageTooLongError } from '@/services/decodeService'
 import { findLocalPatternMatch } from '@/services/localPatterns'
@@ -23,6 +23,111 @@ const decodesStore = useDecodesStore()
 
 const SAMPLE =
   "Hi,\n\nWhen you get a chance, could you take a look at the Q3 deck and tighten up the numbers section? Would be great to have it before the leadership sync.\n\nAlso, loop in whoever owns the pricing slide if that's easier.\n\nThanks!"
+
+// --- The worked example on the intake screen ------------------------------
+// Someone landing here has no idea what "decode" means, and the box alone
+// does not tell them. Rather than describe the feature, this shows it: the
+// same sample message, the same highlight, the same rule that every finding
+// has to point at real words.
+//
+// The phrases are located in SAMPLE by search rather than written out with
+// offsets, so editing the sample cannot leave a finding pointing at the
+// wrong characters. Anything that does not appear verbatim is dropped -
+// which is the rule the real pipeline follows for model claims.
+interface DemoFinding {
+  key: string
+  label: string
+  /** null where the finding is an absence, which highlights nothing. */
+  phrase: string | null
+  note: string
+}
+
+const DEMO_FINDINGS: DemoFinding[] = [
+  {
+    key: 'ask',
+    label: 'What you are being asked to do',
+    phrase: 'take a look at the Q3 deck and tighten up the numbers section',
+    note: 'Two jobs, not one. Easy to do half of this and think you are finished.',
+  },
+  {
+    key: 'second',
+    label: 'A second ask, further down',
+    phrase: 'loop in whoever owns the pricing slide',
+    note: 'Arrives after the message already sounds finished. The one people miss.',
+  },
+  {
+    key: 'when',
+    label: 'The only mention of timing',
+    phrase: 'before the leadership sync',
+    note: 'Not a date. If you do not know when the sync is, you have no deadline yet.',
+  },
+  {
+    key: 'missing',
+    label: 'What the message never says',
+    phrase: null,
+    note: 'Nothing says when, who, or how finished. That is what makes it hard to answer.',
+  },
+]
+
+const demoFindings = DEMO_FINDINGS.filter((f) => f.phrase === null || SAMPLE.includes(f.phrase))
+
+const activeDemo = ref(demoFindings[0]?.key ?? '')
+
+const activeDemoFinding = computed(() => demoFindings.find((f) => f.key === activeDemo.value) ?? null)
+
+const demoParts = computed(() => {
+  const phrase = activeDemoFinding.value?.phrase ?? null
+  if (!phrase) return [{ text: SAMPLE, hit: false }]
+  const start = SAMPLE.indexOf(phrase)
+  if (start < 0) return [{ text: SAMPLE, hit: false }]
+  return [
+    { text: SAMPLE.slice(0, start), hit: false },
+    { text: SAMPLE.slice(start, start + phrase.length), hit: true },
+    { text: SAMPLE.slice(start + phrase.length), hit: false },
+  ]
+})
+
+// A guided pass through the four findings, for someone who does not yet know
+// there is anything to click. Deliberately opt-in and never auto-started:
+// motion that begins on its own is the kind that overwhelms rather than
+// explains, and a static page at rest is also what a first paint should be.
+// Stoppable at any moment, and any click takes the reader back over.
+const WALK_MS = 3600
+const walking = ref(false)
+let walkTimer: ReturnType<typeof setInterval> | null = null
+
+function stopWalk() {
+  walking.value = false
+  if (walkTimer !== null) {
+    clearInterval(walkTimer)
+    walkTimer = null
+  }
+}
+
+function startWalk() {
+  const first = demoFindings[0]
+  if (!first) return
+  stopWalk()
+  walking.value = true
+  activeDemo.value = first.key
+  walkTimer = setInterval(() => {
+    const next = demoFindings[demoFindings.findIndex((f) => f.key === activeDemo.value) + 1]
+    if (!next) {
+      stopWalk()
+      return
+    }
+    activeDemo.value = next.key
+  }, WALK_MS)
+}
+
+// A stray interval outliving the component would keep mutating state that is
+// no longer rendered.
+onBeforeUnmount(stopWalk)
+
+function showDemo(key: string) {
+  stopWalk()
+  activeDemo.value = key
+}
 
 const state = reactive({
   message: '',
@@ -262,6 +367,60 @@ function makeFlashcard() {
   state.showSaved = true
 }
 
+// The saved-card dialog.
+//
+// It covers the page and takes the keyboard with it, so it has to behave like
+// a dialog rather than merely look like one: focus moves in when it opens and
+// returns to whatever opened it when it closes, Escape dismisses it, and Tab
+// cycles inside it. Without the trap, the first Tab landed on "Start a new
+// message" behind the backdrop - a control the reader cannot see.
+const savedModal = ref<HTMLElement | null>(null)
+let lastFocused: HTMLElement | null = null
+
+function closeSaved() {
+  state.showSaved = false
+}
+
+watch(
+  () => state.showSaved,
+  async (open) => {
+    if (open) {
+      lastFocused = document.activeElement as HTMLElement | null
+      await nextTick()
+      savedModal.value?.focus()
+      return
+    }
+    // Guard the restore: reset() also closes this, and "View in Study"
+    // navigates away, either of which can leave the trigger unmounted.
+    if (lastFocused && document.contains(lastFocused)) lastFocused.focus()
+    lastFocused = null
+  },
+)
+
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input, textarea, select, [tabindex]:not([tabindex="-1"])'
+
+function trapTab(event: KeyboardEvent) {
+  const root = savedModal.value
+  if (!root) return
+  const items = [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+    (el) => el.offsetParent !== null,
+  )
+  if (!items.length) return
+  const first = items[0]!
+  const last = items[items.length - 1]!
+  const active = document.activeElement
+  // The dialog root itself holds focus on open, so shift-tabbing from it
+  // wraps to the end rather than escaping backwards into the page.
+  if (event.shiftKey && (active === first || active === root)) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && active === last) {
+    event.preventDefault()
+    first.focus()
+  }
+}
+
 function loadSample() {
   state.message = SAMPLE
   state.error = ''
@@ -467,6 +626,17 @@ const replyDraft = computed(() => {
   return `${greeting}\n\n${opener}\n\n${body}\n\nThanks!`
 })
 
+// What the cards show about the model's progress, as one sentence for the
+// live region above. Kept in step with the card__status labels by hand -
+// there are only three states, and phrasing them for listening is not the
+// same job as phrasing them to sit in a header.
+const readingStatus = computed(() => {
+  if (state.llmLoading && !state.llm) return 'Reading the message closely. This usually takes 5 to 15 seconds.'
+  if (state.llm?.degraded) return 'Showing only what was quoted directly.'
+  if (state.llm) return 'The closer reading is ready.'
+  return ''
+})
+
 const copyState = ref<'idle' | 'copied' | 'failed'>('idle')
 let copyResetTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -488,41 +658,113 @@ async function copyDraftToClipboard() {
 <template>
   <div class="decode">
     <div v-if="!state.result" class="intake">
-      <div class="intro">
-        <h2>Paste the message</h2>
-        <p>An email, a Slack message, a note from your manager...</p>
-      </div>
-
-      <div class="input-area">
-        <textarea
-          v-model="state.message"
-          placeholder="Hi, when you get a chance, could you take a look at…"
-          spellcheck="false"
-          :class="{ 'input-area__box--error': !!state.error }"
-          class="input-area__box"
-        />
-        <div class="input-area__footer">
-          <button type="button" class="link-button" @click="loadSample">Use a sample message</button>
-          <span class="char-count" :class="{ 'char-count--over': state.message.length > MAX_MESSAGE_LENGTH }">
-            {{ state.message.length }} / {{ MAX_MESSAGE_LENGTH }}
-          </span>
+      <div class="intake__form">
+        <div class="intro">
+          <h2>Paste the message</h2>
+          <p>An email, a Slack message, a note from your manager...</p>
         </div>
-      </div>
 
-      <div v-if="state.error" class="error-banner">
-        <span class="error-dot" />
-        <div>
-          <strong>Please enter an actual message</strong>
-          <p>{{ state.error }}</p>
+        <div class="input-area">
+          <textarea
+            v-model="state.message"
+            placeholder="Hi, when you get a chance, could you take a look at…"
+            spellcheck="false"
+            :class="{ 'input-area__box--error': !!state.error }"
+            :aria-invalid="!!state.error"
+            :aria-describedby="state.error ? 'decode-error' : undefined"
+            class="input-area__box"
+          />
+          <div class="input-area__footer">
+            <button type="button" class="link-button" @click="loadSample">Use a sample message</button>
+            <span class="char-count" :class="{ 'char-count--over': state.message.length > MAX_MESSAGE_LENGTH }">
+              {{ state.message.length }} / {{ MAX_MESSAGE_LENGTH }}
+            </span>
+          </div>
         </div>
+
+        <div v-if="state.error" id="decode-error" class="error-banner" role="alert">
+          <span class="error-dot" />
+          <div>
+            <strong>Please enter an actual message</strong>
+            <p>{{ state.error }}</p>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn btn--primary" :disabled="state.loading" @click="review">
+            {{ state.loading ? 'Decoding...' : 'Decode Message' }}
+          </button>
+          <button type="button" class="btn btn--secondary" @click="reset">Reset</button>
+        </div>
+
       </div>
 
-      <div class="actions">
-        <button type="button" class="btn btn--primary" :disabled="state.loading" @click="review">
-          {{ state.loading ? 'Decoding...' : 'Decode Message' }}
-        </button>
-        <button type="button" class="btn btn--secondary" @click="reset">Reset</button>
-      </div>
+      <!-- Beside the input on a wide screen, under it on a narrow one. The
+           column to the right of a 720px textarea was dead space on every
+           visit; putting the explanation there costs the input no vertical
+           room, so someone who already knows what this page does is not made
+           to scroll past it. It disappears once there is a result, because by
+           then it is in the way. -->
+      <section class="explain" aria-labelledby="explain-title">
+        <!-- The same .intro component the left column uses, so the two
+             headings sit on one baseline at one size instead of being two
+             different header treatments side by side. -->
+        <div class="intro">
+          <h3 id="explain-title">Know what a message is actually asking</h3>
+          <p>
+            Indirect messages leave you re-reading and guessing. This points at the words
+            that carry the ask, and names what the message never says.
+          </p>
+        </div>
+
+        <!-- Same two-column split, same panel and same card as the results
+             screen, so what someone sees here is a rehearsal of what they
+             get after they press Decode, not a separate marketing layout. -->
+        <div class="demo">
+          <div class="original-panel original-panel--demo">
+            <p class="original-panel__label">Example message</p>
+            <!-- Keyed on the active finding, not just the index, so switching
+                 findings builds a new <mark> and the sweep actually replays
+                 instead of the node being reused in place. -->
+            <p class="original-text">
+              <template v-for="(part, i) in demoParts" :key="activeDemo + '-' + i">
+                <mark v-if="part.hit" class="demo__hit">{{ part.text }}</mark>
+                <template v-else>{{ part.text }}</template>
+              </template>
+            </p>
+          </div>
+
+          <div class="card">
+            <div class="card__head card__head--static">
+              <span class="card__title">What it finds</span>
+              <button type="button" class="walk" @click="walking ? stopWalk() : startWalk()">
+                {{ walking ? 'Stop' : 'Show me each one' }}
+              </button>
+            </div>
+            <button
+              v-for="finding in demoFindings"
+              :key="finding.key"
+              type="button"
+              class="gap"
+              :class="{ 'gap--on': finding.key === activeDemo }"
+              :aria-pressed="finding.key === activeDemo"
+              @click="showDemo(finding.key)"
+            >
+              <span class="demo__mark" aria-hidden="true" />
+              <span class="gap__label">{{ finding.label }}</span>
+            </button>
+            <p :key="activeDemo" class="demo__note" aria-live="polite">
+              {{ activeDemoFinding?.note }}
+            </p>
+          </div>
+        </div>
+
+        <p class="explain__foot">
+          Made for people who find indirect messages hard to read. It can be wrong, and
+          says so when it is unsure. Nothing you paste is saved &mdash;
+          <RouterLink to="/privacy">where it goes</RouterLink>.
+        </p>
+      </section>
     </div>
 
     <template v-else>
@@ -549,6 +791,11 @@ async function copyDraftToClipboard() {
         </div>
 
         <div class="findings">
+          <!-- The reading's progress is drawn inside each card's header, which
+               a screen reader never revisits once it has read past it. This
+               is the same information as a region that is always mounted, so
+               a change to it is actually announced. -->
+          <p class="sr-only" aria-live="polite">{{ readingStatus }}</p>
           <!-- 1. How it reads ----------------------------------------------
                First because register is the hardest thing to infer from a
                work message and the most useful thing to be told, and because
@@ -616,6 +863,7 @@ async function copyDraftToClipboard() {
                 type="button"
                 class="ask"
                 :class="{ 'ask--done': state.done.has(item.text) }"
+                :aria-pressed="state.done.has(item.text)"
                 @click="toggleDone(item.text)"
                 @mouseenter="showSpan(item.span)"
                 @mouseleave="clearSpan()"
@@ -687,6 +935,7 @@ async function copyDraftToClipboard() {
                 type="button"
                 class="gap"
                 :class="{ 'gap--on': state.checked.has(gap.field) }"
+                :aria-pressed="state.checked.has(gap.field)"
                 @click="toggleChecked(gap.field)"
               >
                 <span class="tick" :class="{ 'tick--on': state.checked.has(gap.field) }" aria-hidden="true" />
@@ -709,7 +958,9 @@ async function copyDraftToClipboard() {
               <button type="button" class="copy-btn" @click="copyDraftToClipboard">
                 <Check v-if="copyState === 'copied'" :size="14" :stroke-width="2" aria-hidden="true" />
                 <Copy v-else :size="14" :stroke-width="2" aria-hidden="true" />
-                {{ copyState === 'copied' ? 'Copied' : copyState === 'failed' ? "Couldn't copy" : 'Copy' }}
+                <span aria-live="polite">{{
+                  copyState === 'copied' ? 'Copied' : copyState === 'failed' ? "Couldn't copy" : 'Copy'
+                }}</span>
               </button>
             </div>
 
@@ -770,11 +1021,21 @@ async function copyDraftToClipboard() {
       </div>
     </template>
 
-    <div v-if="state.showSaved" class="modal-backdrop" @click="state.showSaved = false">
-      <div class="modal" @click.stop>
+    <div v-if="state.showSaved" class="modal-backdrop" @click="closeSaved">
+      <div
+        ref="savedModal"
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="saved-title"
+        tabindex="-1"
+        @click.stop
+        @keydown.esc="closeSaved"
+        @keydown.tab="trapTab"
+      >
         <div class="modal__title">
           <span class="modal__dot" />
-          <strong>Flashcard created</strong>
+          <strong id="saved-title">Flashcard created</strong>
         </div>
         <div class="modal__card">
           <strong>{{ state.savedCard?.name }}</strong>
@@ -783,7 +1044,7 @@ async function copyDraftToClipboard() {
         <p class="modal__note">It's in your Study section whenever you want it.</p>
         <div class="actions">
           <RouterLink to="/study" class="btn btn--primary">View in Study</RouterLink>
-          <button type="button" class="btn btn--secondary" @click="state.showSaved = false">Keep reading</button>
+          <button type="button" class="btn btn--secondary" @click="closeSaved">Keep reading</button>
         </div>
       </div>
     </div>
@@ -797,11 +1058,29 @@ async function copyDraftToClipboard() {
   gap: 18px;
 }
 
+/* Two columns once there is room for them. A 720px input inside a 1240px
+   shell left roughly 500px of empty page to its right on every visit; the
+   explainer goes there rather than below, so it costs the input no height. */
 .intake {
-  max-width: 720px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+
+.intake__form {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  width: 100%;
+  max-width: 720px;
+}
+
+@media (min-width: 1040px) {
+  .intake {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr);
+    gap: 38px;
+    align-items: start;
+  }
 }
 
 .intro {
@@ -810,7 +1089,8 @@ async function copyDraftToClipboard() {
   gap: 8px;
 }
 
-.intro h2 {
+.intro h2,
+.intro h3 {
   font-family: var(--font-serif);
   font-size: 27px;
   font-weight: 500;
@@ -831,25 +1111,39 @@ async function copyDraftToClipboard() {
   gap: 10px;
 }
 
+/* The same surface, radius and shadow as every panel on this page, and the
+   same serif the message is set in once it is decoded - so what you type
+   already looks like what you will be reading back. A 1px square-cornered
+   field next to borderless rounded cards is what made the two halves of
+   this screen look like they came from different products. */
 .input-area__box {
   width: 100%;
   min-height: 262px;
   resize: vertical;
-  padding: 18px;
-  border: 1px solid var(--color-border);
+  padding: 22px 24px;
+  border: 0;
+  border-radius: var(--radius-lg);
   background: var(--color-surface);
-  font-size: 15.5px;
-  line-height: 1.68;
+  box-shadow:
+    0 1px 2px rgba(58, 55, 51, 0.04),
+    0 14px 34px -20px rgba(58, 55, 51, 0.16);
+  font-family: var(--font-serif);
+  font-size: 16.5px;
+  line-height: 1.82;
   color: var(--color-text);
   outline: none;
 }
 
-.input-area__box:focus {
-  border-color: var(--color-primary);
+/* The border used to carry focus. With no border it becomes a real outline,
+   which is the more visible indicator anyway. */
+.input-area__box:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .input-area__box--error {
-  border-color: #d8c9b8;
+  outline: 2px solid var(--color-warn-dot);
+  outline-offset: 2px;
 }
 
 .input-area__footer {
@@ -886,8 +1180,8 @@ async function copyDraftToClipboard() {
 .error-banner {
   display: flex;
   gap: 12px;
-  padding: 14px 16px;
-  border-radius: 10px;
+  padding: 14px 18px;
+  border-radius: var(--radius-lg);
   background: var(--color-warn-bg);
   border: 1px solid var(--color-warn-border);
 }
@@ -949,11 +1243,11 @@ async function copyDraftToClipboard() {
   padding: 13px 20px;
   border: 1px solid var(--color-border-strong);
   background: var(--color-frame);
-  color: #4a453e;
+  color: var(--color-text);
 }
 
 .btn--secondary:hover {
-  background: #f6f2ea;
+  background: var(--color-surface-soft);
 }
 
 .btn--ghost {
@@ -962,12 +1256,12 @@ async function copyDraftToClipboard() {
   background: none;
   border-radius: 8px;
   font-size: 13.5px;
-  color: #4a453e;
+  color: var(--color-text);
   cursor: pointer;
 }
 
 .btn--ghost:hover {
-  background: #f6f2ea;
+  background: var(--color-surface-soft);
 }
 
 .results-header {
@@ -1023,14 +1317,6 @@ async function copyDraftToClipboard() {
     max-height: calc(100vh - 100px);
     overflow-y: auto;
   }
-}
-
-.original-panel p {
-  margin: 0;
-  font-size: 14.5px;
-  line-height: 1.72;
-  color: #5c564d;
-  white-space: pre-wrap;
 }
 
 .findings {
@@ -1205,6 +1491,159 @@ async function copyDraftToClipboard() {
 }
 
 /* ==========================================================================
+   Intake explainer
+   --------------------------------------------------------------------------
+   Same 720px measure and same left edge as the input above it, so the page
+   reads as one column rather than a tool with a brochure bolted underneath.
+   No icons, no pills, no shadowed feature cards: the demo is the only thing
+   here that gets a surface of its own, because it is the only thing that is
+   an object rather than prose.
+   ========================================================================== */
+
+/* Stacked under the input, it needs a rule to separate it. Sitting in its
+   own column it does not - the gap is the separation. */
+.explain {
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid var(--color-border-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+@media (min-width: 1040px) {
+  .explain {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+}
+
+.explain__foot {
+  margin: 0;
+  padding: 0 2px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+}
+
+.explain__foot a {
+  color: var(--color-primary-strong-text);
+  text-underline-offset: 3px;
+}
+
+/* Stacked, not side by side: in a single column of the intake grid there is
+   not enough width to set the message and the findings next to each other
+   without cramping both. */
+.demo {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* The results copy is sticky because the reader scrolls a long way past it.
+   This one sits in a short block with nothing to follow. */
+.original-panel--demo {
+  position: static;
+  padding: 22px 22px 24px;
+}
+
+/* The highlighter sweep. The mark is drawn left to right like a pen, which
+   makes the link between the finding you picked and the words it came from
+   something you watch happen rather than something you have to work out.
+   It runs once, on demand, and never loops - looping or ambient motion is
+   the kind that costs this audience attention instead of giving it.
+   `box-decoration-break: clone` keeps the sweep correct across a line wrap. */
+@keyframes demo-sweep {
+  from {
+    background-size: 0% 100%;
+  }
+  to {
+    background-size: 100% 100%;
+  }
+}
+
+@keyframes demo-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.demo__hit {
+  background-image: linear-gradient(0deg, #fbe9b0 0%, #fdf3d2 100%);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  color: #3d3a33;
+  border-radius: 2px;
+  /* Underlined as well as tinted, so the highlight survives greyscale and
+     does not depend on telling the two colours apart. Static, because a
+     text-decoration cannot be swept and a moving underline would only
+     compete with the highlight for attention. */
+  text-decoration: underline;
+  text-decoration-color: #d9a93a;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  animation: demo-sweep 440ms ease-out;
+}
+
+/* The note changes at the same moment as the highlight. Without this the
+   swap is silent and easy to miss while looking at the message. */
+.demo__note {
+  animation: demo-fade 320ms ease-out;
+}
+
+.walk {
+  margin-left: auto;
+  padding: 2px 0;
+  background: none;
+  border: 0;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  color: var(--color-primary-strong-text);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+.walk:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Selection is a drawn bar as well as the row tint, so which row is active
+   survives greyscale and does not rely on colour perception. */
+.demo__mark {
+  flex: 0 0 3px;
+  align-self: stretch;
+  min-height: 17px;
+  border-radius: 2px;
+  background: var(--color-border-strong);
+}
+
+.gap--on .demo__mark {
+  background: var(--color-primary);
+}
+
+/* Held open so switching findings never shifts the card below it, but only
+   by the two lines the notes actually run to. */
+.demo__note {
+  margin: 0;
+  padding: 12px 24px 18px;
+  min-height: 3.4em;
+  font-family: var(--font-serif);
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+/* ==========================================================================
    Decode results
    --------------------------------------------------------------------------
    Editorial, not dashboard. The first pass at this looked like generated
@@ -1251,13 +1690,13 @@ async function copyDraftToClipboard() {
 }
 
 .original-panel__label {
-  margin: 0 0 14px !important;
+  margin: 0 0 14px;
   font-family: var(--font-sans);
-  font-size: 11px !important;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--color-text-muted) !important;
+  color: var(--color-text-muted);
 }
 
 /* Serif, and roomy. This is somebody's letter, and setting it like one is
@@ -1269,7 +1708,10 @@ async function copyDraftToClipboard() {
   line-height: 1.82;
   letter-spacing: -0.003em;
   white-space: pre-wrap;
-  color: #453f38;
+  /* Token, not a literal. #453f38 was picked against the paper ground and
+     measures 1.45:1 on the dark surface, where it is the message itself
+     that disappears. */
+  color: var(--color-text);
 }
 
 /* The payoff of the spans pipeline: point at a finding and the exact
@@ -1394,7 +1836,7 @@ async function copyDraftToClipboard() {
   white-space: nowrap;
 }
 
-.card__status--warn { color: #8a5220; }
+.card__status--warn { color: var(--color-warn-text); }
 
 .card__fold {
   flex: none;
@@ -1531,7 +1973,7 @@ button.card__head:hover .card__fold { color: var(--color-primary); }
   font-family: var(--font-serif);
   font-size: 14.5px;
   line-height: 1.6;
-  color: #6b6259;
+  color: var(--color-text-muted);
   max-width: 58ch;
 }
 
@@ -1570,7 +2012,7 @@ button.card__head:hover .card__fold { color: var(--color-primary); }
   font-family: var(--font-serif);
   font-size: 14.5px;
   line-height: 1.6;
-  color: #6b6259;
+  color: var(--color-text-muted);
   max-width: 58ch;
 }
 
@@ -1631,9 +2073,17 @@ button.card__head:hover .card__fold { color: var(--color-primary); }
   .ask, .gap, .fact { padding-left: 18px; padding-right: 18px; }
 }
 
+/* Reduced motion takes the movement, not the meaning: the highlight and the
+   note still change, they just arrive instead of animating. The walkthrough
+   keeps working - it is pacing rather than motion, and it has a Stop. */
 @media (prefers-reduced-motion: reduce) {
   .ask, .gap, .fact, .tick, .tone-pick__opt, .card__fold, .ask__main {
     transition: none;
+  }
+
+  .demo__hit,
+  .demo__note {
+    animation: none;
   }
 }
 </style>
