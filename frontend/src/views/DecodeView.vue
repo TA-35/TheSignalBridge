@@ -27,6 +27,11 @@ const SAMPLE =
 const state = reactive({
   message: '',
   error: '',
+  // The banner's heading was the fixed string "Please enter an actual
+  // message", which flatly contradicts the body when the body is "Message is
+  // too long" - the reader did enter a message. The heading belongs to the
+  // error, so it travels with it.
+  errorTitle: '',
   loading: false,
   result: null as DecodeResult | null,
   // Keyed by field name from whichever source produced the gap list -
@@ -90,11 +95,13 @@ const messageParts = computed(() => {
 async function review() {
   const text = state.message.trim()
   if (!text) {
+    state.errorTitle = 'Nothing to decode yet'
     state.error = 'The box is empty. Paste a message and we will go through it together.'
     return
   }
 
   state.error = ''
+  state.errorTitle = ''
   state.loading = true
   try {
     state.result = await decodeMessage(text)
@@ -154,8 +161,10 @@ async function review() {
     state.result = null
     state.record = null
     if (err instanceof EmptyMessageError) {
+      state.errorTitle = "That doesn't look like a message"
       state.error = 'This does not look like a message yet. Paste the message text itself and try again.'
     } else if (err instanceof MessageTooLongError) {
+      state.errorTitle = 'That message is too long'
       state.error = err.message
     } else {
       throw err
@@ -241,6 +250,7 @@ const modelSettled = computed(() =>
 function reset() {
   state.message = ''
   state.error = ''
+  state.errorTitle = ''
   state.result = null
   // The closer reading belongs to the message that was cleared.
   state.llm = null
@@ -319,6 +329,7 @@ function trapTab(event: KeyboardEvent) {
 function loadSample() {
   state.message = SAMPLE
   state.error = ''
+  state.errorTitle = ''
 }
 
 function editMessage() {
@@ -532,6 +543,24 @@ const readingStatus = computed(() => {
   return ''
 })
 
+// The section numbers used to be the literals 01..05 written into the
+// template, while sections 02, 03 and 05 are all conditional. A message with
+// no asks rendered 01, 03, 04 - and a gap in a sequence sends the reader
+// looking for what they missed. Numbered by what is actually on screen.
+const sectionNumber = computed(() => {
+  const order: [string, boolean][] = [
+    ['meaning', true],
+    ['asks', todo.value.length > 0],
+    ['states', coveredRows.value.length > 0],
+    ['gaps', true],
+    ['reply', checkedPrompts.value.length > 0],
+  ]
+  const out: Record<string, string> = {}
+  let i = 0
+  for (const [key, shown] of order) if (shown) out[key] = String(++i).padStart(2, '0')
+  return out
+})
+
 const copyState = ref<'idle' | 'copied' | 'failed'>('idle')
 let copyResetTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -554,7 +583,7 @@ async function copyDraftToClipboard() {
   <div class="decode">
     <div v-if="!state.result" class="intake">
       <div class="intro">
-        <h2>Paste the message</h2>
+        <h1>Paste the message</h1>
         <p>An email, a Slack message, a note from your manager...</p>
       </div>
 
@@ -579,14 +608,14 @@ async function copyDraftToClipboard() {
       <div v-if="state.error" id="decode-error" class="error-banner" role="alert">
         <span class="error-dot" />
         <div>
-          <strong>Please enter an actual message</strong>
+          <strong>{{ state.errorTitle }}</strong>
           <p>{{ state.error }}</p>
         </div>
       </div>
 
       <div class="actions">
         <button type="button" class="btn btn--primary" :disabled="state.loading" @click="review">
-          {{ state.loading ? 'Decoding...' : 'Decode Message' }}
+          {{ state.loading ? 'Decoding…' : 'Decode message' }}
         </button>
         <button type="button" class="btn btn--secondary" @click="reset">Reset</button>
       </div>
@@ -595,7 +624,7 @@ async function copyDraftToClipboard() {
     <template v-else>
       <div class="results-header">
         <div>
-          <h2>Here's what the message says</h2>
+          <h1>Here's what the message says</h1>
           <p>What's stated stays visible. What's unclear stays open.</p>
         </div>
         <button type="button" class="btn btn--ghost" @click="editMessage">Edit message</button>
@@ -647,7 +676,7 @@ async function copyDraftToClipboard() {
           <!-- 2. What it means --------------------------------------------- -->
           <section class="card" :class="{ 'card--folded': folded.meaning }">
             <button type="button" class="card__head" :aria-expanded="!folded.meaning" @click="toggleFold('meaning')">
-              <span class="card__index" aria-hidden="true">01</span>
+              <span class="card__index" aria-hidden="true">{{ sectionNumber.meaning }}</span>
               <span class="card__title">What this message means</span>
               <span v-if="state.llmLoading && !state.llm" class="card__status">
                 reading closely — usually 5–15 seconds
@@ -675,7 +704,7 @@ async function copyDraftToClipboard() {
           <!-- 3. Asks, tickable -------------------------------------------- -->
           <section v-if="todo.length" class="card" :class="{ 'card--folded': folded.asks }">
             <button type="button" class="card__head" :aria-expanded="!folded.asks" @click="toggleFold('asks')">
-              <span class="card__index" aria-hidden="true">02</span>
+              <span class="card__index" aria-hidden="true">{{ sectionNumber.asks }}</span>
               <span class="card__title">What you're being asked to do</span>
               <span class="card__status">{{ doneCount }} of {{ todo.length }} done</span>
               <span class="card__fold" aria-hidden="true">{{ folded.asks ? '⌄' : '⌃' }}</span>
@@ -709,18 +738,25 @@ async function copyDraftToClipboard() {
           <!-- 4. What it states, with its evidence -------------------------- -->
           <section v-if="coveredRows.length" class="card" :class="{ 'card--folded': folded.states }">
             <button type="button" class="card__head" :aria-expanded="!folded.states" @click="toggleFold('states')">
-              <span class="card__index" aria-hidden="true">03</span>
+              <span class="card__index" aria-hidden="true">{{ sectionNumber.states }}</span>
               <span class="card__title">What the message states</span>
               <span class="card__fold" aria-hidden="true">{{ folded.states ? '⌄' : '⌃' }}</span>
             </button>
 
             <div v-show="!folded.states" class="card__body card__body--flush">
-              <div
+              <!-- A focusable <div> with no role was an unexplained stop in
+                   the tab order: a screen reader read the row's text and gave
+                   no reason it was focusable. It earns a tab stop because
+                   reaching it lights the source up in the message, so it says
+                   so - and only when there is a span to light. -->
+              <component
+                :is="row.span ? 'button' : 'div'"
                 v-for="row in coveredRows"
                 :key="row.field"
+                :type="row.span ? 'button' : undefined"
                 class="fact"
                 :class="{ 'fact--live': !!row.span }"
-                tabindex="0"
+                :aria-label="row.span ? `${row.label}: ${row.value}. Highlights where this came from.` : undefined"
                 @mouseenter="showSpan(row.span)"
                 @mouseleave="clearSpan()"
                 @focus="showSpan(row.span)"
@@ -731,15 +767,15 @@ async function copyDraftToClipboard() {
                   <span class="fact__value">{{ row.value }}</span>
                   <span v-if="row.reading" class="fact__reading">{{ row.reading }}</span>
                 </span>
-              </div>
-              <p class="card__hint">Point at a row to light up where it came from.</p>
+              </component>
+              <p class="card__hint">Point at a row, or tab to it, to light up where it came from.</p>
             </div>
           </section>
 
           <!-- 5. Gaps ------------------------------------------------------- -->
           <section class="card" :class="{ 'card--folded': folded.gaps }">
             <button type="button" class="card__head" :aria-expanded="!folded.gaps" @click="toggleFold('gaps')">
-              <span class="card__index" aria-hidden="true">04</span>
+              <span class="card__index" aria-hidden="true">{{ sectionNumber.gaps }}</span>
               <span class="card__title">What it doesn't say</span>
               <span v-if="checkedPrompts.length" class="card__status">{{ checkedPrompts.length }} in your reply</span>
               <span class="card__fold" aria-hidden="true">{{ folded.gaps ? '⌄' : '⌃' }}</span>
@@ -778,7 +814,7 @@ async function copyDraftToClipboard() {
           <!-- 6. The reply -------------------------------------------------- -->
           <section v-if="checkedPrompts.length" class="card card--reply">
             <div class="card__head card__head--static">
-              <span class="card__index" aria-hidden="true">05</span>
+              <span class="card__index" aria-hidden="true">{{ sectionNumber.reply }}</span>
               <span class="card__title">Your reply</span>
               <button type="button" class="copy-btn" @click="copyDraftToClipboard">
                 <Check v-if="copyState === 'copied'" :size="14" :stroke-width="2" aria-hidden="true" />
@@ -835,12 +871,15 @@ async function copyDraftToClipboard() {
               class="btn btn--primary"
               @click="makeFlashcard"
             >
-              Make it a Flashcard
+              Make a flashcard
             </button>
             <button type="button" class="btn btn--secondary" @click="reset">Start a new message</button>
           </div>
-          <span v-if="state.matchedPattern" class="disclaimer">
-            Or leaving this page without save a Flashcard :)
+          <!-- Keyed to the same condition as the button it belongs to. It
+               was keyed to matchedPattern, so the caveat and the button it
+               describes could each appear without the other. -->
+          <span v-if="state.record" class="disclaimer">
+            Or just leave &mdash; nothing is kept unless you make a flashcard.
           </span>
         </div>
       </div>
@@ -896,7 +935,7 @@ async function copyDraftToClipboard() {
   gap: 8px;
 }
 
-.intro h2 {
+.intro h1 {
   font-family: var(--font-serif);
   font-size: 27px;
   font-weight: 500;
@@ -948,7 +987,7 @@ async function copyDraftToClipboard() {
 .char-count {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--color-text-faint);
+  color: var(--color-text-muted);
   white-space: nowrap;
 }
 
@@ -957,13 +996,18 @@ async function copyDraftToClipboard() {
   font-weight: 600;
 }
 
+/* 13.5px on --color-primary is 4.05:1, and with no padding the target was
+   17.5px tall - half the minimum. The negative margin keeps the row's
+   alignment while the padding does its job. */
 .link-button {
   align-self: flex-start;
   background: none;
   border: none;
-  padding: 0;
+  margin: -8px 0;
+  padding: 8px 0;
   font-size: 13.5px;
-  color: var(--color-primary);
+  font-weight: 500;
+  color: var(--color-primary-strong-text);
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -1021,41 +1065,6 @@ async function copyDraftToClipboard() {
   cursor: default;
 }
 
-.btn--primary {
-  border: 1px solid var(--color-primary-border);
-  background: var(--color-primary);
-  color: var(--color-frame);
-}
-
-.btn--primary:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-}
-
-.btn--secondary {
-  padding: 13px 20px;
-  border: 1px solid var(--color-border-strong);
-  background: var(--color-frame);
-  color: var(--color-text);
-}
-
-.btn--secondary:hover {
-  background: var(--color-surface-soft);
-}
-
-.btn--ghost {
-  padding: 8px 14px;
-  border: 1px solid var(--color-border-strong);
-  background: none;
-  border-radius: 8px;
-  font-size: 13.5px;
-  color: var(--color-text);
-  cursor: pointer;
-}
-
-.btn--ghost:hover {
-  background: var(--color-surface-soft);
-}
-
 .results-header {
   display: flex;
   align-items: flex-start;
@@ -1064,7 +1073,7 @@ async function copyDraftToClipboard() {
   flex-wrap: wrap;
 }
 
-.results-header h2 {
+.results-header h1 {
   font-family: var(--font-serif);
   font-size: 26px;
   font-weight: 500;
@@ -1152,7 +1161,7 @@ async function copyDraftToClipboard() {
 .disclaimer {
   font-size: 12.5px;
   line-height: 1.55;
-  color: var(--color-text-faint);
+  color: var(--color-text-muted);
 }
 
 .notice {
@@ -1501,6 +1510,14 @@ button.card__head:hover .card__fold { color: var(--color-primary); }
 
 .card__hint--top { padding: 0 24px 10px; }
 
+/* A flush body has no padding of its own, so the hint supplies the 24px. A
+   normal body already has it, and the two were stacking to 48px - the hint
+   under the reply draft sat indented from everything above it. */
+.card__body:not(.card__body--flush) .card__hint {
+  padding-left: 0;
+  padding-right: 0;
+}
+
 /* The one-line answer to "what is this message actually asking of me", so it
    is set as prose and given room, not as a data field. */
 .meaning {
@@ -1619,6 +1636,12 @@ button.card__head:hover .card__fold { color: var(--color-primary); }
 /* --- stated facts --------------------------------------------------------- */
 
 .fact {
+  width: 100%;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: var(--color-text);
   display: grid;
   grid-template-columns: 104px 1fr;
   gap: 16px;
