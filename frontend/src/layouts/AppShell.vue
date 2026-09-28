@@ -83,7 +83,7 @@ onBeforeUnmount(() => {
     <header class="header">
       <div class="header__inner">
         <RouterLink to="/" class="brand">
-          <img :src="logoUrl" alt="TheSignalBridge" class="brand__logo" />
+          <img :src="logoUrl" alt="BetweenWords" class="brand__logo" />
         </RouterLink>
 
         <button

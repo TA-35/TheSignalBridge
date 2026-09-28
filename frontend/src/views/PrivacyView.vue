@@ -38,7 +38,7 @@ const LAST_UPDATED = '16 September 2026'
       <h1>Privacy</h1>
       <p class="policy__lede">
         This page explains what happens to a message when you paste it into
-        TheSignalBridge. The short version: it is analysed, it is never stored
+        BetweenWords. The short version: it is analysed, it is never stored
         on our servers, and part of the analysis happens at NVIDIA.
       </p>
       <p class="policy__date">Last updated {{ LAST_UPDATED }}</p>
@@ -111,7 +111,7 @@ const LAST_UPDATED = '16 September 2026'
     <section>
       <h2>Who we are</h2>
       <p>
-        TheSignalBridge is a student project built for FIT5120 at Monash
+        BetweenWords is a student project built for FIT5120 at Monash
         University. It is not a commercial service, and it is not covered by a
         company’s support or retention commitments. Treat it accordingly.
       </p>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, reactive, ref, watch } from 'vue'
-import { Check, Copy } from '@lucide/vue'
+import { Check, Copy, Sparkles } from '@lucide/vue'
 import { decodeMessage, EmptyMessageError, MAX_MESSAGE_LENGTH, MessageTooLongError } from '@/services/decodeService'
 import { findLocalPatternMatch } from '@/services/localPatterns'
 import { getPatterns } from '@/services/patternsService'
@@ -44,6 +44,7 @@ const state = reactive({
   record: null as DecodeRecord | null,
   savedCard: null as SavedCard | null,
   showSaved: false,
+  showHow: false,
   // The model-backed reading. Arrives seconds after the instant decode above,
   // so it is tracked separately and rendered only once it lands - the page is
   // never blocked waiting for it.
@@ -302,11 +303,42 @@ watch(
   },
 )
 
+// The "See how it works" dialog. Same contract as the saved-card one above -
+// it covers the page, so it has to hand the keyboard back when it closes.
+//
+// Read once, not watched: it only decides whether the walkthrough starts
+// playing on open, and the controls are there either way.
+const prefersReducedMotion =
+  typeof window !== 'undefined' &&
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+const howModal = ref<HTMLElement | null>(null)
+let lastFocusedByHow: HTMLElement | null = null
+
+function closeHow() {
+  state.showHow = false
+}
+
+watch(
+  () => state.showHow,
+  async (open) => {
+    if (open) {
+      lastFocusedByHow = document.activeElement as HTMLElement | null
+      await nextTick()
+      howModal.value?.focus()
+      return
+    }
+    if (lastFocusedByHow && document.contains(lastFocusedByHow)) lastFocusedByHow.focus()
+    lastFocusedByHow = null
+  },
+)
+
 const FOCUSABLE =
   'a[href], button:not([disabled]), input, textarea, select, [tabindex]:not([tabindex="-1"])'
 
-function trapTab(event: KeyboardEvent) {
-  const root = savedModal.value
+// Takes its root as an argument rather than reading one ref, so both dialogs
+// share the one implementation.
+function trapTab(event: KeyboardEvent, root: HTMLElement | null) {
   if (!root) return
   const items = [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
     (el) => el.offsetParent !== null,
@@ -587,37 +619,66 @@ async function copyDraftToClipboard() {
         <p>An email, a Slack message, a note from your manager...</p>
       </div>
 
-      <div class="input-area">
-        <textarea
-          v-model="state.message"
-          placeholder="Hi, when you get a chance, could you take a look at…"
-          spellcheck="false"
-          :class="{ 'input-area__box--error': !!state.error }"
-          :aria-invalid="!!state.error"
-          :aria-describedby="state.error ? 'decode-error' : undefined"
-          class="input-area__box"
-        />
-        <div class="input-area__footer">
-          <button type="button" class="link-button" @click="loadSample">Use a sample message</button>
-          <span class="char-count" :class="{ 'char-count--over': state.message.length > MAX_MESSAGE_LENGTH }">
-            {{ state.message.length }} / {{ MAX_MESSAGE_LENGTH }}
+      <div class="panes">
+        <!-- Left and right are one row of the same grid, so they start and end
+             together however long either side's content runs. -->
+        <div class="pane">
+          <div class="pane__head">
+            <span class="pane__label">Your message</span>
+            <span class="char-count" :class="{ 'char-count--over': state.message.length > MAX_MESSAGE_LENGTH }">
+              {{ state.message.length }} / {{ MAX_MESSAGE_LENGTH }}
+            </span>
+          </div>
+
+          <textarea
+            v-model="state.message"
+            placeholder="Hi, when you get a chance, could you take a look at…"
+            spellcheck="false"
+            :class="{ 'input-area__box--error': !!state.error }"
+            :aria-invalid="!!state.error"
+            :aria-describedby="state.error ? 'decode-error' : undefined"
+            class="input-area__box"
+          />
+
+          <div v-if="state.error" id="decode-error" class="error-banner" role="alert">
+            <span class="error-dot" />
+            <div>
+              <strong>{{ state.errorTitle }}</strong>
+              <p>{{ state.error }}</p>
+            </div>
+          </div>
+
+          <div class="pane__foot">
+            <button type="button" class="link-button" @click="loadSample">Use a sample message</button>
+            <div class="pane__buttons">
+              <button type="button" class="btn btn--secondary" @click="reset">Reset</button>
+              <button type="button" class="btn btn--primary" :disabled="state.loading" @click="review">
+                {{ state.loading ? 'Decoding…' : 'Decode message' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Holds the shape of the answer while the right half is empty, so the
+             reader knows what they are about to get before they paste. -->
+        <aside class="pane pane--preview">
+          <span class="preview__mark" aria-hidden="true">
+            <Sparkles :size="22" :stroke-width="1.6" />
           </span>
-        </div>
-      </div>
-
-      <div v-if="state.error" id="decode-error" class="error-banner" role="alert">
-        <span class="error-dot" />
-        <div>
-          <strong>{{ state.errorTitle }}</strong>
-          <p>{{ state.error }}</p>
-        </div>
-      </div>
-
-      <div class="actions">
-        <button type="button" class="btn btn--primary" :disabled="state.loading" @click="review">
-          {{ state.loading ? 'Decoding…' : 'Decode message' }}
-        </button>
-        <button type="button" class="btn btn--secondary" @click="reset">Reset</button>
+          <h2 class="preview__title">Your clear summary will appear here</h2>
+          <p class="preview__note">
+            We'll organize the message into four sections.
+          </p>
+          <ul class="preview__chips">
+            <li>1. What's covered</li>
+            <li>2. Your next step</li>
+            <li>3. What's missing</li>
+            <li>4. Draft a reply</li>
+          </ul>
+          <button type="button" class="how-btn" @click="state.showHow = true">
+            See how it works
+          </button>
+        </aside>
       </div>
     </div>
 
@@ -885,6 +946,36 @@ async function copyDraftToClipboard() {
       </div>
     </template>
 
+    <div v-if="state.showHow" class="modal-backdrop" @click="closeHow">
+      <div
+        ref="howModal"
+        class="modal modal--wide"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="how-title"
+        tabindex="-1"
+        @click.stop
+        @keydown.esc="closeHow"
+        @keydown.tab="trapTab($event, howModal)"
+      >
+        <div class="modal__title">
+          <span class="modal__dot" />
+          <strong id="how-title">How decoding works</strong>
+        </div>
+        <video
+          class="how-video"
+          src="/decode_explain_vid.mp4"
+          controls
+          muted
+          playsinline
+          :autoplay="!prefersReducedMotion"
+        />
+        <div class="actions">
+          <button type="button" class="btn btn--secondary" @click="closeHow">Close</button>
+        </div>
+      </div>
+    </div>
+
     <div v-if="state.showSaved" class="modal-backdrop" @click="closeSaved">
       <div
         ref="savedModal"
@@ -895,7 +986,7 @@ async function copyDraftToClipboard() {
         tabindex="-1"
         @click.stop
         @keydown.esc="closeSaved"
-        @keydown.tab="trapTab"
+        @keydown.tab="trapTab($event, savedModal)"
       >
         <div class="modal__title">
           <span class="modal__dot" />
@@ -905,7 +996,7 @@ async function copyDraftToClipboard() {
           <strong>{{ state.savedCard?.name }}</strong>
           <span>{{ state.savedCard?.implies }}</span>
         </div>
-        <p class="modal__note">It's in your Study section whenever you want it.</p>
+        <p class="modal__note">You Flash cards can be found in Study.</p>
         <div class="actions">
           <RouterLink to="/study" class="btn btn--primary">View in Study</RouterLink>
           <button type="button" class="btn btn--secondary" @click="closeSaved">Keep reading</button>
@@ -923,55 +1014,180 @@ async function copyDraftToClipboard() {
 }
 
 .intake {
-  max-width: 720px;
+  max-width: 1240px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 26px;
 }
 
 .intro {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  max-width: 44ch;
 }
 
+/* Sized as the page's masthead rather than a section label - it is the first
+   thing on the screen and the only heading above the fold. */
 .intro h1 {
   font-family: var(--font-serif);
-  font-size: 27px;
+  font-size: clamp(32px, 4.4vw, 46px);
   font-weight: 500;
-  letter-spacing: -0.015em;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
   margin: 0;
+  text-wrap: balance;
 }
 
 .intro p {
   margin: 0;
-  font-size: 14.5px;
+  font-size: 15.5px;
   line-height: 1.6;
   color: var(--color-text-muted);
 }
 
-.input-area {
+/* One grid row, so the two panes are the same width and the same height -
+   whichever side is taller sets it for both. Below 1040px they stack. */
+.panes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+}
+
+@media (min-width: 1040px) {
+  .panes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.pane {
   display: flex;
   flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-frame);
+}
+
+.pane__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pane__label {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.pane__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pane__buttons {
+  display: flex;
+  align-items: center;
   gap: 10px;
 }
 
+/* Centred, and it fills whatever height the left pane sets. */
+.pane--preview {
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  padding: 32px 28px;
+  border: 3px dashed var(--color-border-muted, #667168);
+  background: var(--color-primary-soft-bg,  #FAFAF9);
+}
+
+.preview__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  margin-bottom: 4px;
+}
+
+.preview__title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  color: var(--color-text);
+}
+
+.preview__note {
+  margin: 0;
+  max-width: 38ch;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+.preview__chips {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.preview__chips li {
+  padding: 7px 13px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 999px;
+  background: var(--color-surface);
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.how-btn {
+  margin-top: 15px;
+  padding: 8px 15px;
+  border: 3px solid var(--color-primary-soft-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-primary-strong-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.how-btn:hover {
+  border-color: var(--color-primary-border);
+}
+
+/* Grows into whatever height the preview pane gives the row, so the two panes
+   stay level instead of the shorter one sprouting a gap at the bottom. */
 .input-area__box {
   width: 100%;
-  min-height: 262px;
+  flex: 1;
+  min-height: 300px;
   resize: vertical;
-  padding: 18px;
-  border: 1px solid var(--color-border);
+  padding: 16px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-sm);
   background: var(--color-surface);
   font-size: 15.5px;
   line-height: 1.68;
   color: var(--color-text);
 }
 
-/* The browser's default placeholder is the text colour at its own alpha,
-   which lands at 3.28:1 on the dark surface - under the 4.5:1 this size
-   needs. Set explicitly instead of inherited. `opacity: 1` is not
-   redundant: Firefox applies an opacity of its own otherwise. */
 .input-area__box::placeholder {
   color: var(--color-text-muted);
   opacity: 1;
@@ -994,13 +1210,6 @@ async function copyDraftToClipboard() {
      indicator. The text variant is the light one in dark mode, so the border
      is emphatic in both appearances rather than only in light. */
   border-color: var(--color-danger-text);
-}
-
-.input-area__footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
 }
 
 .char-count {
@@ -1235,6 +1444,21 @@ async function copyDraftToClipboard() {
   flex-direction: column;
   gap: 16px;
   box-shadow: 0 18px 44px rgba(58, 55, 51, 0.16);
+}
+
+/* Wide enough for the walkthrough to be legible, and scrollable because the
+   video plus a title and a button can outgrow a laptop viewport. */
+.modal--wide {
+  max-width: 720px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+
+.how-video {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-soft);
 }
 
 .modal__title {

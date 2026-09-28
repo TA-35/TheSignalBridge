@@ -39,7 +39,7 @@ function open(id: string) {
       <strong>Nothing saved yet</strong>
       <p>Cards appear here when you choose to keep a pattern after reviewing a message.</p>
       <div class="empty-actions">
-        <RouterLink to="/decode" class="btn btn--primary">Review a message</RouterLink>
+        <RouterLink to="/decode" class="btn btn--primary">Decode a message</RouterLink>
         <RouterLink to="/library" class="btn btn--secondary">Browse the pattern library</RouterLink>
       </div>
     </div>
