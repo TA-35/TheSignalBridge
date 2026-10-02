@@ -1,0 +1,20 @@
+{
+  "model": "circa",
+  "source": "reproduced from Src/source/model/circa/circa_nn.py",
+  "variant": "answer_only",
+  "input": "answer_only",
+  "labels": {
+    "0": "direct",
+    "1": "indirect"
+  },
+  "threshold": 0.27445035200872114,
+  "seed": 2002,
+  "features": 12932,
+  "test_indirect_f1": 0.6103,
+  "split_rows": {
+    "train": 21938,
+    "val": 4701,
+    "test": 4701
+  },
+  "caveat": "trained on casual social language (Circa), not workplace email"
+}

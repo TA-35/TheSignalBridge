@@ -1,29 +1,73 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ArrowLeft, Check } from '@lucide/vue'
 import { useCardsStore } from '@/stores/cards'
+import { getPatterns } from '@/services/patternsService'
+import type { Pattern } from '@/types/pattern'
 
 const route = useRoute()
 const router = useRouter()
 const store = useCardsStore()
 
 const flipped = ref(false)
+const patterns = ref<Pattern[]>([])
 
-const orderedIds = computed(() => store.sortedByNeglect.map((c) => c.id))
-const index = computed(() => orderedIds.value.indexOf(route.params.id as string))
-const card = computed(() => store.cards.find((c) => c.id === route.params.id))
+// Library links here to preview a pattern that may not be saved yet; Study
+// links here to open a card the user already chose to keep. Same page, two
+// very different data sources - a preview must never write to the store.
+const isPreview = computed(() => route.name === 'pattern-preview')
 
-// Explore (from Library) and Open (from Study) both link in here — remember
-// which one so leaving goes back to where the user actually came from.
-const cameFromLibrary = computed(() => route.query.from === 'library')
-const backTo = computed(() => (cameFromLibrary.value ? '/library' : '/study'))
-const backLabel = computed(() => (cameFromLibrary.value ? '← Back to Library' : '← Back to Study'))
+onMounted(async () => {
+  if (isPreview.value) patterns.value = await getPatterns()
+})
+
+const previewPattern = computed(() => patterns.value.find((p) => p.id === route.params.patternId))
+const savedCard = computed(() => store.cards.find((c) => c.id === route.params.id))
+
+const card = computed(() => {
+  if (!isPreview.value) return savedCard.value
+  const p = previewPattern.value
+  if (!p) return undefined
+  return {
+    category: p.category,
+    name: p.name,
+    excerpt: '',
+    implies: p.implies,
+    why_misread: p.why_misread,
+    unsaid: [] as { field: string; prompt: string }[],
+  }
+})
+
+const alreadySaved = computed(() => (previewPattern.value ? store.isPatternSaved(previewPattern.value.id) : false))
+
+// Came in from a specific category's list (Library's sidebar) - paging and
+// "back" should stay inside that category, not jump across the whole set.
+const previewCategory = computed(() => (typeof route.query.category === 'string' ? route.query.category : null))
+
+const orderedIds = computed(() => {
+  if (!isPreview.value) return store.sortedByNeglect.map((c) => c.id)
+  const pool = previewCategory.value
+    ? patterns.value.filter((p) => p.category === previewCategory.value)
+    : patterns.value
+  return pool.map((p) => p.id)
+})
+const currentId = computed(() => (isPreview.value ? (route.params.patternId as string) : (route.params.id as string)))
+const index = computed(() => orderedIds.value.indexOf(currentId.value))
+
+const backTo = computed(() =>
+  isPreview.value ? { path: '/library', query: previewCategory.value ? { category: previewCategory.value } : {} } : '/study',
+)
+// The arrow is an <ArrowLeft> beside this, not a character inside it: the rest
+// of the app draws its icons with Lucide, and Study was using an ASCII "->"
+// for the same job.
+const backLabel = computed(() => (isPreview.value ? 'Back to Library' : 'Back to Study'))
 
 watch(
-  () => route.params.id,
+  currentId,
   (id) => {
     flipped.value = false
-    if (typeof id === 'string') store.touch(id)
+    if (!isPreview.value && typeof id === 'string') store.touch(id)
   },
   { immediate: true },
 )
@@ -32,25 +76,42 @@ function step(delta: number) {
   const ids = orderedIds.value
   if (!ids.length || index.value < 0) return
   const next = (index.value + delta + ids.length) % ids.length
-  // Keep `from` so paging through cards doesn't lose the entry point.
-  router.push({ name: 'card-review', params: { id: ids[next] }, query: route.query })
+  if (isPreview.value) {
+    router.push({
+      name: 'pattern-preview',
+      params: { patternId: ids[next] },
+      query: previewCategory.value ? { category: previewCategory.value } : {},
+    })
+  } else {
+    router.push({ name: 'card-review', params: { id: ids[next] } })
+  }
+}
+
+function saveToStudy() {
+  if (previewPattern.value) store.savePattern(previewPattern.value)
 }
 </script>
 
 <template>
   <div v-if="card" class="review">
     <div class="topline">
-      <RouterLink :to="backTo" class="back">{{ backLabel }}</RouterLink>
+      <RouterLink :to="backTo" class="back">
+        <ArrowLeft :size="15" :stroke-width="2" aria-hidden="true" />
+        {{ backLabel }}
+      </RouterLink>
       <span class="pos">card {{ index + 1 }} of {{ orderedIds.length }}</span>
     </div>
 
     <div class="card">
       <span v-if="card.category" class="tag">{{ card.category }}</span>
-      <strong class="name">{{ card.name }}</strong>
+      <!-- The phrase being studied is what this page is about, so it is the
+           page's heading. This screen previously had no heading element at
+           all, which left a screen reader nothing to navigate by. -->
+      <h1 class="name">{{ card.name }}</h1>
 
       <p v-if="card.excerpt" class="excerpt">{{ card.excerpt }}</p>
 
-      <div class="reveal" :class="{ 'reveal--open': flipped }">
+      <div id="card-reveal" class="reveal" :class="{ 'reveal--open': flipped }">
         <div class="reveal__inner">
           <template v-if="card.implies">
             <div class="block">
@@ -82,11 +143,29 @@ function step(delta: number) {
 
     <div class="controls">
       <button type="button" class="btn btn--secondary" @click="step(-1)">Previous</button>
-      <button type="button" class="btn btn--primary flip" @click="flipped = !flipped">
+      <button
+        type="button"
+        class="btn btn--primary flip"
+        :aria-expanded="flipped"
+        aria-controls="card-reveal"
+        @click="flipped = !flipped"
+      >
         {{ flipped ? "That's enough for now" : 'Explore this idea' }}
       </button>
       <button type="button" class="btn btn--secondary" @click="step(1)">Next</button>
     </div>
+
+    <button
+      v-if="isPreview"
+      type="button"
+      class="btn save-to-study"
+      :class="alreadySaved ? 'btn--saved' : 'btn--outline'"
+      :disabled="alreadySaved"
+      @click="saveToStudy"
+    >
+      <Check v-if="alreadySaved" :size="14" :stroke-width="2" aria-hidden="true" />
+      {{ alreadySaved ? 'Saved to Study' : 'Save to Study' }}
+    </button>
   </div>
 </template>
 
@@ -106,15 +185,25 @@ function step(delta: number) {
   gap: 12px;
 }
 
+/* Was 13.5px on --color-primary: 4.05:1, just under the 4.5:1 this size
+   needs. The strong variant of the same hue clears it at 7.7:1. The padding
+   is what takes the target from 18px tall to a reachable one. */
 .back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
   font-size: 13.5px;
-  color: var(--color-primary);
+  font-weight: 500;
+  color: var(--color-primary-strong-text);
 }
 
+/* --color-text-faint measures 2.96:1 on the page background. It is never a
+   safe colour for text at any size this app uses. */
 .pos {
   font-family: var(--font-mono);
-  font-size: 11.5px;
-  color: var(--color-text-faint);
+  font-size: 12px;
+  color: var(--color-text-muted);
 }
 
 .card {
@@ -131,12 +220,14 @@ function step(delta: number) {
 
 .tag {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 11.5px;
   letter-spacing: 0.09em;
-  color: var(--color-text-faint);
+  color: var(--color-text-muted);
 }
 
+/* An <h1> now, so it arrives with the browser's own heading margins. */
 .name {
+  margin: 0;
   font-family: var(--font-serif);
   font-size: 28px;
   font-weight: 500;
@@ -174,11 +265,14 @@ function step(delta: number) {
   gap: 7px;
 }
 
+/* The worst text on the site before this: 10.5px at 2.55:1, on the two labels
+   that say what you are reading. Below the 11px floor as well as the contrast
+   one, and hardcoded to a light-mode green so dark mode never touched it. */
 .block__label {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 12px;
   letter-spacing: 0.09em;
-  color: #8ca79a;
+  color: var(--color-primary-strong-text);
 }
 
 .block__text {
@@ -189,7 +283,7 @@ function step(delta: number) {
 
 .rule {
   height: 1px;
-  background: #e5ede9;
+  background: var(--color-border-soft);
 }
 
 .controls {
@@ -207,16 +301,12 @@ function step(delta: number) {
   cursor: pointer;
 }
 
-.btn--secondary {
-  border: 1px solid var(--color-border-strong);
-  background: var(--color-frame);
-  color: #4a453e;
-}
-
-.btn--primary {
-  border: 1px solid var(--color-primary-border);
-  background: var(--color-primary);
-  color: var(--color-frame);
+.save-to-study {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 20px;
+  font-weight: 500;
 }
 
 .flip {

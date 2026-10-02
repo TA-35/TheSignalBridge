@@ -1,5 +1,6 @@
 from app import create_app
 from app.config import Config
+from app.routes.decode import MAX_MESSAGE_LENGTH
 
 
 class TestConfig(Config):
@@ -57,6 +58,28 @@ def test_meaningless_message_returns_same_error():
     resp = _client().post("/api/decode", json={"message": "!!! ### 123"})
     assert resp.status_code == 400
     assert resp.get_json()["error"] == "Please enter a message"
+
+
+def test_oversized_message_is_rejected_with_413_not_processed():
+    resp = _client().post("/api/decode", json={"message": "a" * (MAX_MESSAGE_LENGTH + 1)})
+    assert resp.status_code == 413
+    assert "too long" in resp.get_json()["error"]
+
+
+def test_message_at_the_limit_is_not_rejected_for_size():
+    filler = "Send the invoice. "
+    message = (filler * (MAX_MESSAGE_LENGTH // len(filler) + 1))[:MAX_MESSAGE_LENGTH]
+    resp = _client().post("/api/decode", json={"message": message})
+    assert resp.status_code != 413
+
+
+def test_oversized_raw_body_is_rejected_before_parsing():
+    # A large body under some other field name would sail past the
+    # message-length check entirely - MAX_CONTENT_LENGTH (see app/config.py)
+    # is the backstop that catches this before the view function even runs.
+    resp = _client().post("/api/decode", json={"message": "x", "padding": "y" * 200_000})
+    assert resp.status_code == 413
+    assert resp.get_json()["error"]
 
 
 # Category enum from docs/api-contract.md - a value outside this set would

@@ -4,8 +4,8 @@
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
 
-  /*Colors style*/
-  --color-bg: #f4f1ea;
+  /*Colors style - light appearance, Sage accent (defaults)*/
+  --color-bg: #EEEAE0;
   --color-frame: #fdfbf7;
   --color-surface: #fffdf9;
   --color-surface-soft: #faf7f1;
@@ -31,10 +31,25 @@
   --color-warn-text: #6b5c4d;
   --color-warn-text-soft: #8a7c6c;
 
+  /* Destructive actions. Warm brick rather than signal red - see buttons.css. */
+  --color-danger-text: #9c3f2f;
+  --color-danger-border: #e6c9c2;
+  --color-danger-bg: #faefec;
+  --color-danger-solid: #8f3a2b;
+
+  /* The one content column the header, main and footer all share. It was
+     previously 1240px hardcoded twice and `var(--layout-max, 1100px)` in the
+     footer - and --layout-max was never defined, so the footer sat 140px
+     narrower than everything above it on every page. */
+  --layout-max: 1240px;
+
   /*Spacing and Shape style*/
   --radius-lg: 16px;
   --radius-md: 12px;
   --radius-sm: 9px;
+
+  /* Comfort settings defaults */
+  --ui-scale: 1;
 }
 
 /* Comfort settings. Applied via data-* on <html>. */
@@ -43,29 +58,168 @@
   --font-sans: 'Atkinson Hyperlegible', system-ui, sans-serif;
 }
 
-:root[data-contrast='soft'] {
-  --color-text: #4a453e;
-  --color-text-muted: #7a7166;
-  --color-border: #ece7dc;
-  --color-border-soft: #f1ede4;
-  --color-border-strong: #e6e0d3;
+/* Text size: a plain scale factor rather than rewriting every component's
+   px font-size to rem. `zoom` scales layout and text together, which mirrors
+   the browser's own page zoom and keeps spacing/hit-targets proportional. */
+:root[data-text-size='small'] {
+  --ui-scale: 0.92;
 }
 
-:root[data-contrast='high'] {
-  --color-bg: #ffffff;
-  --color-frame: #ffffff;
-  --color-surface: #ffffff;
-  --color-surface-soft: #F7F5F0;
-
-  --color-text: #000000;
-  --color-text-muted: #262218;
-  --color-text-faint: #4a4436;
-
-  --color-border: #8f8368;
-  --color-border-soft: #a89d84;
-  --color-border-strong: #4a4235;
+:root[data-text-size='large'] {
+  --ui-scale: 1.22;
 }
 
-:root[data-calm='true'] {
-  filter: grayscale(1);
+html {
+  zoom: var(--ui-scale);
+}
+
+/* Bold text: a deliberate global override, not a per-component style - it
+   has to win over every component's own font-weight to do its job. */
+:root[data-bold-text='true'] :where(body, body *) {
+  font-weight: 600 !important;
+}
+
+/* Dark appearance. Kept warm (not pure black/white) to match the paper-like
+   light palette instead of jumping to a cold, generic dark theme. */
+:root[data-appearance='dark'] {
+  --color-bg: #1c1a17;
+  --color-frame: #232019;
+  --color-surface: #29261f;
+  --color-surface-soft: #26231d;
+
+  --color-border: #3a352c;
+  --color-border-soft: #322e26;
+  --color-border-strong: #4a4436;
+
+  --color-text: #ede8df;
+  --color-text-muted: #b8b0a1;
+  --color-text-faint: #8f8778;
+
+  --color-primary: #7fae9a;
+  --color-primary-border: #6f9c88;
+  --color-primary-hover: #8fbeaa;
+  --color-primary-soft-bg: #26332d;
+  --color-primary-soft-border: #35473e;
+  --color-primary-strong-text: #a8d3c1;
+
+  --color-warn-bg: #2e2820;
+  --color-warn-border: #4a4030;
+  --color-warn-dot: #c2a98a;
+  --color-warn-text: #d8c9b0;
+  --color-warn-text-soft: #b8a98f;
+
+  --color-danger-text: #eaa695;
+  --color-danger-border: #5e3a32;
+  --color-danger-bg: #33231f;
+  --color-danger-solid: #b0543f;
+}
+
+/* Accent color themes. Sage (above) is the neutral, unwashed default - the
+   other three also tint the light-mode background/border/text scale with a
+   soft wash in the same hue, so the page doesn't read as uniformly pale.
+   Dark mode stays on the shared neutral-dark scale for every accent below;
+   only its primary/highlight tokens change, since a dark background is
+   already a big enough visual shift on its own.
+
+   The `:not([data-appearance='dark'])` guard matters: without it, this
+   selector and `:root[data-appearance='dark']` have equal specificity, and
+   whichever is written later in the file wins the background/text/border
+   tokens regardless of which is semantically correct - a colored accent
+   picked in light mode would then leak its light background into dark mode
+   while only the primary/button color switched to its dark variant. The
+   guard makes this block only ever match in light mode, so dark mode's
+   neutral tokens are never in a same-specificity fight it can accidentally
+   lose. */
+
+:root:not([data-appearance='dark'])[data-accent='ocean'] {
+  --color-bg: #eef4f8;
+  --color-frame: #f8fbfd;
+  --color-surface: #fcfeff;
+  --color-surface-soft: #eef5f9;
+
+  --color-border: #dbe6ee;
+  --color-border-soft: #e6eef4;
+  --color-border-strong: #c9d9e3;
+
+  --color-text: #263238;
+  --color-text-muted: #56666f;
+  --color-text-faint: #7c8a92;
+
+  --color-primary: #3d6fa0;
+  --color-primary-border: #35608c;
+  --color-primary-hover: #356090;
+  --color-primary-soft-bg: #eaf1f7;
+  --color-primary-soft-border: #d8e4ee;
+  --color-primary-strong-text: #244a6b;
+}
+
+:root[data-appearance='dark'][data-accent='ocean'] {
+  --color-primary: #7ba8d1;
+  --color-primary-border: #6a97c2;
+  --color-primary-hover: #8db8de;
+  --color-primary-soft-bg: #202b36;
+  --color-primary-soft-border: #2d3c4a;
+  --color-primary-strong-text: #a9cbe8;
+}
+
+:root:not([data-appearance='dark'])[data-accent='lavender'] {
+  --color-bg: #f5f1f8;
+  --color-frame: #fbf8fc;
+  --color-surface: #fdfbfe;
+  --color-surface-soft: #f4eff8;
+
+  --color-border: #e6dcec;
+  --color-border-soft: #efe7f3;
+  --color-border-strong: #d9cbe3;
+
+  --color-text: #322b3a;
+  --color-text-muted: #695f72;
+  --color-text-faint: #8d8395;
+
+  --color-primary: #7d6a9e;
+  --color-primary-border: #6c5a8c;
+  --color-primary-hover: #6c5a8c;
+  --color-primary-soft-bg: #f1eef7;
+  --color-primary-soft-border: #e2dceb;
+  --color-primary-strong-text: #4f3f6b;
+}
+
+:root[data-appearance='dark'][data-accent='lavender'] {
+  --color-primary: #b3a0d4;
+  --color-primary-border: #9f8bc4;
+  --color-primary-hover: #c2b1de;
+  --color-primary-soft-bg: #2a2534;
+  --color-primary-soft-border: #383049;
+  --color-primary-strong-text: #d3c6ea;
+}
+
+:root:not([data-appearance='dark'])[data-accent='slate'] {
+  --color-bg: #f1f2f3;
+  --color-frame: #f9fafa;
+  --color-surface: #fcfdfd;
+  --color-surface-soft: #eef0f1;
+
+  --color-border: #dee1e3;
+  --color-border-soft: #e8eaec;
+  --color-border-strong: #ced2d5;
+
+  --color-text: #2b2f33;
+  --color-text-muted: #5f656a;
+  --color-text-faint: #82898e;
+
+  --color-primary: #5c6570;
+  --color-primary-border: #4c545e;
+  --color-primary-hover: #4c545e;
+  --color-primary-soft-bg: #eef0f2;
+  --color-primary-soft-border: #dde1e5;
+  --color-primary-strong-text: #363c43;
+}
+
+:root[data-appearance='dark'][data-accent='slate'] {
+  --color-primary: #9aa4b0;
+  --color-primary-border: #838e9c;
+  --color-primary-hover: #aab3be;
+  --color-primary-soft-bg: #262a2f;
+  --color-primary-soft-border: #343a41;
+  --color-primary-strong-text: #c3ccd6;
 }

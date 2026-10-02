@@ -1,0 +1,156 @@
+name: Inference service deploy
+
+# Separate from backend-deploy.yml on purpose. That workflow rsyncs only
+# backend/ and restarts the API; this one ships the pipeline, its models and
+# its own virtualenv to a different directory and restarts a different unit.
+# Neither touches the other, so a failure here cannot take the API down.
+#
+# Manual trigger, matching the other two workflows in this repo.
+
+on:
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: "Deploy without running the test suite (not recommended)"
+        type: boolean
+        default: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # The pipeline's tests mock every model call, so they need no key, no
+      # network and no GPU - the same constraint the backend tests satisfy.
+      - name: Install and test
+        if: ${{ !inputs.skip_tests }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r Src/source/pipeline/requirements.txt pytest
+          python -m pytest Src/source/pipeline/tests -q
+
+      - name: Guard - the API's dependency list must not have grown
+        run: |
+          # The API reaches this service over HTTP using only the standard
+          # library. If backend/requirements.txt ever gains one of these, the
+          # pipeline has been imported into the API by mistake and the 1GB
+          # box will not fit it.
+          for pkg in scikit-learn joblib openai anthropic pandas; do
+            if grep -qi "^${pkg}" backend/requirements.txt; then
+              echo "::error::$pkg appeared in backend/requirements.txt - the"
+              echo "::error::inference stack must stay out of the API process."
+              exit 1
+            fi
+          done
+          echo "API dependency list is clean."
+
+      - name: Detect the remote login user
+        id: remote
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.INFERENCE_HOST }} >> ~/.ssh/known_hosts
+
+          # Ubuntu AMIs log in as `ubuntu`, Amazon Linux as `ec2-user`. Both
+          # reject the wrong name with "Permission denied (publickey)", which
+          # is indistinguishable from an unauthorised key - so detect rather
+          # than hardcode, and say which one worked.
+          USER=""
+          for candidate in ubuntu ec2-user; do
+            if ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o ConnectTimeout=10 \
+                 "$candidate@${{ secrets.INFERENCE_HOST }}" true 2>/dev/null; then
+              USER="$candidate"; break
+            fi
+          done
+          if [ -z "$USER" ]; then
+            echo "::error::Could not log in as ubuntu or ec2-user."
+            echo "::error::Either the CI public key is not in authorized_keys"
+            echo "::error::on that host, or the host uses a different login user."
+            exit 1
+          fi
+          echo "user=$USER" >> "$GITHUB_OUTPUT"
+          echo "home=/home/$USER" >> "$GITHUB_OUTPUT"
+          echo "Logged in as $USER"
+
+      - name: Push pipeline, models and weights to EC2
+        env:
+          REMOTE: ${{ steps.remote.outputs.user }}@${{ secrets.INFERENCE_HOST }}
+        run: |
+          ssh -i ~/.ssh/deploy_key "$REMOTE" 'mkdir -p ~/inference'
+          # Everything the service imports: the pipeline, the teammates'
+          # model code it wraps, the saved weights, and the backend module it
+          # borrows the span extractor from.
+          rsync -az --delete \
+            --exclude '__pycache__' --exclude '.pytest_cache' --exclude '.env' \
+            -e "ssh -i ~/.ssh/deploy_key" Src/ "$REMOTE:~/inference/Src/"
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy_key" models/ "$REMOTE:~/inference/models/"
+          rsync -az --exclude '__pycache__' \
+            -e "ssh -i ~/.ssh/deploy_key" backend/app/services/extraction.py \
+            "$REMOTE:~/inference/backend/app/services/"
+
+      - name: Install the systemd unit for this host
+        env:
+          REMOTE: ${{ steps.remote.outputs.user }}@${{ secrets.INFERENCE_HOST }}
+          RUSER: ${{ steps.remote.outputs.user }}
+          RHOME: ${{ steps.remote.outputs.home }}
+        run: |
+          # Generated here rather than shipped as a fixed file: the unit has
+          # to name the login user and its home directory, and those differ
+          # between Ubuntu (ubuntu) and Amazon Linux (ec2-user). infra/systemd/
+          # keeps a readable reference copy; this is the one that runs.
+          sed -e "s|__USER__|$RUSER|g" -e "s|__HOME__|$RHOME|g" \
+            infra/systemd/inference.service.template > /tmp/inference.service
+          scp -i ~/.ssh/deploy_key /tmp/inference.service "$REMOTE:/tmp/"
+          ssh -i ~/.ssh/deploy_key "$REMOTE" '
+            sudo mv /tmp/inference.service /etc/systemd/system/inference.service
+            sudo systemctl daemon-reload
+            sudo systemctl enable inference
+          '
+
+      - name: Install dependencies and restart
+        env:
+          REMOTE: ${{ steps.remote.outputs.user }}@${{ secrets.INFERENCE_HOST }}
+        run: |
+          ssh -i ~/.ssh/deploy_key "$REMOTE" '
+            set -e
+            # python3-venv is separate on Debian/Ubuntu and bundled on
+            # Amazon Linux; pick whichever package manager exists.
+            if ! python3 -m venv --help >/dev/null 2>&1; then
+              if command -v apt-get >/dev/null; then
+                sudo apt-get update -qq && sudo apt-get install -y -qq python3-venv python3-pip
+              else
+                sudo dnf install -y -q python3-pip
+              fi
+            fi
+            cd ~/inference
+            test -d .venv || python3 -m venv .venv
+            .venv/bin/pip install --quiet --upgrade pip
+            .venv/bin/pip install --quiet -r Src/source/pipeline/requirements.txt
+            sudo systemctl restart inference
+          '
+
+      - name: Smoke test - the service answers and knows its model
+        env:
+          REMOTE: ${{ steps.remote.outputs.user }}@${{ secrets.INFERENCE_HOST }}
+        run: |
+          ssh -i ~/.ssh/deploy_key "$REMOTE" '
+            for i in $(seq 1 30); do
+              curl -sf http://127.0.0.1:8100/health && break || sleep 2
+            done
+            curl -sf http://127.0.0.1:8100/health | grep -q "\"status\": *\"ok\"" \
+              || { echo "health check failed"; exit 1; }
+          '
+
+      - name: Smoke test - the API can still serve without this service
+        run: |
+          # The whole point of the degraded path: even if this deploy is
+          # broken, the site keeps working. Verified against the live API,
+          # which this workflow never touches.
+          curl -sf https://api.thesignalbridge.com/api/patterns > /dev/null
+          echo "API unaffected."

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ChevronRight } from '@lucide/vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCardsStore } from '@/stores/cards'
 import { describeLastOpened } from '@/utils/relativeTime'
@@ -7,11 +8,8 @@ import { describeLastOpened } from '@/utils/relativeTime'
 const router = useRouter()
 const store = useCardsStore()
 
-const view = ref<'list' | 'deck'>('list')
-const deckPos = ref(0)
-
 function preview(text: string): string {
-  return text.length > 118 ? `${text.slice(0, 116)}…` : text
+  return text.length > 64 ? `${text.slice(0, 62)}…` : text
 }
 
 const cards = computed(() =>
@@ -24,63 +22,43 @@ const cards = computed(() =>
   })),
 )
 
-const deckCard = computed(() => (cards.value.length ? cards.value[deckPos.value % cards.value.length] : null))
-
 function open(id: string) {
-  router.push({ name: 'card-review', params: { id }, query: { from: 'study' } })
+  router.push({ name: 'card-review', params: { id } })
 }
 
-function nextInDeck() {
-  if (cards.value.length) deckPos.value = (deckPos.value + 1) % cards.value.length
-}
 </script>
 
 <template>
   <div class="study">
     <div class="header">
-      <div>
-        <h2>Study</h2>
-        <p>Explore whatever you feel like.</p>
-      </div>
-      <div class="tabs">
-        <button type="button" class="tab" :class="{ 'tab--active': view === 'list' }" @click="view = 'list'">
-          List
-        </button>
-        <button type="button" class="tab" :class="{ 'tab--active': view === 'deck' }" @click="view = 'deck'">
-          Deck
-        </button>
-      </div>
+      <h1>Study</h1>
+      <p>Cards you've kept from the library and from messages you've reviewed. Open one to refresh what it means.</p>
     </div>
 
     <div v-if="!cards.length" class="empty">
       <strong>Nothing saved yet</strong>
       <p>Cards appear here when you choose to keep a pattern after reviewing a message.</p>
       <div class="empty-actions">
-        <RouterLink to="/decode" class="btn btn--primary">Review a message</RouterLink>
+        <RouterLink to="/decode" class="btn btn--primary">Decode a message</RouterLink>
         <RouterLink to="/library" class="btn btn--secondary">Browse the pattern library</RouterLink>
       </div>
     </div>
 
-    <div v-else-if="view === 'list'" class="list">
+    <div v-else class="list">
       <button v-for="card in cards" :key="card.id" type="button" class="card-row" @click="open(card.id)">
         <span class="card-row__text">
           <strong>{{ card.name }}</strong>
-          <span>{{ card.impliesPreview }}</span>
           <span class="meta">{{ card.meta }}</span>
         </span>
-        <span class="explore">Explore -></span>
+        <!-- A cue, not a control. This was a bordered, filled pill reading
+             "See more ->" sitting INSIDE the row's own <button>, so it looked
+             like the thing to click when the whole row already was. The label
+             also now matches the Library's wording for the same destination. -->
+        <span class="explore">
+          See what this means
+          <ChevronRight :size="15" :stroke-width="2" aria-hidden="true" />
+        </span>
       </button>
-    </div>
-
-    <div v-else class="deck">
-      <button v-if="deckCard" type="button" class="deck-card" @click="open(deckCard.id)">
-        <strong>{{ deckCard.name }}</strong>
-        <span>Tap to open · {{ deckCard.meta }}</span>
-      </button>
-      <div class="deck-controls">
-        <button type="button" class="btn btn--secondary" @click="nextInDeck">Next card</button>
-        <span class="meta">{{ cards.length }} in the pile</span>
-      </div>
     </div>
   </div>
 </template>
@@ -94,13 +72,10 @@ function nextInDeck() {
 
 .header {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
+  flex-direction: column;
 }
 
-.header h2 {
+.header h1 {
   font-family: var(--font-serif);
   font-size: 26px;
   font-weight: 500;
@@ -112,31 +87,6 @@ function nextInDeck() {
   margin: 0;
   font-size: 14px;
   color: var(--color-text-muted);
-}
-
-.tabs {
-  display: flex;
-  gap: 2px;
-  padding: 3px;
-  background: #efeae1;
-  border-radius: 999px;
-}
-
-.tab {
-  padding: 7px 15px;
-  border-radius: 999px;
-  border: none;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-  background: transparent;
-  color: var(--color-text-faint);
-}
-
-.tab--active {
-  background: var(--color-frame);
-  color: var(--color-text);
-  box-shadow: 0 1px 2px rgba(58, 55, 51, 0.08);
 }
 
 .empty {
@@ -179,18 +129,6 @@ function nextInDeck() {
   cursor: pointer;
 }
 
-.btn--primary {
-  border: 1px solid var(--color-primary-border);
-  background: var(--color-primary);
-  color: var(--color-frame);
-}
-
-.btn--secondary {
-  border: 1px solid var(--color-border-strong);
-  background: var(--color-frame);
-  color: #4a453e;
-}
-
 .list {
   display: flex;
   flex-direction: column;
@@ -228,65 +166,32 @@ function nextInDeck() {
   color: var(--color-text);
 }
 
-.card-row__text span {
-  font-size: 13.5px;
-  line-height: 1.55;
-  color: var(--color-text-muted);
-}
-
+/* --color-text-faint is 3.5:1 on the card surface and 2.96:1 on the page.
+   The !important was there to win against a parent rule, not to pick this
+   colour, so it survives the swap. */
 .meta {
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--color-text-faint) !important;
+  font-size: 11.5px;
+  color: var(--color-text-muted) !important;
 }
 
 .explore {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 13px;
-  color: var(--color-primary);
+  font-weight: 600;
+  color: var(--color-primary-strong-text);
   white-space: nowrap;
 }
 
-.deck {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 22px;
-  padding: 16px 0 8px;
+.card-row:hover .explore {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-.deck-card {
-  width: 100%;
-  max-width: 460px;
-  min-height: 200px;
-  border: 1px solid var(--color-border-strong);
-  border-radius: 14px;
-  background: var(--color-surface);
-  padding: 26px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: flex-start;
-  text-align: left;
-  cursor: pointer;
-  gap: 10px;
+.card-row:hover .explore {
+  border-color: var(--color-primary-border);
 }
 
-.deck-card strong {
-  font-family: var(--font-serif);
-  font-size: 23px;
-  font-weight: 500;
-  line-height: 1.25;
-  color: var(--color-text);
-}
-
-.deck-card span {
-  font-size: 13.5px;
-  color: var(--color-text-muted);
-}
-
-.deck-controls {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
 </style>

@@ -9,6 +9,11 @@ const router = createRouter({
       component: () => import('@/views/HomeView.vue'),
     },
     {
+      path: '/compose',
+      name: 'compose',
+      component: () => import('@/views/ComposeView.vue')
+    },
+    {
       path: '/decode',
       name: 'decode',
       component: () => import('@/views/DecodeView.vue'),
@@ -29,9 +34,24 @@ const router = createRouter({
       component: () => import('@/views/LibraryView.vue'),
     },
     {
+      path: '/library/:patternId',
+      name: 'pattern-preview',
+      component: () => import('@/views/CardReviewView.vue'),
+    },
+    {
       path: '/settings',
       name: 'settings',
       component: () => import('@/views/SettingsView.vue'),
+    },
+    {
+      path: '/privacy',
+      name: 'privacy',
+      component: () => import('@/views/PrivacyView.vue'),
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: () => import('@/views/LoginView.vue')
     },
   ],
 })

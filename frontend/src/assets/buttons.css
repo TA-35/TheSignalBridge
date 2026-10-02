@@ -1,0 +1,101 @@
+/* Shared button skins.
+   ---------------------------------------------------------------------------
+   These used to be redeclared inside five views' scoped <style> blocks, which
+   is how `color: #4a453e` - a light-mode literal - survived in four of them
+   after being fixed in the fifth. A skin defined once cannot drift.
+
+   Only the SKIN lives here (border, background, colour). Size stays with each
+   view, because a button in a Library card and a button under the decode
+   results are deliberately not the same size. A view's scoped `.btn` carries a
+   [data-v-*] attribute, so its padding/font-size always outranks anything
+   here - the two never fight, they compose. */
+
+.btn {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.btn:disabled {
+  cursor: default;
+}
+
+.btn--primary {
+  border: 1px solid var(--color-primary-border);
+  background: var(--color-primary);
+  color: var(--color-frame);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+/* Secondary, ghost and outline are one skin with three names across the app.
+   Kept as three selectors rather than renamed, so no template has to change. */
+.btn--secondary,
+.btn--ghost,
+.btn--outline {
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-frame);
+  color: var(--color-text);
+}
+
+.btn--ghost {
+  background: none;
+}
+
+.btn--secondary:hover:not(:disabled),
+.btn--ghost:hover:not(:disabled),
+.btn--outline:hover:not(:disabled) {
+  background: var(--color-surface-soft);
+}
+
+/* Already-saved. Reads as a state, not an action - which is why it is also
+   the one skin that keeps the default cursor. */
+.btn--saved {
+  border: 1px solid var(--color-primary-soft-border);
+  background: var(--color-primary-soft-bg);
+  color: var(--color-primary-strong-text);
+  cursor: default;
+}
+
+/* Destructive. Tinted rather than red: this palette is deliberately warm and
+   unalarming, and an emergency red would be louder than anything in this app
+   needs to be. It still has to be visibly a different class of control from
+   the secondary button beside it - previously the two differed only in text
+   colour, so "Delete my saved cards" read as a peer of "Reset settings". */
+.btn--danger {
+  border: 1px solid var(--color-danger-border);
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+}
+
+.btn--danger:hover:not(:disabled) {
+  border-color: var(--color-danger-solid);
+}
+
+.btn--danger-solid {
+  border: 1px solid var(--color-danger-solid);
+  background: var(--color-danger-solid);
+  color: var(--color-frame);
+}
+
+.btn--danger-solid:hover:not(:disabled) {
+  background: var(--color-danger-text);
+  border-color: var(--color-danger-text);
+}
+
+/* One focus ring for every control in the app.
+   The browser's own ring is amber, which is legible but reads as a foreign
+   object in a sage/paper palette. This keeps the same job and the same
+   thickness, in the accent colour.
+
+   No border-radius here on purpose. Setting it would reshape the element for
+   as long as it held focus - a square field would round its corners on focus
+   and square them again on blur. Outlines already follow whatever radius the
+   element itself has, so there is nothing to restate. */
+:where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}

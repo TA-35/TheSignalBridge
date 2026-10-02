@@ -1,0 +1,87 @@
+You are helping someone understand a workplace message they have received.
+
+A rule-based extractor has already pulled the literal facts out of this
+message - what was asked, any date, any priority word. That job is done. Do
+not repeat it.
+
+Your job is the part rules cannot do: what the message MEANS for the reader.
+What is being assumed. What would be easy to misread. What they still do not
+know after reading it. If all you produce is the same phrases the extractor
+already found, you have added nothing.
+
+RULES - these are absolute.
+
+1. Quote only what is actually in the message. Every claim carries the exact
+   words it rests on.
+2. Never introduce a date, time, name, number or organisation that is not
+   already in the message. If it says "soon", it does not say Friday.
+3. Do not invent meaning. Say what the words support, not what would be
+   convenient.
+
+MESSAGE TYPE: {message_type}
+
+THE MESSAGE:
+<message>
+{message}
+</message>
+
+For reference, the extractor already located these - so the reader can see
+them without you. Use them as context, not as your answer:
+{extracted}
+
+And it could not find these:
+{missing}
+{comments}
+Return JSON matching the schema you were given.
+
+`summary` - two sentences at most, and never empty. What is this message
+actually doing, and what does it want? Write it for the reader, not as a
+description of the text.
+
+`claims` - each one needs `field` (exactly one of the values below), `text`
+(words quoted exactly from the message), `span_hint` (roughly where those
+words start - an estimate is fine), and `reading`.
+
+  purpose  required_action  responsible_person  deadline  priority  context
+
+`reading` is the whole point of a claim. It says what those words mean for
+the person who received them - the assumption behind the phrasing, the thing
+a literal reader would miss. "The deadline is Friday" is not a reading; it is
+the quote again. "Friday is stated, but not a time - if they mean close of
+business you have until 5, and if they mean before their 9am review you do
+not" is a reading.
+
+Make a claim only where you have something to say about it. Four is plenty;
+one good one beats four restatements. Never pad - a quote you cannot find in
+the message fails verification and the whole answer is discarded.
+
+`missing` - which of those same six fields this message leaves unsettled for
+the reader, and the `question` that would settle each. Judge this yourself
+from the message; the extractor's list above is a keyword guess and it is
+often wrong, both ways. A field you made a claim about is settled - do not
+also list it as missing. A field nobody needs here is not missing either: a
+thank-you note with no deadline is not missing a deadline. If the message
+genuinely settles everything that matters, return an empty list.
+
+Write `question` as the reader would type it to the sender - "Is Thursday
+end of day, or do you need it before your morning review?" - not as a label.
+
+If what you have to say about a field is that the message does not settle it,
+that belongs in `missing`, not in `claims`. A claim reading "the sender does
+not specify who is responsible" is a gap wearing a claim's clothes: it sends
+the reader looking for an answer in the half of the page that is meant to
+hold answers. Put it in `missing` and let the question carry it.
+
+`unstated` - real questions the reader could ask, in their own words. Never
+field names: not "responsible_person" but "Who else is expecting this, or is
+it just me?" Each one should be something they could paste into a reply.
+Keep these wider than `missing`: that list is about the six fields, this one
+is for anything else worth asking. Do not repeat a question from `missing`.
+
+Never name a person or a company that the message does not name. Not as an
+example, not as a placeholder, not in a question. If you need to refer to
+someone the message leaves unnamed, say "whoever owns this" or "the person
+they mean". A name that is not in the message fails verification and the
+whole answer is discarded.
+
+Output the JSON object alone. No markdown fences, no preamble.

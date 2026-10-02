@@ -1,0 +1,269 @@
+{
+  "summary": {
+    "examples": 2,
+    "errors": 0,
+    "message_type_correct": 1,
+    "degraded": 0,
+    "clean": 2,
+    "mean_prompt_chars": 2460,
+    "mean_seconds": 328.1,
+    "mean_cross_check_agreement": null,
+    "wall_clock_seconds": 337.2
+  },
+  "config": {
+    "provider": "nvidia",
+    "model": "moonshotai/kimi-k3",
+    "include_model_comments": true,
+    "include_extracted_spans": false,
+    "dry_run": false
+  },
+  "records": [
+    {
+      "id": "req-01",
+      "expected_type": "request",
+      "detected_type": "update",
+      "type_matches": false,
+      "found": [],
+      "actions": 0,
+      "missing": [
+        "purpose",
+        "context"
+      ],
+      "comments": [
+        {
+          "model": "politeness",
+          "label": "medium",
+          "confidence": 1.0,
+          "note": "politeness score -0.006 (negative is blunt, positive is polite; low/medium/high cut at -0.205 and +0.312); trained on Wikipedia and Stack Exchange requests, not workplace email; test Pearson 0.47"
+        },
+        {
+          "model": "tone",
+          "label": "unknown",
+          "confidence": 0.0,
+          "note": "model unavailable: ModuleNotFoundError"
+        },
+        {
+          "model": "circa",
+          "label": "indirect",
+          "confidence": 0.32978192464887457,
+          "note": "p(indirect)=0.33 against a validation-tuned threshold of 0.27; circa_nn.py variant 'answer_only', in-domain indirect F1 0.61; trained on casual social question-answer pairs (Circa), not workplace email; confidence capped at 0.6 as out of domain"
+        }
+      ],
+      "prompt_chars": 2447,
+      "result": {
+        "summary": "The message is a placeholder describing an intended direct request, not the request itself. It signals that something should name what is needed and by when, but does not provide those details.",
+        "claims": [
+          {
+            "field": "placeholder_status",
+            "text": "PLACEHOLDER",
+            "reading": "The message explicitly labels itself as a placeholder rather than supplying the workplace content.",
+            "span": [
+              0,
+              11
+            ]
+          },
+          {
+            "field": "self_description",
+            "text": "a direct request naming what is needed and by when",
+            "reading": "The only substance is a description of the kind of message intended: one that would name a need and a deadline.",
+            "span": [
+              14,
+              64
+            ]
+          }
+        ],
+        "unstated": [
+          "What exactly is needed?",
+          "By when is it needed?",
+          "Who is asking for it?",
+          "Who is expected to act?",
+          "What update, task, or decision is this about?"
+        ],
+        "degraded": false,
+        "cross_check": {
+          "comparisons": [
+            {
+              "field": "placeholder_status",
+              "verdict": "llm_only",
+              "llm": {
+                "text": "PLACEHOLDER",
+                "span": [
+                  0,
+                  11
+                ]
+              },
+              "extractor": null
+            },
+            {
+              "field": "self_description",
+              "verdict": "llm_only",
+              "llm": {
+                "text": "a direct request naming what is needed and by when",
+                "span": [
+                  14,
+                  64
+                ]
+              },
+              "extractor": null
+            }
+          ],
+          "agreement_rate": null,
+          "disagreements": []
+        },
+        "llm_attempts": 1,
+        "model": "moonshotai/kimi-k3",
+        "model_comments_included": true,
+        "extracted_spans_in_prompt": false
+      },
+      "seconds": 337.2
+    },
+    {
+      "id": "req-02",
+      "expected_type": "request",
+      "detected_type": "request",
+      "type_matches": true,
+      "found": [
+        "priority",
+        "required_action"
+      ],
+      "actions": 1,
+      "missing": [
+        "purpose",
+        "responsible_person",
+        "deadline"
+      ],
+      "comments": [
+        {
+          "model": "politeness",
+          "label": "high",
+          "confidence": 1.0,
+          "note": "politeness score +0.317 (negative is blunt, positive is polite; low/medium/high cut at -0.205 and +0.312); trained on Wikipedia and Stack Exchange requests, not workplace email; test Pearson 0.47"
+        },
+        {
+          "model": "tone",
+          "label": "unknown",
+          "confidence": 0.0,
+          "note": "model unavailable: ModuleNotFoundError"
+        },
+        {
+          "model": "circa",
+          "label": "indirect",
+          "confidence": 0.40927666692874914,
+          "note": "p(indirect)=0.41 against a validation-tuned threshold of 0.27; circa_nn.py variant 'answer_only', in-domain indirect F1 0.61; trained on casual social question-answer pairs (Circa), not workplace email; confidence capped at 0.6 as out of domain"
+        }
+      ],
+      "prompt_chars": 2474,
+      "result": {
+        "summary": "This message is a placeholder describing a type of request rather than an actual request. It characterises itself as a request made to sound casual that nonetheless carries a real deadline, but it contains no concrete task, no deadline, and no named person.",
+        "claims": [
+          {
+            "field": "content",
+            "text": "PLACEHOLDER",
+            "reading": "The message is explicitly marked as a placeholder; it is not the actual request content.",
+            "span": [
+              0,
+              11
+            ]
+          },
+          {
+            "field": "softening",
+            "text": "a request softened with 'when you get a chance'",
+            "reading": "The message describes itself as a request phrased casually with the softener 'when you get a chance', signalling low apparent urgency in wording.",
+            "span": [
+              14,
+              61
+            ]
+          },
+          {
+            "field": "deadline",
+            "text": "that still has a real deadline",
+            "reading": "The message asserts that despite the casual phrasing, a real deadline exists - so the task should not be treated as optional or open-ended.",
+            "span": [
+              62,
+              92
+            ]
+          }
+        ],
+        "unstated": [
+          "What specific task or action is actually being requested?",
+          "What is the actual deadline date or time?",
+          "Who is making the request?",
+          "Who is expected to carry out the task?",
+          "Is any response or confirmation expected, and by when?"
+        ],
+        "degraded": false,
+        "cross_check": {
+          "comparisons": [
+            {
+              "field": "content",
+              "verdict": "llm_only",
+              "llm": {
+                "text": "PLACEHOLDER",
+                "span": [
+                  0,
+                  11
+                ]
+              },
+              "extractor": null
+            },
+            {
+              "field": "softening",
+              "verdict": "llm_only",
+              "llm": {
+                "text": "a request softened with 'when you get a chance'",
+                "span": [
+                  14,
+                  61
+                ]
+              },
+              "extractor": null
+            },
+            {
+              "field": "deadline",
+              "verdict": "llm_only",
+              "llm": {
+                "text": "that still has a real deadline",
+                "span": [
+                  62,
+                  92
+                ]
+              },
+              "extractor": null
+            },
+            {
+              "field": "required_action",
+              "verdict": "extractor_only",
+              "llm": null,
+              "extractor": {
+                "text": "PLACEHOLDER - a request softened with 'when you get a chance' that still has a real deadline",
+                "span": [
+                  0,
+                  92
+                ]
+              }
+            },
+            {
+              "field": "priority",
+              "verdict": "extractor_only",
+              "llm": null,
+              "extractor": {
+                "text": "when you get a chance",
+                "span": [
+                  39,
+                  60
+                ]
+              }
+            }
+          ],
+          "agreement_rate": null,
+          "disagreements": []
+        },
+        "llm_attempts": 1,
+        "model": "moonshotai/kimi-k3",
+        "model_comments_included": true,
+        "extracted_spans_in_prompt": false
+      },
+      "seconds": 319.1
+    }
+  ]
+}

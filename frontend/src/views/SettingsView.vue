@@ -1,17 +1,36 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { nextTick, ref, watch } from 'vue'
 import { useCardsStore } from '@/stores/cards'
 import { useDecodesStore } from '@/stores/decodes'
-import { useSettingsStore, type Contrast, type Typeface } from '@/stores/settings'
+import {
+  useSettingsStore,
+  type Accent,
+  type Appearance,
+  type TextSize,
+  type Typeface,
+} from '@/stores/settings'
 
 const settingsStore = useSettingsStore()
 const cardsStore = useCardsStore()
 const decodesStore = useDecodesStore()
 
-const CONTRAST_OPTIONS: { value: Contrast; label: string }[] = [
-  { value: 'soft', label: 'Soft' },
-  { value: 'standard', label: 'Standard' },
-  { value: 'high', label: 'High' },
+const APPEARANCE_OPTIONS: { value: Appearance; label: string }[] = [
+  { value: 'system', label: 'System' },
+  { value: 'light', label: 'Light' },
+  { value: 'dark', label: 'Dark' },
+]
+
+const ACCENT_OPTIONS: { value: Accent; label: string; swatch: string }[] = [
+  { value: 'sage', label: 'Sage', swatch: '#4f7a69' },
+  { value: 'ocean', label: 'Ocean', swatch: '#3d6fa0' },
+  { value: 'lavender', label: 'Lavender', swatch: '#7d6a9e' },
+  { value: 'slate', label: 'Slate', swatch: '#5c6570' },
+]
+
+const TEXT_SIZE_OPTIONS: { value: TextSize; label: string }[] = [
+  { value: 'small', label: 'A-' },
+  { value: 'standard', label: 'A' },
+  { value: 'large', label: 'A+' },
 ]
 
 const TYPEFACE_OPTIONS: { value: Typeface; label: string }[] = [
@@ -27,27 +46,77 @@ function confirmDelete() {
   decodesStore.clear()
   showDeleteConfirm.value = false
 }
+
+// The delete confirmation.
+//
+// It guards the one irreversible action in the app, so it has to behave like a
+// dialog and not merely look like one. Before this, nothing announced that it
+// had opened, Escape did nothing, and the first Tab from the trigger landed on
+// "Delete cards" - so trigger, Tab, Enter wiped every saved card without the
+// warning ever being read out.
+const confirmModal = ref<HTMLElement | null>(null)
+let lastFocused: HTMLElement | null = null
+
+function closeDeleteConfirm() {
+  showDeleteConfirm.value = false
+}
+
+watch(showDeleteConfirm, async (open) => {
+  if (open) {
+    lastFocused = document.activeElement as HTMLElement | null
+    await nextTick()
+    // Focus the dialog itself rather than either button: landing on "Delete
+    // cards" is how a confirmation becomes a trapdoor.
+    confirmModal.value?.focus()
+    return
+  }
+  if (lastFocused && document.contains(lastFocused)) lastFocused.focus()
+  lastFocused = null
+})
+
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input, textarea, select, [tabindex]:not([tabindex="-1"])'
+
+function trapTab(event: KeyboardEvent) {
+  const root = confirmModal.value
+  if (!root) return
+  const items = [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+    (el) => el.offsetParent !== null,
+  )
+  if (!items.length) return
+  const first = items[0]!
+  const last = items[items.length - 1]!
+  const active = document.activeElement
+  if (event.shiftKey && (active === first || active === root)) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && active === last) {
+    event.preventDefault()
+    first.focus()
+  }
+}
 </script>
 
 <template>
   <div class="settings">
     <div class="header">
-      <h2>Comfort settings</h2>
+      <h1>Comfort settings</h1>
       <p>Set the room to your liking. Changes apply straight away.</p>
     </div>
 
     <div class="panel">
       <div class="row">
-        <strong>Contrast</strong>
-        <span class="row__desc">Soft is the gentlest. High is the sharpest.</span>
-        <div class="options">
+        <strong id="label-appearance">Appearance</strong>
+        <span class="row__desc">System follows your device setting. Light and dark override it.</span>
+        <div class="options" role="group" aria-labelledby="label-appearance">
           <button
-            v-for="opt in CONTRAST_OPTIONS"
+            v-for="opt in APPEARANCE_OPTIONS"
             :key="opt.value"
             type="button"
             class="option"
-            :class="{ 'option--active': settingsStore.settings.contrast === opt.value }"
-            @click="settingsStore.settings.contrast = opt.value"
+            :class="{ 'option--active': settingsStore.settings.appearance === opt.value }"
+            :aria-pressed="settingsStore.settings.appearance === opt.value"
+            @click="settingsStore.settings.appearance = opt.value"
           >
             {{ opt.label }}
           </button>
@@ -55,37 +124,76 @@ function confirmDelete() {
       </div>
 
       <div class="row">
-        <strong>Typeface</strong>
-        <span class="row__desc">Hyperlegible has more distinct letter shapes.</span>
+        <strong id="label-accent">Accent color</strong>
+        <span class="row__desc">Pick the color used for highlights and active states.</span>
+        <div class="options" role="group" aria-labelledby="label-accent">
+          <button
+            v-for="opt in ACCENT_OPTIONS"
+            :key="opt.value"
+            type="button"
+            class="option option--accent"
+            :class="{ 'option--active': settingsStore.settings.accent === opt.value }"
+            :aria-pressed="settingsStore.settings.accent === opt.value"
+            @click="settingsStore.settings.accent = opt.value"
+          >
+            <span class="swatch" :style="{ background: opt.swatch }" />
+            {{ opt.label }}
+          </button>
+        </div>
+      </div>
+
+      <div class="row">
+        <strong id="label-text-format">Text format</strong>
+        <span class="row__desc">Change how large or bold the text is. Buttons preview the effect.</span>
+        <!-- Two different kinds of control used to sit in one undivided row:
+             three sizes you pick between, and Bold, which is independent of
+             all of them. Bold read as a fourth size. Separating them is both
+             the visual fix and the one that gives each group its own name. -->
         <div class="options">
+          <span class="options__set" role="group" aria-label="Text size">
+            <button
+              v-for="opt in TEXT_SIZE_OPTIONS"
+              :key="opt.value"
+              type="button"
+              class="option option--size"
+              :class="[`option--size-${opt.value}`, { 'option--active': settingsStore.settings.textSize === opt.value }]"
+              :aria-pressed="settingsStore.settings.textSize === opt.value"
+              @click="settingsStore.settings.textSize = opt.value"
+            >
+              {{ opt.label }}
+            </button>
+          </span>
+
+          <span class="options__divider" aria-hidden="true" />
+
+          <button
+            type="button"
+            class="option option--bold"
+            :class="{ 'option--active': settingsStore.settings.boldText }"
+            :aria-pressed="settingsStore.settings.boldText"
+            @click="settingsStore.settings.boldText = !settingsStore.settings.boldText"
+          >
+            Bold
+          </button>
+        </div>
+      </div>
+
+      <div class="row">
+        <strong id="label-typeface">Typeface</strong>
+        <span class="row__desc">Hyperlegible has more distinct letter shapes.</span>
+        <div class="options" role="group" aria-labelledby="label-typeface">
           <button
             v-for="opt in TYPEFACE_OPTIONS"
             :key="opt.value"
             type="button"
             class="option"
             :class="{ 'option--active': settingsStore.settings.typeface === opt.value }"
+            :aria-pressed="settingsStore.settings.typeface === opt.value"
             @click="settingsStore.settings.typeface = opt.value"
           >
             {{ opt.label }}
           </button>
         </div>
-      </div>
-
-      <div class="row row--toggle">
-        <span class="row__text">
-          <strong>Calm mode</strong>
-          <span class="row__desc">Removes colour accents and tints. The interface goes quiet and neutral.</span>
-        </span>
-        <button
-          type="button"
-          class="switch"
-          :class="{ 'switch--on': settingsStore.settings.calm }"
-          role="switch"
-          :aria-checked="settingsStore.settings.calm"
-          @click="settingsStore.settings.calm = !settingsStore.settings.calm"
-        >
-          <span class="switch__knob" />
-        </button>
       </div>
     </div>
 
@@ -98,16 +206,27 @@ function confirmDelete() {
       </button>
     </div>
 
-    <div v-if="showDeleteConfirm" class="modal-backdrop" @click="showDeleteConfirm = false">
-      <div class="modal" @click.stop>
-        <strong>Delete your saved cards?</strong>
-        <p>
+    <div v-if="showDeleteConfirm" class="modal-backdrop" @click="closeDeleteConfirm">
+      <div
+        ref="confirmModal"
+        class="modal"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="confirm-delete-title"
+        aria-describedby="confirm-delete-body"
+        tabindex="-1"
+        @click.stop
+        @keydown.esc="closeDeleteConfirm"
+        @keydown.tab="trapTab"
+      >
+        <strong id="confirm-delete-title">Delete your saved cards?</strong>
+        <p id="confirm-delete-body">
           This clears every card in your Study section on this device. It can't be undone, and cards aren't backed
           up anywhere else.
         </p>
         <div class="modal-actions">
           <button type="button" class="btn btn--danger-solid" @click="confirmDelete">Delete cards</button>
-          <button type="button" class="btn btn--secondary" @click="showDeleteConfirm = false">Keep them</button>
+          <button type="button" class="btn btn--secondary" @click="closeDeleteConfirm">Keep them</button>
         </div>
       </div>
     </div>
@@ -122,7 +241,7 @@ function confirmDelete() {
   gap: 22px;
 }
 
-.header h2 {
+.header h1 {
   font-family: var(--font-serif);
   font-size: 26px;
   font-weight: 500;
@@ -146,7 +265,7 @@ function confirmDelete() {
 
 .row {
   padding: 18px 20px;
-  border-top: 1px solid #f0ebe2;
+  border-top: 1px solid var(--color-border-soft);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -168,8 +287,22 @@ function confirmDelete() {
   color: var(--color-text-muted);
 }
 
+.options__set {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.options__divider {
+  width: 1px;
+  align-self: stretch;
+  margin: 2px 4px;
+  background: var(--color-border);
+}
+
 .options {
   display: flex;
+  align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
@@ -182,6 +315,9 @@ function confirmDelete() {
   border: 1px solid var(--color-border);
   background: var(--color-frame);
   color: var(--color-text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .option--active {
@@ -190,45 +326,27 @@ function confirmDelete() {
   color: var(--color-primary-strong-text);
 }
 
-.row--toggle {
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.row__text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.switch {
-  width: 46px;
-  height: 26px;
-  flex: 0 0 46px;
+.swatch {
+  width: 12px;
+  height: 12px;
   border-radius: 999px;
-  border: 1px solid var(--color-border-strong);
-  background: #f0ebe2;
-  cursor: pointer;
-  padding: 2px;
-  display: flex;
-  justify-content: flex-start;
+  flex: 0 0 12px;
 }
 
-.switch--on {
-  border-color: var(--color-primary-border);
-  background: var(--color-primary);
-  justify-content: flex-end;
+.option--size-small {
+  font-size: 12px;
 }
 
-.switch__knob {
-  width: 20px;
-  height: 20px;
-  border-radius: 999px;
-  background: var(--color-frame);
-  display: block;
-  box-shadow: 0 1px 2px rgba(58, 55, 51, 0.2);
+.option--size-standard {
+  font-size: 15px;
+}
+
+.option--size-large {
+  font-size: 19px;
+}
+
+.option--bold {
+  font-weight: 700;
 }
 
 .actions {
@@ -242,36 +360,6 @@ function confirmDelete() {
   border-radius: var(--radius-sm);
   font-size: 13.5px;
   cursor: pointer;
-}
-
-.btn--secondary {
-  border: 1px solid var(--color-border-strong);
-  background: var(--color-frame);
-  color: #4a453e;
-}
-
-.btn--secondary:hover {
-  background: #f6f2ea;
-}
-
-.btn--danger {
-  border: 1px solid var(--color-warn-border);
-  background: var(--color-frame);
-  color: var(--color-warn-text);
-}
-
-.btn--danger:hover {
-  background: var(--color-warn-bg);
-}
-
-.btn--danger-solid {
-  border: 1px solid var(--color-warn-text);
-  background: var(--color-warn-text);
-  color: var(--color-frame);
-}
-
-.btn--danger-solid:hover {
-  background: #574a3c;
 }
 
 .modal-backdrop {

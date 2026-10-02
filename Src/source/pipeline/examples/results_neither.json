@@ -1,0 +1,44 @@
+{
+  "summary": {
+    "examples": 2,
+    "errors": 2,
+    "message_type_correct": 0,
+    "degraded": 2,
+    "clean": 0,
+    "mean_prompt_chars": 0,
+    "mean_seconds": 0.1,
+    "mean_cross_check_agreement": null,
+    "wall_clock_seconds": 0.1
+  },
+  "config": {
+    "provider": "nvidia",
+    "model": "moonshotai/kimi-k3",
+    "include_model_comments": false,
+    "include_extracted_spans": false,
+    "dry_run": false
+  },
+  "records": [
+    {
+      "id": "req-01",
+      "error": "KeyError",
+      "result": {
+        "degraded": true,
+        "degraded_reason": [
+          "KeyError"
+        ]
+      },
+      "seconds": 0.1
+    },
+    {
+      "id": "req-02",
+      "error": "KeyError",
+      "result": {
+        "degraded": true,
+        "degraded_reason": [
+          "KeyError"
+        ]
+      },
+      "seconds": 0.1
+    }
+  ]
+}
