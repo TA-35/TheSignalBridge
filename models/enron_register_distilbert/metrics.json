@@ -1,0 +1,28 @@
+{
+  "rows_train": 31500,
+  "rows_test": 3500,
+  "accuracy": 0.8026,
+  "macro_f1": 0.7841,
+  "labels": [
+    "neutral",
+    "casual",
+    "formal"
+  ],
+  "confusion_matrix": [
+    [
+      1547,
+      156,
+      316
+    ],
+    [
+      130,
+      813,
+      16
+    ],
+    [
+      68,
+      5,
+      449
+    ]
+  ]
+}
