@@ -1,0 +1,9 @@
+              precision    recall  f1-score   support
+
+     neutral      0.887     0.766     0.822      2019
+      casual      0.835     0.848     0.841       959
+      formal      0.575     0.860     0.689       522
+
+    accuracy                          0.803      3500
+   macro avg      0.765     0.825     0.784      3500
+weighted avg      0.826     0.803     0.807      3500
