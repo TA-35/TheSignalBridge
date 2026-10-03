@@ -149,9 +149,13 @@ export const useCardsStore = defineStore('cards', () => {
     if (card) card.lastOpened = new Date().toISOString()
   }
 
+  function remove(id: string) {
+    cards.value = cards.value.filter((c) => c.id !== id)
+  }
+
   function clear() {
     cards.value = []
   }
 
-  return { cards, sortedByNeglect, isSaved, isPatternSaved, save, savePattern, touch, clear }
+  return { cards, sortedByNeglect, isSaved, isPatternSaved, save, savePattern, touch, remove, clear }
 })
