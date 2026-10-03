@@ -1,7 +1,18 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { BookOpen, ChevronLeft, ChevronRight, Layers, Library, Mail, Search, Trash2 } from '@lucide/vue'
+import {
+  BookOpen,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Layers,
+  Library,
+  Mail,
+  Search,
+  SlidersHorizontal,
+  Trash2,
+} from '@lucide/vue'
 import { useCardsStore } from '@/stores/cards'
 import type { SavedCard } from '@/types/pattern'
 import { describeOpened, savedBucket } from '@/utils/relativeTime'
@@ -40,6 +51,17 @@ const PAGE_SIZE = 6
 // modal: the confirmation replaces the card's own footer, so what is about to
 // be deleted stays in front of them while they decide.
 const pendingDelete = ref<string | null>(null)
+
+// Phone only: the filter rail collapses behind a button, because stacked it
+// pushed every card below the fold. Open state is not persisted - a reader
+// who comes back is looking for their cards, not for the filters.
+const filtersOpen = ref(false)
+
+// Shown on the collapsed button so a filter that is still on cannot hide
+// behind it and quietly explain a short list.
+const activeFilterCount = computed(
+  () => (source.value === 'all' ? 0 : 1) + (progress.value === 'any' ? 0 : 1),
+)
 
 const SORT_OPTIONS: { value: Sort; label: string }[] = [
   { value: 'newest', label: 'Newest first' },
@@ -186,6 +208,21 @@ function confirmDelete(id: string) {
 
     <div v-else class="body">
       <aside class="filters" aria-label="Filter cards">
+        <button
+          type="button"
+          class="filters__toggle"
+          :class="{ 'filters__toggle--open': filtersOpen }"
+          :aria-expanded="filtersOpen"
+          aria-controls="study-filters"
+          @click="filtersOpen = !filtersOpen"
+        >
+          <SlidersHorizontal :size="15" :stroke-width="1.8" aria-hidden="true" />
+          Filters
+          <span v-if="activeFilterCount" class="filters__badge">{{ activeFilterCount }}</span>
+          <ChevronDown class="filters__caret" :size="15" :stroke-width="2" aria-hidden="true" />
+        </button>
+
+        <div id="study-filters" class="filters__panel" :class="{ 'filters__panel--open': filtersOpen }">
         <p id="filter-source" class="filters__head">Source</p>
         <div class="filters__group" role="group" aria-labelledby="filter-source">
           <button
@@ -256,6 +293,7 @@ function confirmDelete(id: string) {
             Reviewed
             <span class="filter__count">{{ counts.reviewed }}</span>
           </button>
+        </div>
         </div>
       </aside>
 
@@ -512,9 +550,17 @@ function confirmDelete(id: string) {
   gap: 6px;
 }
 
-/* Fixed height, not whatever line-height the font happens to give a 10.5px
-   label: the main column offsets itself by exactly this much so the search
-   box starts level with "All cards". See --rail-head below. */
+/* Desktop keeps the rail open and has no use for the control. */
+.filters__toggle {
+  display: none;
+}
+
+.filters__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .filters__head {
   margin: 12px 0 0;
   height: var(--rail-head);
@@ -888,4 +934,139 @@ function confirmDelete(id: string) {
   color: var(--color-frame);
   font-weight: 600;
 }
+
+/* Phone. The rail's six full-width rows and their two headings filled the
+   whole first screen, so the cards - the reason for the page - started below
+   the fold. Stacked rows become wrapping chips: same filters, same counts,
+   one tap each, in a fraction of the height.
+   The group headings go to display:none rather than being deleted; each
+   group still names itself through aria-labelledby, which reads hidden text
+   just fine. */
+@media (max-width: 899px) {
+  .study {
+    gap: 16px;
+  }
+
+  .masthead {
+    gap: 10px;
+  }
+
+  .tally {
+    gap: 18px;
+  }
+
+  .tally__item {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .tally__num {
+    font-size: 20px;
+  }
+
+  .filters {
+    gap: 10px;
+  }
+
+  /* One row at rest. The panel below it only exists once asked for, so the
+     first screen is the search box and the cards. */
+  .filters__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    align-self: flex-start;
+    padding: 9px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .filters__toggle--open {
+    border-color: var(--color-primary-soft-border);
+    background: var(--color-primary-soft-bg);
+    color: var(--color-primary-strong-text);
+  }
+
+  /* The count of filters currently narrowing the list - without it, a reader
+     who left "From the library" on sees a short list and no reason for it. */
+  .filters__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--color-primary);
+    color: var(--color-frame);
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .filters__caret {
+    transition: transform 160ms ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .filters__caret {
+      transition: none;
+    }
+  }
+
+  .filters__toggle--open .filters__caret {
+    transform: rotate(180deg);
+  }
+
+  .filters__panel {
+    display: none;
+  }
+
+  .filters__panel--open {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .filters__head {
+    display: none;
+  }
+
+  .filters__group {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .filter {
+    width: auto;
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+  }
+
+  .filter__count {
+    margin-left: 2px;
+  }
+
+  .body,
+  .main {
+    gap: 14px;
+  }
+
+  .nudge {
+    flex-wrap: wrap;
+  }
+
+  .nudge p {
+    min-width: 60%;
+  }
+}
+
 </style>
