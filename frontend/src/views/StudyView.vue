@@ -37,7 +37,7 @@ function phrase(name: string): string {
 }
 
 type Source = 'all' | 'message' | 'library'
-type Progress = 'any' | 'unopened' | 'reviewed'
+type Progress = 'any' | 'unopened' | 'opened'
 type Sort = 'newest' | 'oldest' | 'opened' | 'neglect'
 
 const source = ref<Source>('all')
@@ -66,8 +66,8 @@ const activeFilterCount = computed(
 const SORT_OPTIONS: { value: Sort; label: string }[] = [
   { value: 'newest', label: 'Newest first' },
   { value: 'oldest', label: 'Oldest first' },
-  { value: 'opened', label: 'Recently reviewed' },
-  { value: 'neglect', label: 'Least recently reviewed' },
+  { value: 'opened', label: 'Recently opened' },
+  { value: 'neglect', label: 'Least recently opened' },
 ]
 
 const BUCKET_LABELS: Record<string, string> = {
@@ -86,7 +86,7 @@ const counts = computed(() => ({
   library: store.cards.filter((c) => !isFromMessage(c)).length,
   any: total.value,
   unopened: unopened.value,
-  reviewed: store.cards.filter((c) => !!c.lastOpened).length,
+  opened: store.cards.filter((c) => !!c.lastOpened).length,
 }))
 
 const filtered = computed(() => {
@@ -96,7 +96,7 @@ const filtered = computed(() => {
     if (source.value === 'message' && !isFromMessage(card)) return false
     if (source.value === 'library' && isFromMessage(card)) return false
     if (progress.value === 'unopened' && card.lastOpened) return false
-    if (progress.value === 'reviewed' && !card.lastOpened) return false
+    if (progress.value === 'opened' && !card.lastOpened) return false
     if (!q) return true
 
     return [card.name, card.category, card.excerpt, card.implies]
@@ -177,8 +177,7 @@ function confirmDelete(id: string) {
       <div class="masthead__text">
         <h1>Study</h1>
         <p>
-          Phrases you've saved from the library and from messages you've decoded. Open one to
-          refresh what it means.
+          Phrases you've saved from the library and from messages you've decoded.
         </p>
       </div>
       <div v-if="total" class="tally">
@@ -279,19 +278,20 @@ function confirmDelete(id: string) {
             :aria-pressed="progress === 'unopened'"
             @click="progress = 'unopened'"
           >
-            <span class="dot" aria-hidden="true" />
+            <span class="dot dot--unopened" aria-hidden="true" />
             Not opened yet
             <span class="filter__count">{{ counts.unopened }}</span>
           </button>
           <button
             type="button"
             class="filter"
-            :class="{ 'filter--on': progress === 'reviewed' }"
-            :aria-pressed="progress === 'reviewed'"
-            @click="progress = 'reviewed'"
+            :class="{ 'filter--on': progress === 'opened' }"
+            :aria-pressed="progress === 'opened'"
+            @click="progress = 'opened'"
           >
-            Reviewed
-            <span class="filter__count">{{ counts.reviewed }}</span>
+            <span class="dot dot--opened" aria-hidden="true"/>
+            Opened
+            <span class="filter__count">{{ counts.opened }}</span>
           </button>
         </div>
         </div>
@@ -624,8 +624,15 @@ function confirmDelete(id: string) {
   width: 7px;
   height: 7px;
   border-radius: 999px;
-  background: var(--color-warn-dot);
   flex: none;
+}
+
+.dot--unopened {
+  background: var(--color-danger-text);
+}
+
+.dot--opened {
+  background: var(--color-primary-border);
 }
 
 .main {
