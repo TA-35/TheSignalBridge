@@ -113,6 +113,47 @@ The AI model's classification output must be bounded to a fixed set of category 
 
 Implemented in `backend/app/services/ai_decoder.py` (`_CATEGORY_RULES`) and mirrored in `frontend/src/services/localPatterns.ts` (`CATEGORY_TRIGGERS`) for the offline fallback — keep both in step if this list changes again.
 
+## Accounts: `/api/account/*`
+
+Optional, and additive - every endpoint above behaves identically signed in
+or out. Authentication is a passkey (WebAuthn); there is no password and no
+email. How the flows fit together, and why, is in [accounts.md](accounts.md).
+
+Every call carries the session cookie, so the frontend sends
+`credentials: 'include'` and the API answers with
+`Access-Control-Allow-Credentials`.
+
+| endpoint | body | success | notes |
+| --- | --- | --- | --- |
+| `POST /register/options` | – | `200` WebAuthn creation options | mints a handle; writes no row yet |
+| `POST /register/verify` | the browser's attestation | `201 {handle, created_at}` | creates the account, signs in |
+| `POST /login/options` | – | `200` WebAuthn request options | no `allowCredentials` - passkeys are discoverable |
+| `POST /login/verify` | the browser's assertion | `200 {handle, created_at}` | signs in |
+| `POST /pairing` | – | `201 {code, handle, expires_at, expires_in_minutes}` | signed in only; retires any earlier code |
+| `POST /pairing/claim` | `{handle, code}` | `200` WebAuthn creation options | single use, ten-minute life |
+| `POST /pairing/verify` | the browser's attestation | `201 {handle, created_at}` | adds a passkey to the existing account, signs in |
+| `GET /me` | – | `200 {handle, created_at}` / `401` | 401 is the signed-out answer, not an error |
+| `POST /logout` | – | `200 {ok: true}` | |
+| `DELETE /api/account` | – | `200 {ok: true}` / `401` | removes the user, its passkeys and its codes |
+
+The account object is the whole of it:
+
+```json
+{ "handle": "7KQ2", "created_at": "2026-10-04T02:11:30+00:00" }
+```
+
+**Rule:** the handle is an identifier, never a credential. Four characters is
+about a million combinations, so no endpoint grants anything for knowing one
+- `/pairing/claim` takes a handle only to narrow which code it is checking.
+
+**Error shapes.** `400` for a failed or expired flow, `401` for "not signed
+in", `409` if a handle could not be allocated, `429` from the rate limiter.
+Verification failures all answer `{"error": "That passkey could not be
+verified."}` and pairing failures all answer `{"error": "That code is not
+valid. Ask for a new one."}` - wrong, expired, and unknown are deliberately
+indistinguishable, so neither endpoint can be used to discover which accounts
+exist.
+
 ## Data retention
 
 No message text, extracted elements, or saved cards are ever persisted server-side or logged.
@@ -122,3 +163,9 @@ user's own device, so a decode survives a refresh and a card can point back at
 the message that produced it. The decode history is capped at 100 records.
 This is the only place message text is written to disk; nothing is uploaded,
 and Settings -> "clear" removes all of it.
+
+Accounts do not change that. A signed-in account holds a four-character
+handle, two timestamps, and the public half of each registered passkey -
+no message text, no saved cards, no email, no password hash. Saved cards
+stay in the browser whether or not anyone is signed in, which is also why
+deleting an account leaves them untouched.
