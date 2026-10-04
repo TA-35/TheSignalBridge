@@ -49,17 +49,17 @@ const FEATURES: FeatureCard[] = [
   {
     title: 'Message Composer',
     desc: 'See what a message might be missing before you send it.',
-    to: null,
-    cta: null,
-    status: 'soon',
+    to: '/compose',
+    cta: 'Compose message',
+    status: 'live',
     icon: PenLine,
   },
   {
     title: 'Accounts & Progress',
     desc: 'An optional account to keep your history across devices.',
-    to: null,
-    cta: null,
-    status: 'soon',
+    to: '/account',
+    cta: 'Check account',
+    status: 'live',
     icon: UserRound,
   },
 ]

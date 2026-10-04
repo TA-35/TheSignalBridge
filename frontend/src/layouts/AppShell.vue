@@ -50,7 +50,7 @@ onMounted(() => {
 const navItems = [
   { to: '/', label: 'Home', icon: Home, soon: false },
   { to: '/decode', label: 'Decoder', icon: MailQuestionMark, soon: false },
-  { to: '/compose', label: 'Compose', icon: PenLine, soon: true },
+  { to: '/compose', label: 'Compose', icon: PenLine, soon: false },
   { to: '/study', label: 'Study', icon: BookOpen, soon: false },
   { to: '/library', label: 'Library', icon: Library, soon: false },
   { to: '/settings', label: 'Settings', icon: Settings, soon: false },
