@@ -8,7 +8,7 @@
 // register is, and the eval penalises a rewrite whose politeness drops. A
 // tone selector here would promise something the model is not trained to do.
 import { computed, reactive, ref } from 'vue'
-import { Check, Copy, Lightbulb } from '@lucide/vue'
+import { Check, ChevronDown, Clock, Lightbulb } from '@lucide/vue'
 import {
   composeMessage,
   EmptyMessageError,
@@ -29,29 +29,16 @@ const state = reactive({
   result: null as ComposeResult | null,
 })
 
-// Advisory wording for the three classifiers, matching how the decode page
-// says the same thing - these are a guess from the wording, not a fact about
-// the writer.
-const REGISTER_WORDS: Record<string, Record<string, string>> = {
-  politeness: { high: 'politely worded', medium: 'plainly worded', low: 'blunt' },
-  tone: { formal: 'formal', neutral: 'neutral in tone', casual: 'casual' },
-  circa: { direct: 'a direct ask', indirect: 'an indirect ask' },
-}
-const LOW_CONFIDENCE = 0.4
-
-const signals = computed(() => state.result?.signals ?? state.quick?.signals ?? [])
-
-const registerChips = computed(() =>
-  signals.value
-    .map((s) => ({
-      model: s.model,
-      word: REGISTER_WORDS[s.model]?.[s.label] ?? '',
-      unsure: s.confidence < LOW_CONFIDENCE,
-    }))
-    .filter((c) => c.word),
-)
-
 const alreadyClear = computed(() => !!state.result && isAlreadyClear(state.result))
+
+// Urgency rides beside the version switch rather than waiting inside the
+// breakdown: it is the one field that changes what the reader does next.
+const URGENCY_WORDS: Record<string, string> = {
+  high: 'High urgency',
+  medium: 'Medium urgency',
+  low: 'Low urgency',
+}
+const urgency = computed(() => URGENCY_WORDS[state.result?.meaning.urgency ?? ''] ?? '')
 
 /** The five fields the model reports, in a fixed order, empty ones dropped. */
 const meaningRows = computed(() => {
@@ -112,11 +99,34 @@ function editDraft() {
   state.quick = null
 }
 
+// Which version the single panel shows. One panel with a switch rather than
+// two side by side: the question is which one to send, not how they differ
+// word by word.
+const shown = ref<'rewrite' | 'original'>('rewrite')
+
+// The rewrite is a starting point, not a verdict - editing it here means the
+// copy button hands over what the sender actually wants to send.
+const editing = ref(false)
+const edited = ref('')
+
+const rewriteText = computed(() => (editing.value ? edited.value : state.result?.rewrite ?? ''))
+
+function toggleEditing() {
+  if (!editing.value) {
+    edited.value = state.result?.rewrite ?? ''
+    shown.value = 'rewrite'
+  }
+  editing.value = !editing.value
+}
+
+// Closed by default: the breakdown is what you open when something in the
+// rewrite looks wrong, and noise when it doesn't.
+const breakdownOpen = ref(false)
+
 const copyState = ref<'idle' | 'copied' | 'failed'>('idle')
 let copyResetTimer: ReturnType<typeof setTimeout> | undefined
 
-async function copyRewrite() {
-  const text = state.result?.rewrite
+async function copyText(text: string) {
   if (!text) return
   try {
     await navigator.clipboard.writeText(text)
@@ -129,6 +139,8 @@ async function copyRewrite() {
     copyState.value = 'idle'
   }, 2000)
 }
+
+const copyRewrite = () => copyText(rewriteText.value)
 </script>
 
 <template>
@@ -205,84 +217,209 @@ async function copyRewrite() {
 
     <!-- Result ------------------------------------------------------- -->
     <template v-else>
-      <div class="results-header">
-        <div>
-          <h1>{{ alreadyClear ? 'This one already reads clearly' : "Here's a clearer version" }}</h1>
-          <p>Nothing is sent from here. Copy it when you are ready.</p>
+      <!-- Already clear. The verdict comes first: presenting an unchanged
+           message under "here is your rewrite" reads as a tool that did
+           nothing at all. -->
+      <template v-if="alreadyClear">
+        <div class="verdict">
+          <span class="verdict__mark" aria-hidden="true"><Check :size="18" :stroke-width="2.2" /></span>
+          <div>
+            <h1>Your message is already clear</h1>
+            <p>
+              We didn't find any hints, hedges or hidden deadlines to spell out. It's ready to send
+              as it is.
+            </p>
+          </div>
         </div>
-        <button type="button" class="btn btn--ghost" @click="editDraft">Edit draft</button>
-      </div>
 
-      <p v-if="registerChips.length" class="register">
-        <span class="register__lead">Your draft reads as</span>
-        <span v-for="chip in registerChips" :key="chip.model" class="register__chip">
-          {{ chip.word }}<template v-if="chip.unsure"> (not sure)</template>
-        </span>
-      </p>
+        <div class="layout">
+          <div class="layout__main">
+            <section class="card">
+              <p class="card__eyebrow">Your message, unchanged</p>
+              <p class="message">{{ state.message }}</p>
+            </section>
 
-      <div class="results-grid">
-        <section class="card card--source">
-          <h2 class="card__title">What you wrote</h2>
-          <p class="message">{{ state.message }}</p>
-        </section>
+            <section class="card card--reason">
+              <span class="reason__mark" aria-hidden="true"><Check :size="14" :stroke-width="2.2" /></span>
+              <div>
+                <strong>Why nothing changed</strong>
+                <p>{{ state.result.notes[0] }}</p>
+              </div>
+            </section>
+          </div>
 
-        <section class="card card--rewrite" :class="{ 'card--flat': alreadyClear }">
-          <div class="card__head">
-            <h2 class="card__title">{{ alreadyClear ? 'Kept as written' : 'Clearer version' }}</h2>
+          <aside class="actions-panel">
+            <h2 class="actions-panel__title">Actions</h2>
+            <button type="button" class="btn btn--primary" @click="copyText(state.message)">
+              {{ copyState === 'copied' ? 'Copied' : 'Copy message' }}
+            </button>
+            <hr class="actions-panel__rule" />
+            <p class="actions-panel__note">Want to check another message?</p>
+            <button type="button" class="text-link" @click="startOver">Start over</button>
+          </aside>
+        </div>
+      </template>
+
+      <!-- Nothing safe to show: the grounding check rejected the rewrite, or
+           the service could not be reached. A flagged rewrite is never
+           rendered - it reads as finished text and would be sent as-is. -->
+      <template v-else-if="!state.result.rewrite">
+        <h1 class="page-title">No rewrite this time</h1>
+
+        <div class="layout">
+          <div class="layout__main">
+            <section class="card card--blocked">
+              <strong>
+                {{
+                  state.result.degraded_reason?.length
+                    ? "The rewrite didn't pass our fact check, so we're not showing it."
+                    : "The rewriter couldn't be reached."
+                }}
+              </strong>
+              <p>
+                A rewrite that drops or invents a detail is worse than none, so you get your own
+                words back rather than something you would have to check line by line.
+              </p>
+            </section>
+
+            <section class="card">
+              <p class="card__eyebrow">Your message, unchanged</p>
+              <p class="message">{{ state.message }}</p>
+            </section>
+          </div>
+
+          <aside class="actions-panel">
+            <h2 class="actions-panel__title">Actions</h2>
+            <button type="button" class="btn btn--primary" @click="copyText(state.message)">
+              {{ copyState === 'copied' ? 'Copied' : 'Copy my message' }}
+            </button>
+            <button type="button" class="btn btn--secondary" @click="editDraft">Edit draft</button>
+            <hr class="actions-panel__rule" />
+            <button type="button" class="text-link" @click="startOver">Start over</button>
+          </aside>
+        </div>
+      </template>
+
+      <!-- Rewritten -->
+      <template v-else>
+        <h1 class="page-title">Here's your clearer message</h1>
+
+        <div class="switch-row">
+          <div class="switch" role="tablist" aria-label="Which version to show">
             <button
-              v-if="state.result.rewrite"
               type="button"
-              class="copy-btn"
-              @click="copyRewrite"
+              role="tab"
+              class="switch__tab"
+              :class="{ 'switch__tab--on': shown === 'rewrite' }"
+              :aria-selected="shown === 'rewrite'"
+              @click="shown = 'rewrite'"
             >
-              <Check v-if="copyState === 'copied'" :size="14" :stroke-width="2" aria-hidden="true" />
-              <Copy v-else :size="14" :stroke-width="2" aria-hidden="true" />
-              <span aria-live="polite">{{ copyState === 'copied' ? 'Copied' : 'Copy' }}</span>
+              Clearer version
+            </button>
+            <button
+              type="button"
+              role="tab"
+              class="switch__tab"
+              :class="{ 'switch__tab--on': shown === 'original' }"
+              :aria-selected="shown === 'original'"
+              @click="shown = 'original'; editing = false"
+            >
+              Your original
             </button>
           </div>
 
-          <p v-if="state.result.rewrite" class="message message--rewrite">{{ state.result.rewrite }}</p>
+          <!-- The one field that changes what the reader does next, so it
+               sits in the open rather than inside the breakdown. -->
+          <span v-if="urgency" class="urgency">
+            <Clock :size="13" :stroke-width="2" aria-hidden="true" />
+            {{ urgency }}
+          </span>
+        </div>
 
-          <!-- No rewrite: either the grounding check rejected it or the
-               service could not be reached. Showing a flagged rewrite would
-               be worse than showing none - it reads as finished text. -->
-          <div v-else class="blocked">
-            <strong>No rewrite for this messgae</strong>
-            <p>
-              {{
-                state.result.degraded_reason?.length
-                  ? 'Your message is clear enough! No changes can be done.'
-                  : 'The rewriter could not be reached.'
-              }}
-            </p>
+        <div class="layout">
+          <div class="layout__main">
+            <section class="card card--message">
+              <textarea
+                v-if="editing"
+                id="compose-edit"
+                v-model="edited"
+                class="edit-box"
+                aria-label="Edit the clearer version"
+              />
+              <p v-else class="message">
+                {{ shown === 'rewrite' ? state.result.rewrite : state.message }}
+              </p>
+            </section>
+
+            <section v-if="state.result.notes.length && shown === 'rewrite'" class="card">
+              <h2 class="card__title">What changed and why</h2>
+              <ol class="notes">
+                <li v-for="(note, i) in state.result.notes" :key="i">
+                  <span class="notes__num" aria-hidden="true">{{ i + 1 }}</span>
+                  <span>{{ note }}</span>
+                </li>
+              </ol>
+            </section>
+
+            <!-- Folded away: useful when something in the rewrite looks
+                 wrong, noise when it doesn't. -->
+            <section v-if="meaningRows.length" class="card card--fold">
+              <button
+                type="button"
+                class="fold"
+                :aria-expanded="breakdownOpen"
+                aria-controls="compose-breakdown"
+                @click="breakdownOpen = !breakdownOpen"
+              >
+                <span class="card__title">Your message, broken down</span>
+                <ChevronDown
+                  class="fold__caret"
+                  :class="{ 'fold__caret--open': breakdownOpen }"
+                  :size="18"
+                  :stroke-width="2"
+                  aria-hidden="true"
+                />
+              </button>
+
+              <div v-show="breakdownOpen" id="compose-breakdown">
+                <dl class="meaning">
+                  <div v-for="row in meaningRows" :key="row.label" class="meaning__row">
+                    <dt>{{ row.label }}</dt>
+                    <dd>{{ row.value }}</dd>
+                  </div>
+                </dl>
+                <p class="card__hint">
+                  Read from your draft, not added to it. If something here is wrong, the message
+                  probably says it less clearly than you meant.
+                </p>
+              </div>
+            </section>
+
+            <!-- Phone only: the side panel becomes a bar of the two buttons
+                 you actually press, so these two keep a home in the page. -->
+            <div class="inline-links">
+              <button type="button" class="text-link" @click="editDraft">Keep my original instead</button>
+              <button type="button" class="text-link" @click="startOver">Start over</button>
+            </div>
+
+            <p class="footnote">Nothing is sent from here. Copy it when you're ready.</p>
           </div>
-        </section>
-      </div>
 
-      <section v-if="state.result.notes.length && !alreadyClear" class="card">
-        <h2 class="card__title">What changed</h2>
-        <ul class="notes">
-          <li v-for="(note, i) in state.result.notes" :key="i">{{ note }}</li>
-        </ul>
-      </section>
-
-      <section v-if="meaningRows.length" class="card">
-        <h2 class="card__title">What your message is asking for</h2>
-        <dl class="meaning">
-          <div v-for="row in meaningRows" :key="row.label" class="meaning__row">
-            <dt>{{ row.label }}</dt>
-            <dd>{{ row.value }}</dd>
-          </div>
-        </dl>
-        <p class="card__hint">
-          Read from your draft, not added to it. If something here is wrong, the message probably
-          says it less clearly than you meant.
-        </p>
-      </section>
-
-      <div class="actions">
-        <button type="button" class="btn btn--secondary" @click="startOver">Start a new message</button>
-      </div>
+          <aside class="actions-panel">
+            <h2 class="actions-panel__title">Actions</h2>
+            <button type="button" class="btn btn--primary" @click="copyRewrite">
+              {{ copyState === 'copied' ? 'Copied' : 'Copy clearer version' }}
+            </button>
+            <button type="button" class="btn btn--secondary" @click="toggleEditing">
+              {{ editing ? 'Done editing' : 'Edit clearer version' }}
+            </button>
+            <button type="button" class="text-link panel-only" @click="editDraft">Keep my original</button>
+            <hr class="actions-panel__rule panel-only" />
+            <p class="actions-panel__note panel-only">Want to try a different message?</p>
+            <button type="button" class="text-link panel-only" @click="startOver">Start over</button>
+          </aside>
+        </div>
+      </template>
     </template>
   </div>
 </template>
@@ -500,149 +637,285 @@ async function copyRewrite() {
   color: var(--color-warn-text-soft);
 }
 
-.results-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.results-header h1 {
-  margin: 0 0 6px;
+.page-title,
+.verdict h1 {
+  margin: 0;
   font-family: var(--font-serif);
-  font-size: clamp(26px, 3.2vw, 34px);
+  font-size: clamp(27px, 3.4vw, 36px);
   font-weight: 500;
-  letter-spacing: -0.02em;
+  line-height: 1.14;
+  letter-spacing: -0.022em;
   text-wrap: balance;
 }
 
-.results-header p {
-  margin: 0;
-  font-size: 14px;
-  color: var(--color-text-muted);
-}
-
-/* Advisory, and said so in the copy: three small models reading wording. */
-.register {
+/* "Nothing to do" leads with a mark rather than a card, so the verdict is
+   readable before anything else on the screen. */
+.verdict {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0;
-  font-size: 13px;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.verdict p {
+  margin: 8px 0 0;
+  max-width: 54ch;
+  font-size: 14.5px;
+  line-height: 1.6;
   color: var(--color-text-muted);
 }
 
-.register__chip {
-  padding: 4px 11px;
+.verdict__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  margin-top: 2px;
   border-radius: 999px;
-  border: 1px solid var(--color-border-soft);
-  background: var(--color-surface);
-  color: var(--color-text);
+  background: var(--color-primary-soft-bg);
+  color: var(--color-primary-strong-text);
 }
 
-.results-grid {
+/* Message on the left, the things you can do with it on the right. */
+.layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 16px;
+  gap: 20px;
   align-items: start;
 }
 
 @media (min-width: 900px) {
-  .results-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 282px;
+    gap: 28px;
   }
+}
+
+.layout__main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.switch {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-surface-soft);
+}
+
+.switch__tab {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 7px;
+  background: none;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.switch__tab--on {
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(58, 55, 51, 0.08);
+}
+
+.urgency {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--color-warn-bg);
+  color: var(--color-warn-text);
+  font-size: 12.5px;
+  font-weight: 600;
 }
 
 .card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 20px;
+  gap: 10px;
+  padding: 22px;
   border: 1px solid var(--color-border-soft);
   border-radius: var(--radius-md);
   background: var(--color-surface);
 }
 
-/* The rewrite is the thing to read: the draft beside it sits back. */
-.card--source {
-  background: var(--color-surface-soft);
+.card--message {
+  min-height: 170px;
 }
 
-.card--rewrite {
-  border-color: var(--color-primary-soft-border);
+.card--fold {
+  padding: 8px 22px 10px;
 }
 
-.card--flat {
-  border-color: var(--color-border-soft);
-}
-
-.card__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+.card__eyebrow {
+  margin: 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
 }
 
 .card__title {
   margin: 0;
   font-family: var(--font-serif);
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 500;
   color: var(--color-text);
 }
 
+/* Serif at reading size: this is the text someone is about to send, not a
+   data field. */
 .message {
   margin: 0;
-  font-size: 15px;
-  line-height: 1.7;
+  font-family: var(--font-serif);
+  font-size: 16px;
+  line-height: 1.72;
   white-space: pre-wrap;
-  color: var(--color-text-muted);
-}
-
-.message--rewrite {
   color: var(--color-text);
 }
 
-.copy-btn {
+.edit-box {
+  width: 100%;
+  min-height: 150px;
+  resize: vertical;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-serif);
+  font-size: 16px;
+  line-height: 1.72;
+  color: var(--color-text);
+  outline: none;
+}
+
+.card--reason {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.card--reason strong {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 14.5px;
+}
+
+.card--reason p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+.reason__mark {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 11px;
-  border-radius: 7px;
-  border: 1px solid var(--color-primary-soft-border);
+  justify-content: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
   background: var(--color-primary-soft-bg);
   color: var(--color-primary-strong-text);
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
 }
 
-.blocked strong {
-  display: block;
-  font-size: 14px;
+.card--blocked {
+  border-color: var(--color-warn-border);
+  background: var(--color-warn-bg);
+}
+
+.card--blocked strong {
+  font-size: 14.5px;
   color: var(--color-warn-text);
-  margin-bottom: 4px;
 }
 
-.blocked p {
+.card--blocked p {
   margin: 0;
   font-size: 13.5px;
   line-height: 1.6;
-  color: var(--color-text-muted);
+  color: var(--color-warn-text-soft);
 }
 
+.fold {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 0;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fold__caret {
+  color: var(--color-text-muted);
+  transition: transform 160ms ease;
+}
+
+.fold__caret--open {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fold__caret {
+    transition: none;
+  }
+}
+
+/* Numbered because the notes are a sequence of edits, not a set of tips. */
 .notes {
+  list-style: none;
   margin: 0;
-  padding-left: 18px;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
+}
+
+.notes li {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.55;
   color: var(--color-text);
+}
+
+.notes__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  border-radius: 999px;
+  background: var(--color-primary-soft-bg);
+  color: var(--color-primary-strong-text);
+  font-size: 11.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .meaning {
@@ -659,11 +932,6 @@ async function copyRewrite() {
   border-top: 1px solid var(--color-border-soft);
 }
 
-.meaning__row:first-child {
-  border-top: none;
-  padding-top: 0;
-}
-
 .meaning dt {
   font-size: 13px;
   color: var(--color-text-faint);
@@ -677,15 +945,134 @@ async function copyRewrite() {
 }
 
 .card__hint {
-  margin: 0;
+  margin: 10px 0 0;
   font-size: 12.5px;
   line-height: 1.55;
   color: var(--color-text-faint);
 }
 
-.actions {
+.footnote {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--color-text-faint);
+}
+
+.actions-panel {
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
   gap: 10px;
-  flex-wrap: wrap;
+  padding: 20px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.actions-panel__title {
+  margin: 0 0 2px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.actions-panel .btn {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.actions-panel__rule {
+  margin: 6px 0 2px;
+  border: none;
+  border-top: 1px solid var(--color-border-soft);
+}
+
+.actions-panel__note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.text-link {
+  align-self: center;
+  padding: 4px 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-primary-strong-text);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* The two links that live in the side panel on a laptop. On a phone the
+   panel becomes a bar of the two buttons you actually press, and these
+   move into the page instead - see below. */
+.inline-links {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+@media (min-width: 900px) {
+  .inline-links {
+    display: none;
+  }
+}
+
+/* Phone: the actions panel stops being a column beside the message and
+   becomes a bar pinned to the bottom, holding only Edit and Copy. Pinned
+   because the message and its notes are longer than a phone screen, and
+   the thing you came to do should not be at the end of a scroll. */
+@media (max-width: 899px) {
+  .panel-only {
+    display: none;
+  }
+
+  .actions-panel {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    flex-direction: row-reverse;
+    gap: 10px;
+    margin: 4px -16px -8px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    border: none;
+    border-top: 1px solid var(--color-border);
+    border-radius: 0;
+    background: var(--color-frame);
+  }
+
+  .actions-panel__title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .actions-panel .btn {
+    flex: 1;
+  }
+
+  /* Copy is the primary action and sits on the right, so row-reverse puts
+     it first in the DOM for a screen reader and last on screen. */
+  .actions-panel .btn--secondary {
+    flex: 0 0 38%;
+  }
+
+  .verdict__mark {
+    width: 32px;
+    height: 32px;
+  }
+
+  .card {
+    padding: 18px;
+  }
 }
 </style>

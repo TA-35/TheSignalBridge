@@ -35,6 +35,71 @@ function unavailable(reason: string): ComposeResult {
   }
 }
 
+// --------------------------------------------------------------------------
+// Development stand-in
+// For checking front-end style when model gives back different result.
+//
+// /api/compose does not exist yet, so every real call fails and the page can
+// only ever reach its "no rewrite" state - the two states that matter most
+// are unreachable. This fakes the service so the UI can be built and
+// reviewed before the model lands.
+//
+// Off unless VITE_COMPOSE_MOCK=1 is set (put it in frontend/.env.local,
+// which is gitignored). Delete this block the day the endpoint is live.
+// --------------------------------------------------------------------------
+
+const MOCK = import.meta.env.VITE_COMPOSE_MOCK === '1'
+
+// Phrases the real classifiers would flag. Enough to decide which of the two
+// answers to fake, so both can be seen from the sample message.
+const HEDGES = /might be good|when you get a chance|if you get a chance|no pressure|sometime|would be great/i
+
+function mockResult(message: string): ComposeResult {
+  if (!HEDGES.test(message)) {
+    return {
+      stage: 'compose',
+      degraded: false,
+      rewrite: message,
+      notes: ['Already clear, kept as written.'],
+      meaning: {
+        ask: 'Send the Q3 sales report',
+        deadline: '3pm Thursday',
+        urgency: 'medium',
+        tone: 'direct',
+        implied: 'The ask, who does it and the deadline are all stated directly.',
+      },
+      signals: [{ model: 'politeness', label: 'medium', confidence: 0.58 }],
+      checks: { entities_kept: true, nothing_added: true },
+      model: 'mock',
+    }
+  }
+
+  return {
+    stage: 'compose',
+    degraded: false,
+    rewrite:
+      "Hi Sam, please send me the Q3 numbers before Friday's meeting. This is needed, not optional. Thanks!",
+    notes: [
+      '"Might be good" was a polite way of asking. It\'s now a direct request.',
+      '"If you get a chance" made it sound optional, so the rewrite says it\'s needed.',
+      'The ask and the deadline now come first, in one sentence.',
+    ],
+    meaning: {
+      ask: 'Send the Q3 numbers',
+      deadline: "Before Friday's meeting",
+      urgency: 'high',
+      tone: 'friendly',
+      implied: 'Required, not optional',
+    },
+    signals: [
+      { model: 'politeness', label: 'high', confidence: 0.65 },
+      { model: 'circa', label: 'indirect', confidence: 0.52 },
+    ],
+    checks: { entities_kept: true, nothing_added: true },
+    model: 'mock',
+  }
+}
+
 /**
  * Two-stage, like the decode page.
  *
@@ -53,6 +118,13 @@ export async function composeMessage(
 ): Promise<ComposeResult> {
   if (message.length > MAX_MESSAGE_LENGTH) throw new MessageTooLongError()
   if (!message.trim()) throw new EmptyMessageError()
+
+  if (MOCK) {
+    // Long enough to see the loading state, short enough to work in.
+    await new Promise((resolve) => setTimeout(resolve, 600))
+    return mockResult(message)
+  }
+
   if (!API_BASE) return unavailable('no API configured')
 
   if (onQuick) {
