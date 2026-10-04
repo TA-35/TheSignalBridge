@@ -113,6 +113,78 @@ The AI model's classification output must be bounded to a fixed set of category 
 
 Implemented in `backend/app/services/ai_decoder.py` (`_CATEGORY_RULES`) and mirrored in `frontend/src/services/localPatterns.ts` (`CATEGORY_TRIGGERS`) for the offline fallback — keep both in step if this list changes again.
 
+## `POST /api/compose`
+
+**Draft — the frontend is built against this; the service does not exist yet.**
+
+The other direction from `/api/decode`. The sender pastes a message they
+have already written; the response says the same thing more explicitly,
+with a short account of what changed.
+
+The response shape is the training record from the data team's build guide
+(`meaning`, `rewrite`, `notes`), so the model's own output drops straight in
+without a translation layer. Keep these names.
+
+Request:
+
+```json
+{ "message": "string, required, non-empty, max 5000 characters" }
+```
+
+Response `200`:
+
+```json
+{
+  "stage": "compose",
+  "degraded": false,
+  "degraded_reason": [],
+  "rewrite": "Please send me the Q3 numbers before Friday's 2pm sync.",
+  "notes": [
+    "'Might be good' was a polite way of asking - this is required",
+    "The deadline was implied, so it's now stated"
+  ],
+  "meaning": {
+    "ask": "Send the Q3 numbers",
+    "deadline": "Before Friday's sync",
+    "urgency": "high",
+    "tone": "friendly",
+    "implied": "Required, not optional"
+  },
+  "signals": [{ "model": "politeness", "label": "high", "confidence": 0.65 }],
+  "checks": { "entities_kept": true, "nothing_added": true },
+  "model": "qwen3.5-4b-ft"
+}
+```
+
+`POST /api/compose/quick` runs the three classifiers only and returns
+`{ "stage": "analyse", "signals": [...] }` in milliseconds, so the page can
+paint before the rewrite lands.
+
+**No tone parameter, on purpose.** The rewrite keeps the register of the
+draft: the classifier signals tell the model what that register is, and the
+eval harness penalises a rewrite whose politeness band drops. `meaning.tone`
+is an observation about the message, never an instruction. A tone or
+formality selector would promise something the model is not trained to do -
+see [the data team's build guide](../TheSignalBridge%20—%20Data%20Team%20How-To%20Guide%20(Final%20Build).pdf).
+
+**Three states the frontend renders, so all three must be answerable:**
+
+1. **Rewritten.** `rewrite` is a string, `notes` has 2-3 entries.
+2. **Already clear.** `notes` is exactly `["Already clear, kept as written."]`
+   and the rewrite is near-identical to the source. The page says so rather
+   than presenting an unchanged message as a result.
+3. **No rewrite.** `rewrite` is `null` and `degraded` is `true` - the
+   grounding check found a dropped or invented fact, or the model could not
+   be reached. `degraded_reason` names the class of failure, never the
+   message body.
+
+**A rewrite that fails the grounding check must not be returned at all.**
+It reads as finished text and would be pasted into an email. Send `null` and
+let the page explain itself; the client drops any rewrite that arrives with
+`degraded: true` as a backstop.
+
+Response `400` / `413`: same shapes as `/api/decode`.
+
 ## Accounts: `/api/account/*`
 
 Optional, and additive - every endpoint above behaves identically signed in
