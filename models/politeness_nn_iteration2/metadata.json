@@ -1,0 +1,231 @@
+{
+  "iteration": 2,
+  "task": "English request politeness regression",
+  "data": {
+    "labelled_file": "stanford_politeness_features.csv",
+    "labelled_rows": 10956,
+    "split_rows": {
+      "train": 7666,
+      "test": 1645,
+      "validation": 1645
+    },
+    "split": "identical to Iteration 1 (grouped_split, seed 5120)",
+    "teacher_labelled_unlabelled_rows": 179607
+  },
+  "model": {
+    "type": "text CNN distilled from fine-tuned RoBERTa-base",
+    "runtime": "NumPy only",
+    "embedding_dim": 128,
+    "filters_per_width": 160,
+    "conv_widths": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "hidden": 256,
+    "vocab_size": 23870,
+    "weights_dtype": "float16"
+  },
+  "teacher": {
+    "type": "RoBERTa-base fine-tuned 3 epochs, mean pooling, Huber loss, annotator-agreement sample weights",
+    "best_val_pearson": 0.6171325561023184,
+    "history": [
+      {
+        "step": 240,
+        "epoch": 0.5,
+        "val_pearson": 0.5398643622697719,
+        "val_mae": 0.47255051136016846,
+        "min": 9.282707854111989
+      },
+      {
+        "step": 480,
+        "epoch": 1.0,
+        "val_pearson": 0.5797805844631392,
+        "val_mae": 0.4480709135532379,
+        "min": 19.268036059538524
+      },
+      {
+        "step": 720,
+        "epoch": 1.5,
+        "val_pearson": 0.6080852197310537,
+        "val_mae": 0.4266432225704193,
+        "min": 34.23869143327077
+      },
+      {
+        "step": 960,
+        "epoch": 2.0,
+        "val_pearson": 0.6136468702569337,
+        "val_mae": 0.4360771179199219,
+        "min": 49.4970276594162
+      },
+      {
+        "step": 1200,
+        "epoch": 2.5,
+        "val_pearson": 0.6171325561023184,
+        "val_mae": 0.43675652146339417,
+        "min": 58.22318150202433
+      },
+      {
+        "step": 1440,
+        "epoch": 3.0,
+        "val_pearson": 0.6169885335218982,
+        "val_mae": 0.43042662739753723,
+        "min": 67.1449586391449
+      }
+    ]
+  },
+  "target": {
+    "name": "Normalized Score",
+    "train_mean": 0.00029795480077154934,
+    "train_std": 0.7311672568321228,
+    "label_tertile_cutoffs": [
+      -0.2048859672961821,
+      0.3116236732228942
+    ]
+  },
+  "levels": {
+    "prediction_cutoffs": [
+      -0.09680419321936906,
+      0.20411980706467503
+    ],
+    "binary_threshold": 0.07100763407876087,
+    "note": "cut-offs are tertiles of validation predictions, fixed before the test set was scored"
+  },
+  "training": {
+    "epochs": 10,
+    "batch_size": 128,
+    "selected_epoch": 7,
+    "history": [
+      {
+        "epoch": 1,
+        "val_pearson_vs_human": 0.5304917187416831,
+        "val_pearson_vs_teacher": 0.8280850942503928,
+        "min": 5.529796767234802
+      },
+      {
+        "epoch": 2,
+        "val_pearson_vs_human": 0.550842018980508,
+        "val_pearson_vs_teacher": 0.8682029363423075,
+        "min": 10.855290730794271
+      },
+      {
+        "epoch": 3,
+        "val_pearson_vs_human": 0.5757036430078136,
+        "val_pearson_vs_teacher": 0.8871084985647928,
+        "min": 16.150310039520264
+      },
+      {
+        "epoch": 4,
+        "val_pearson_vs_human": 0.5768526134801639,
+        "val_pearson_vs_teacher": 0.895745596472958,
+        "min": 21.493634180227914
+      },
+      {
+        "epoch": 5,
+        "val_pearson_vs_human": 0.5810537911573445,
+        "val_pearson_vs_teacher": 0.8987590433355236,
+        "min": 26.783505288759866
+      },
+      {
+        "epoch": 6,
+        "val_pearson_vs_human": 0.5790297381656336,
+        "val_pearson_vs_teacher": 0.9014795567615962,
+        "min": 32.00603811740875
+      },
+      {
+        "epoch": 7,
+        "val_pearson_vs_human": 0.5847403578295134,
+        "val_pearson_vs_teacher": 0.9056716021308793,
+        "min": 37.280234106381734
+      },
+      {
+        "epoch": 8,
+        "val_pearson_vs_human": 0.5823186833286138,
+        "val_pearson_vs_teacher": 0.9036070082151553,
+        "min": 42.56492787996928
+      },
+      {
+        "epoch": 9,
+        "val_pearson_vs_human": 0.581915637233119,
+        "val_pearson_vs_teacher": 0.905170623726806,
+        "min": 47.79805192550023
+      },
+      {
+        "epoch": 10,
+        "val_pearson_vs_human": 0.5827104766709769,
+        "val_pearson_vs_teacher": 0.905694037403272,
+        "min": 52.964858023325604
+      }
+    ],
+    "labelled_target": "0.5 * human score + 0.5 * teacher score"
+  },
+  "metrics": {
+    "train": {
+      "n": 7666,
+      "pearson": 0.7071531960096248,
+      "spearman": 0.6843061536467872,
+      "mae": 0.37184364654731045,
+      "rmse": 0.5170854569018688,
+      "acc3": 0.6022697625880511,
+      "acc_binary_quartiles": 0.8622848200312989,
+      "n_binary": 3834
+    },
+    "validation": {
+      "n": 1645,
+      "pearson": 0.5847405291312849,
+      "spearman": 0.5602047639808524,
+      "mae": 0.44010104375000436,
+      "rmse": 0.5923482406797849,
+      "acc3": 0.5434650455927051,
+      "acc_binary_quartiles": 0.7940813810110974,
+      "n_binary": 811
+    },
+    "test": {
+      "n": 1645,
+      "pearson": 0.5599379502322815,
+      "spearman": 0.5613328620291271,
+      "mae": 0.46060480151238786,
+      "rmse": 0.6342221953713356,
+      "acc3": 0.555015197568389,
+      "acc_binary_quartiles": 0.812958435207824,
+      "n_binary": 818
+    },
+    "test_wikipedia": {
+      "n": 654,
+      "pearson": 0.7036363785453008,
+      "spearman": 0.7195730939147015,
+      "mae": 0.43092013239466676,
+      "rmse": 0.5718922048765879,
+      "acc3": 0.6223241590214067,
+      "acc_binary_quartiles": 0.8962765957446809,
+      "n_binary": 376
+    },
+    "test_stack-exchange": {
+      "n": 991,
+      "pearson": 0.4214341544238141,
+      "spearman": 0.420575587429776,
+      "mae": 0.4801948858746377,
+      "rmse": 0.6721979819364075,
+      "acc3": 0.5105953582240161,
+      "acc_binary_quartiles": 0.7420814479638009,
+      "n_binary": 442
+    },
+    "test_ci95": {
+      "pearson": [
+        0.523,
+        0.599
+      ],
+      "acc3": [
+        0.531,
+        0.578
+      ]
+    }
+  },
+  "limitations": [
+    "Trained on English requests from Wikipedia and Stack Exchange.",
+    "Levels are relative to this corpus, not universal politeness categories.",
+    "Stack Exchange-style messages are scored much less reliably than Wikipedia-style messages.",
+    "No calibrated uncertainty and no rewrite generation."
+  ]
+}
