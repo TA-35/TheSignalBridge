@@ -15,6 +15,7 @@ import {
   Settings,
 } from '@lucide/vue'
 import { useAccountStore } from '@/stores/account'
+import { useCardsStore } from '@/stores/cards'
 import { useSettingsStore } from '@/stores/settings'
 import logoLight from '@/assets/logo.png'
 import logoDark from '@/assets/logo-dark.png'
@@ -40,6 +41,19 @@ const accountStore = useAccountStore()
 onMounted(() => {
   if (!accountStore.ready) void accountStore.refresh()
 })
+
+// Library cards follow the account, so the moment one is signed in - on
+// load, after signing in, after pairing a new device - the two sides
+// reconcile. Here rather than on the Study page: a card saved from the
+// Library while signed in should reach the server without anyone having
+// visited Study first.
+watch(
+  () => accountStore.signedIn,
+  (signedIn) => {
+    if (signedIn) void useCardsStore().syncWithAccount()
+  },
+  { immediate: true },
+)
 
 // The last item carries the account: an invitation when signed out, the
 // handle itself when signed in - which is also the only place the handle is

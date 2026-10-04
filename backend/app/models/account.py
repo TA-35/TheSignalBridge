@@ -81,6 +81,11 @@ class User(db.Model):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    cards = db.relationship(
+        "UserCard",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
     def to_dict(self) -> dict:
         return {

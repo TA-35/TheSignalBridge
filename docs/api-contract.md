@@ -226,6 +226,30 @@ valid. Ask for a new one."}` - wrong, expired, and unknown are deliberately
 indistinguishable, so neither endpoint can be used to discover which accounts
 exist.
 
+## Library cards: `/api/cards`
+
+Signed-in only; `401` otherwise. These are the cards an account carries
+between devices, stored as a pointer rather than as content: which curated
+pattern, when it was kept, when it was last opened.
+
+| endpoint | body | success |
+| --- | --- | --- |
+| `GET /api/cards` | – | `200 [{pattern_id, saved_at, last_opened_at}]` |
+| `PUT /api/cards/<pattern_id>` | `{saved_at?, last_opened_at?}` | `200` the stored row |
+| `DELETE /api/cards/<pattern_id>` | – | `200 {ok: true}` |
+
+`PUT` is an upsert and is meant to be replayed: a device signing in sends
+everything it has. Conflicts resolve by time - the **earliest** `saved_at`
+wins (that is when the reader actually kept it) and the **latest**
+`last_opened_at` wins. `DELETE` answers `200` whether or not a row was
+there; removing a card the server never had is the two sides agreeing.
+
+**Only library cards sync.** A card made from a decode carries an excerpt of
+the reader's own message, so it stays in the browser that made it. A second
+device therefore shows the library cards and not those - a deliberate limit,
+not a gap. The browser remains the source of truth either way: the Study
+page reads `localStorage`, and a failed sync never costs a saved card.
+
 ## Data retention
 
 No message text, extracted elements, or saved cards are ever persisted server-side or logged.
