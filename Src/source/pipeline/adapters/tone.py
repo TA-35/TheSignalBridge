@@ -1,59 +1,63 @@
-"""Tone adapter - wraps Src/source/model/tone/.
+"""Tone adapter - wraps Src/source/model/tone/enron_register.py.
 
-A thin pass-through: that model already returns the contract shape, so this
-validates rather than reshapes. Two things it does add.
+Final build classifier: neutral / casual / formal. Informal is merged into
+casual and terse is dropped. It's a DistilBERT model trained on 35k Enron
+emails that were auto-labelled with Claude. The weights live in
+models/enron_register_distilbert/ (too big for git, shared on Drive under
+Iteration Build > Models).
 
-First, the import is lazy. enron_evaluate_and_predict imports torch at module
-level, so importing it anywhere near module scope would make a missing torch
-crash the whole pipeline at startup instead of degrading one signal.
+Held-out results (10% split, scored against the Claude labels, not human
+ones): accuracy 0.80, macro F1 0.78. Precision per class: neutral 0.89,
+casual 0.84, formal 0.58. Casual is fine now (recall 0.85, the old model
+was 0.30), so the old casual cap is gone. Formal is the label the model
+over-uses - it sometimes calls plain neutral emails formal - so formal
+gets its confidence capped instead, same idea as before.
 
-Second, casual predictions get their confidence capped. The model's casual
-recall is 0.30 on the held-out set - it misses roughly seven of every ten
-casual messages, calling them neutral or terse. When it does say casual it
-reports high softmax confidence anyway, because softmax measures the model's
-internal certainty, not its accuracy on that class. Passing 0.97 through for
-a class known to be wrong most of the time would tell the LLM to trust the
-one label it should trust least.
+Never raises: missing torch, missing weights or any runtime error comes
+back as the unavailable stub.
 """
-from __future__ import annotations
 
 from typing import Any
 
 from ..contract import unavailable, validate
-from ._paths import add_model_dir
+from ._paths import WEIGHTS_DIR, add_model_dir
 
 MODEL_NAME = "tone"
+MODEL_PATH = WEIGHTS_DIR / "enron_register_distilbert"
 
-# Held-out per-class recall (300 hand-verified rows): neutral 0.87,
-# terse 0.74, casual 0.30. Only casual is unreliable enough to cap.
-_UNRELIABLE_CLASSES = {"casual"}
-_UNRELIABLE_CAP = 0.3
+# formal precision is 0.58 on the held-out set, so don't let it sound sure
+_UNRELIABLE_CLASSES = {"formal"}
+_UNRELIABLE_CAP = 0.6
 
 
 def predict(text: str) -> dict[str, Any]:
-    """Tone comment on `text`, in the contract shape.
-
-    Never raises: a missing torch, missing weights, or any runtime error
-    degrades to the unavailable stub.
-    """
+    """Tone comment on `text`, in the contract shape."""
     try:
         add_model_dir("tone")
-        from enron_evaluate_and_predict import predict as _tone_predict  # noqa: E402
+        import enron_register  # noqa: E402
 
-        raw = dict(_tone_predict(text))
-        raw["model"] = MODEL_NAME  # the model self-reports "tone"; pin it anyway
+        # the script uses a cwd-relative path, point it at the repo copy instead
+        enron_register.MODEL_DIR = MODEL_PATH
+        out = enron_register.classify(text)
 
-        label = str(raw.get("label", ""))
-        if label in _UNRELIABLE_CLASSES:
-            reported = float(raw.get("confidence", 0.0))
-            raw["confidence"] = min(reported, _UNRELIABLE_CAP)
-            note = str(raw.get("note", ""))
-            raw["note"] = (
-                f"{note}; confidence capped from {reported:.2f} to "
-                f"{raw['confidence']:.2f} - '{label}' recall is 0.30 on the "
-                f"held-out set, so this label is unreliable"
-            ).lstrip("; ")
+        label = out["tone"]
+        confidence = float(out["tone_scores"][label])
+        note = f"register reads as {label}"
 
-        return validate(raw)
+        if label in _UNRELIABLE_CLASSES and confidence > _UNRELIABLE_CAP:
+            reported = confidence
+            confidence = _UNRELIABLE_CAP
+            note += (
+                f"; confidence capped from {reported:.2f} to {confidence:.2f} - "
+                f"'{label}' precision is 0.58 on the held-out set, it sometimes "
+                f"fires on neutral emails"
+            )
+
+        return validate({
+            "model": MODEL_NAME,
+            "label": label,
+            "confidence": confidence,
+            "note": note,
+        })
     except Exception as exc:  # noqa: BLE001 - deliberate: never propagate
         return unavailable(MODEL_NAME, type(exc).__name__)
