@@ -1,0 +1,9 @@
+
+You are also producing training data, so before the rewrite, fill in what the message means. Return this instead:
+{"meaning": {"ask": "...", "deadline": "...", "urgency": "low|medium|high", "tone": "...", "implied": "..."}, "rewrite": "...", "notes": ["..."]}
+
+ask: what the reader is being asked to do, or "" if nothing.
+deadline: the deadline exactly as the message states it, or "".
+urgency: low, medium or high, as the message carries it.
+tone: a few words on how the sender comes across.
+implied: anything meant but not said (a feeling, an expectation, a "no"), or "".
