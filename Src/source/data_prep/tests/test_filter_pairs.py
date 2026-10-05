@@ -44,3 +44,35 @@ def test_real_filter_refuses_test_files(tmp_path, monkeypatch):
 
     with pytest.raises(SystemExit, match="refusing to run"):
         fp.step_filter(Args())
+
+
+def _run_filter(tmp_path, monkeypatch, records, want):
+    monkeypatch.chdir(tmp_path)
+    gen = tmp_path / "data" / "generated"
+    gen.mkdir(parents=True)
+    (gen / "enron_gen.jsonl").write_text("\n".join(json.dumps(r) for r in records) + "\n")
+
+    class Args:
+        test = False; no_nli = True; allow_small = True; prompt_version = want
+
+    fp.step_filter(Args())
+    rej = [json.loads(l) for l in (tmp_path / "data/filtered/rejects.jsonl").read_text().splitlines() if l]
+    ok = [json.loads(l) for l in (tmp_path / "data/filtered/train.jsonl").read_text().splitlines() if l]
+    return ok, rej
+
+
+def test_old_prompt_version_is_rejected(tmp_path, monkeypatch):
+    base = {"dataset": "enron", "source": "please send the file", "signals": [],
+            "meaning": {}, "rewrite": "Please send the file.", "notes": ["Made the request direct."]}
+    records = [dict(base, id="a", prompt_version="abc123"), dict(base, id="b", prompt_version="old999")]
+    ok, rej = _run_filter(tmp_path, monkeypatch, records, "abc123")
+    assert [r["id"] for r in ok] == ["a"]
+    assert rej[0]["id"] == "b" and rej[0]["check"] == "prompt_version"
+
+
+def test_circa_only_checks_the_reply():
+    src = "Q: Are you coming to the lunch at Nobu on Friday?\nReply: I'm swamped this week."
+    r = {"source": src, "rewrite": "No, I can't come. I'm swamped this week."}
+    assert fp.split_circa(src)[1] == "I'm swamped this week."
+    assert fp.check_dropped(r) is None          # Nobu and Friday live in the question
+    assert fp.check_length(r) is None           # 9 vs 4 words is fine against the reply
