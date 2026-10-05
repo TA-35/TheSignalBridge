@@ -1,4 +1,4 @@
-﻿# Environment
+# Environment
 .env
 .env.local
 .env.production
@@ -91,3 +91,7 @@ models/**/*.pth
 # provenance. The original is already tracked in data/Stanford_Politeness/,
 # so the copy is 2.2MB of duplication - keep it local.
 models/**/training_data_snapshot.csv
+
+# Root virtual environment
+.venv/
+.venv311/
