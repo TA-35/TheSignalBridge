@@ -74,7 +74,7 @@ def test_tone_stubs_when_torch_is_missing(monkeypatch):
 
 def test_politeness_confidence_is_a_proxy_not_the_score():
     """The score is signed and unbounded; confidence must stay a 0-1 trust value."""
-    if not (politeness._WEIGHTS / "politeness_mlp.npz").exists():
+    if not (politeness._WEIGHTS / "politeness_cnn.npz").exists():
         pytest.skip("politeness weights not present")
     out = politeness.predict(
         "Would you mind taking a look at the deck when you have a moment? Thank you."
@@ -87,12 +87,26 @@ def test_politeness_confidence_is_a_proxy_not_the_score():
 
 
 def test_politeness_lowers_confidence_on_short_input():
-    if not (politeness._WEIGHTS / "politeness_mlp.npz").exists():
+    if not (politeness._WEIGHTS / "politeness_cnn.npz").exists():
         pytest.skip("politeness weights not present")
     short = politeness.predict("do it")
     assert not is_unavailable(short), "weights are present, so this must not stub"
     assert short["confidence"] == politeness._SHORT_INPUT_CONFIDENCE
     assert "confidence lowered" in short["note"]
+
+
+def test_politeness_confidence_is_the_measured_accuracy():
+    """Not a flat 1.0: the label is right about 55% of the time on held-out data."""
+    if not (politeness._WEIGHTS / "politeness_cnn.npz").exists():
+        pytest.skip("politeness weights not present")
+    out = politeness.predict(
+        "Please review the attached contract and send me your comments by 5pm."
+    )
+    _model, _vocab, metadata = politeness._load()
+    assert out["confidence"] == metadata["metrics"]["test"]["acc3"]
+    assert out["confidence"] < 0.6
+    low, high = metadata["levels"]["prediction_cutoffs"]
+    assert f"{low:+.3f}" in out["note"] and f"{high:+.3f}" in out["note"]
 
 
 def _stub_tone(monkeypatch, label, confidence):
