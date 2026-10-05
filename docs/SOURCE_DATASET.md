@@ -41,3 +41,14 @@
 - Sender diversity: 279 unique senders represented
 - Full breakdown recorded in data/staging/annotation_sample_v1_manifest.txt
   (not committed - gitignored along with other staging data)
+## Enron Final Build Set (October 2026)
+- Source: the 455,514 cleaned Enron messages above
+- What it's for: source and gold messages to train and test the rewrite model (step 1 of the data team guide)
+- Owner: Amulya Reddy
+- Script: Src/source/model/tone/enron_step1.py, with a how-to in docs/ENRON_STEP1_AND_FILTER.md
+- Filters: message body only, 5 to 120 words, automated mail removed, and a junk filter for spam, leftover forwarded headers, signature-only emails and trading or data lines (about 55,000 dropped)
+- Correction to the duplicates note above: the Iteration 1 content hash included sender, date and subject, so the same email filed in several mailboxes still came out as different hashes. Hashing just the message text (lowercased, punctuation and spacing stripped, SHA-1) took 304,235 messages down to 119,571, so about 61% were copies. A MinHash pass (Jaccard 0.85) then removed about another 2% of near copies.
+- PII: the names-in-text gap above is fixed for this set. Names are swapped for consistent fake ones through one shared mapping (Presidio plus about 13,000 real employee names pulled from the raw emails), and phone numbers in every format are swapped too. A leak check compares every message with its original, and a 10,000-email run had no real names or numbers left.
+- Output: data/gold/enron_gold.jsonl (60 messages, 45 flagged and 15 clear, checked by hand) and data/source/enron_source.jsonl (about 1,000 messages, 850 flagged and 150 clear), each with tone, politeness and circa signals. Random seed 42.
+- Keeping gold separate: the gold messages, 40 reserves and anything close to them are removed from the source pool before sampling.
+- Never committed: data/step1/known_names.json (real employee names) and data/step1/1_clean.csv (text from before the scrub) stay on the local machine only.
