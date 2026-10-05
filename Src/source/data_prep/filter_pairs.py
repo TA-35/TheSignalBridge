@@ -10,6 +10,7 @@ and rejects at the first failure.
 
 Checks, in order:
   0. gold_overlap   - source is a gold message or a near copy of one (never train on gold)
+  0b. prompt_version - made with a different prompt than the current one (cp.fingerprint())
   1. json_valid     - has rewrite, notes and meaning
   2. notes_ok       - 1-3 notes, each under 20 words
   3. dropped_entity - every PERSON/ORG/DATE/TIME/MONEY/number in the source is in the rewrite
@@ -47,7 +48,7 @@ GOLD_GLOB = "data/gold/*_gold.jsonl"
 SOURCE_GLOB = "data/source/*_source.jsonl"
 OUT_DIR = Path("data/filtered")
 
-CHECKS = ["gold_overlap", "json_valid", "notes_ok", "dropped_entity",
+CHECKS = ["gold_overlap", "prompt_version", "json_valid", "notes_ok", "dropped_entity",
           "added_entity", "length", "contradiction"]
 ENT_TYPES = {"PERSON", "ORG", "DATE", "TIME", "MONEY"}
 NLI_MODEL = "cross-encoder/nli-deberta-v3-base"
@@ -195,8 +196,21 @@ def check_notes(r):
     return None
 
 
+CIRCA_RE = re.compile(r"^\s*Q:\s*(.*?)\n\s*Reply:\s*(.*)$", re.S)
+
+
+def split_circa(source):
+    """Circa sources are "Q: ...\nReply: ...". Only the reply gets rewritten and
+    the question is context (style guide), so returns (question, reply).
+    Anything else comes back as (None, source)."""
+    m = CIRCA_RE.match(str(source))
+    return (m.group(1).strip(), m.group(2).strip()) if m else (None, str(source))
+
+
 def check_dropped(r):
-    src, rw = r["source"], r["rewrite"]
+    # every entity in the part that gets rewritten must survive. For Circa
+    # that's the reply only: the rewrite doesn't have to repeat the question
+    src, rw = split_circa(r["source"])[1], r["rewrite"]
     rw_n, rw_t = norm(rw), tokens(rw)
     missing = [e for e in entities(src) if not present(e, rw, rw_n, rw_t)]
     return f"dropped {missing}" if missing else None
@@ -210,7 +224,8 @@ def check_added(r):
 
 
 def check_length(r):
-    s, w = len(str(r["source"]).split()), len(r["rewrite"].split())
+    # compared with the part that gets rewritten (the reply, for Circa)
+    s, w = len(split_circa(r["source"])[1].split()), len(r["rewrite"].split())
     ratio = w / max(s, 1)
     if not 0.5 <= ratio <= 2.5:
         return f"length ratio {ratio:.2f} ({w} vs {s} words)"
@@ -283,6 +298,24 @@ def step_goldcheck(a):
 
 
 # ---------------------------------------------------------------- main filter
+def expected_fingerprint(a):
+    """The fingerprint of the current prompt. Pairs made with any other prompt
+    are rejected, so data from an old prompt can't slip into training."""
+    if getattr(a, "prompt_version", None):
+        return a.prompt_version
+    if getattr(a, "test", False):
+        return "test"                      # fake pairs are tagged "test"
+    import sys
+    root = Path(__file__).resolve().parents[3]
+    sys.path.insert(0, str(root))
+    try:
+        from Src.source.pipeline import compose_prompt as cp
+    except ImportError:
+        raise SystemExit("can't import Src/source/pipeline/compose_prompt.py to get the current "
+                         "prompt fingerprint. Pull main (it comes with PR 18) or pass --prompt-version")
+    return cp.fingerprint()
+
+
 def step_filter(a):
     if a.test:
         gen_glob, out_dir = str(TEST_GEN_DIR / "*.jsonl"), TEST_OUT_DIR
@@ -303,6 +336,8 @@ def step_filter(a):
 
     gold_hashes, gold = gold_index()
     print(f"gold messages loaded for the overlap check: {len(gold)}")
+    want_fp = expected_fingerprint(a)
+    print(f"current prompt fingerprint: {want_fp}")
 
     passed, rejected = [], []
     fails = Counter()
@@ -337,6 +372,12 @@ def step_filter(a):
 
             if r.get("model") == "fake-test" and not a.test:
                 raise SystemExit("found a fake-test record in the real input - stopping")
+
+            seen["prompt_version"] += 1
+            pv = str(r.get("prompt_version") or "")
+            if not pv == want_fp:
+                reject("prompt_version", f"made with prompt {pv or 'unknown'}, current is {want_fp}")
+                continue
 
             seen["json_valid"] += 1
             why = parse_err or check_json(r)
@@ -491,6 +532,8 @@ if __name__ == "__main__":
     ap.add_argument("--n", type=int, default=60, help="fake: how many test pairs")
     ap.add_argument("--no-nli", action="store_true", help="skip the contradiction check (quick tests)")
     ap.add_argument("--allow-small", action="store_true")
+    ap.add_argument("--prompt-version", default=None,
+                    help="filter: expected prompt fingerprint (default: cp.fingerprint())")
     a = ap.parse_args()
     {"filter": step_filter, "spotcheck": step_spotcheck, "fake": step_fake,
      "goldcheck": step_goldcheck}[a.step](a)
