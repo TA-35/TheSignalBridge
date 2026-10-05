@@ -6,7 +6,7 @@ Two transports, chosen by config:
                base_url https://api.moonshot.ai/v1, models kimi-k3,
                kimi-k2.6, kimi-k2.7-code. Also reaches OpenAI itself or any
                local server speaking the same protocol.
-    anthropic - the Anthropic Messages API.
+    
 
 Both request structured output against the same JSON schema, so the
 validator sees an identical shape either way and nothing downstream knows
