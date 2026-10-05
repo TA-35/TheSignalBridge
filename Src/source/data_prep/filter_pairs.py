@@ -18,11 +18,17 @@ Checks, in order:
   6. contradiction  - NLI (cross-encoder/nli-deberta-v3-base) doesn't say it contradicts
 
 Run from the repo root:
-  python Src/source/data_prep/filter_pairs.py fake --n 60     # make test pairs from the source files
+  python Src/source/data_prep/filter_pairs.py goldcheck       # how many source rows look like gold
+  python Src/source/data_prep/filter_pairs.py fake --n 60     # test pairs -> data/test_generated/
+  python Src/source/data_prep/filter_pairs.py filter --test   # test run -> data/test_filtered/
   python Src/source/data_prep/filter_pairs.py filter          # the real run
   python Src/source/data_prep/filter_pairs.py spotcheck       # 10% sample split three ways
 
-Needs: spacy (en_core_web_sm), datasketch, sentence-transformers, pandas
+Test files never touch the real folders: fake writes to data/test_generated/
+and filter --test writes to data/test_filtered/. The real run also refuses to
+start if anything test-looking ends up in data/generated/.
+
+Needs: spacy (en_core_web_sm), sentence-transformers, pandas
 """
 
 import argparse
@@ -35,12 +41,11 @@ from collections import Counter
 from pathlib import Path
 
 GEN_GLOB = "data/generated/*_gen.jsonl"
+TEST_GEN_DIR = Path("data/test_generated")
+TEST_OUT_DIR = Path("data/test_filtered")
 GOLD_GLOB = "data/gold/*_gold.jsonl"
 SOURCE_GLOB = "data/source/*_source.jsonl"
 OUT_DIR = Path("data/filtered")
-TRAIN = OUT_DIR / "train.jsonl"
-REJECTS = OUT_DIR / "rejects.jsonl"
-REPORT = OUT_DIR / "filter_report.json"
 
 CHECKS = ["gold_overlap", "json_valid", "notes_ok", "dropped_entity",
           "added_entity", "length", "contradiction"]
@@ -213,37 +218,91 @@ def check_length(r):
 
 
 # ---------------------------------------------------------------- gold guard
+# Sanket found the old MinHash LSH at 0.85 missed real gold near-copies
+# (enron_01523 -> enron_00006, enron_01556 -> enron_00021). There are only
+# 180 gold messages, so we can afford an exact comparison against every one
+# of them instead of the approximate LSH lookup. A pair is treated as a
+# near-copy of gold if either:
+#   - Jaccard similarity of the character 5-grams is >= 0.5, or
+#   - containment (overlap / smaller set) is >= 0.8, which catches a gold
+#     message quoted inside a longer email. Skipped for very short texts so
+#     a gold "Thanks!" doesn't knock out every email that says thanks.
+# This is the last line of defence for rule 2, so it leans towards rejecting.
+NEAR_JACCARD = 0.5
+NEAR_CONTAIN = 0.8
+MIN_SHINGLES_FOR_CONTAIN = 30
+
+
+def shingles(t, k=5):
+    t = re.sub(r"\s+", " ", str(t).lower()).strip()
+    return {t[i:i + k] for i in range(max(1, len(t) - k + 1))}
+
+
+def similarity(a, b):
+    inter = len(a & b)
+    if not inter:
+        return 0.0, 0.0
+    return inter / len(a | b), inter / min(len(a), len(b))
+
+
+def near_gold(text, gold):
+    """gold is a list of (gold_id, shingle_set). Returns (gold_id, jaccard,
+    containment) for the first gold message it's too close to, else None."""
+    s = shingles(text)
+    for gid, g in gold:
+        j, c = similarity(s, g)
+        long_enough = min(len(s), len(g)) >= MIN_SHINGLES_FOR_CONTAIN
+        if j >= NEAR_JACCARD or (long_enough and c >= NEAR_CONTAIN):
+            return gid, round(j, 3), round(c, 3)
+    return None
+
+
 def gold_index():
-    from datasketch import MinHash, MinHashLSH
-    lsh = MinHashLSH(threshold=0.85, num_perm=128)
-    hashes = set()
-    n = 0
+    hashes, gold = set(), []
     for path in glob.glob(GOLD_GLOB):
         for i, g in enumerate(read_jsonl(path)):
             src = g.get("source", "")
             hashes.add(text_hash(src))
-            lsh.insert(f"{path}:{i}", minhash(src))
-            n += 1
-    return hashes, lsh, n
+            gold.append((g.get("id", f"{path}:{i}"), shingles(src)))
+    return hashes, gold
 
 
-def minhash(t):
-    from datasketch import MinHash
-    m = MinHash(num_perm=128)
-    t = re.sub(r"\s+", " ", str(t).lower())
-    for i in range(max(1, len(t) - 4)):
-        m.update(t[i:i + 5].encode())
-    return m
+def step_goldcheck(a):
+    """How many source rows sit too close to a gold message. Should be 0
+    once the step 1 split uses the same rule."""
+    _, gold = gold_index()
+    hits = []
+    for path in sorted(glob.glob(SOURCE_GLOB)):
+        for r in read_jsonl(path):
+            m = near_gold(r["source"], gold)
+            if m:
+                hits.append((r["id"], *m))
+    print(f"gold messages: {len(gold)}, source rows too close to gold: {len(hits)}")
+    for sid, gid, j, c in hits[:50]:
+        print(f"  {sid} -> {gid}   jaccard {j:.2f}  containment {c:.2f}")
 
 
 # ---------------------------------------------------------------- main filter
 def step_filter(a):
-    files = sorted(glob.glob(GEN_GLOB))
-    if not files:
-        raise SystemExit(f"no files match {GEN_GLOB} - has the generation script run yet?")
+    if a.test:
+        gen_glob, out_dir = str(TEST_GEN_DIR / "*.jsonl"), TEST_OUT_DIR
+        print("TEST RUN: reading data/test_generated/, writing data/test_filtered/")
+    else:
+        gen_glob, out_dir = GEN_GLOB, OUT_DIR
+        # never let fake pairs reach the real train.jsonl
+        stray = [f for f in glob.glob("data/generated/*") if "test" in Path(f).name.lower()]
+        if stray:
+            raise SystemExit(f"refusing to run: test files in data/generated/: {stray}\n"
+                             f"delete them, or use --test for a test run")
+    train, rejects_path, report_path = (out_dir / "train.jsonl", out_dir / "rejects.jsonl",
+                                        out_dir / "filter_report.json")
 
-    gold_hashes, gold_lsh, n_gold = gold_index()
-    print(f"gold messages loaded for the overlap check: {n_gold}")
+    files = sorted(glob.glob(gen_glob))
+    if not files:
+        raise SystemExit(f"no files match {gen_glob} - has the generation script run yet?")
+
+    gold_hashes, gold = gold_index()
+    print(f"gold messages loaded for the overlap check: {len(gold)}")
 
     passed, rejected = [], []
     fails = Counter()
@@ -267,9 +326,17 @@ def step_filter(a):
 
             seen["gold_overlap"] += 1
             src = r.get("source", "")
-            if text_hash(src) in gold_hashes or gold_lsh.query(minhash(src)):
-                reject("gold_overlap", "source is a gold message or a near copy of one")
+            if text_hash(src) in gold_hashes:
+                reject("gold_overlap", "source is a gold message")
                 continue
+            hit = near_gold(src, gold)
+            if hit:
+                reject("gold_overlap", f"near copy of gold {hit[0]} "
+                                       f"(jaccard {hit[1]}, containment {hit[2]})")
+                continue
+
+            if r.get("model") == "fake-test" and not a.test:
+                raise SystemExit("found a fake-test record in the real input - stopping")
 
             seen["json_valid"] += 1
             why = parse_err or check_json(r)
@@ -286,6 +353,8 @@ def step_filter(a):
             if failed:
                 continue
             pending_nli.append((r, rec))
+
+    # (the gold check above is exact, so nothing approximate is left here)
 
     # NLI last, in batches - it's the slow one
     seen["contradiction"] += len(pending_nli)
@@ -308,8 +377,8 @@ def step_filter(a):
                     keep[k] = r[k]
             passed.append(keep)
 
-    write_jsonl(passed, TRAIN)
-    write_jsonl(rejected, REJECTS)
+    write_jsonl(passed, train)
+    write_jsonl(rejected, rejects_path)
 
     total = sum(per_dataset.values())
     report = {
@@ -321,20 +390,23 @@ def step_filter(a):
             c: round(fails[c] / seen[c], 3) if seen[c] else 0.0 for c in CHECKS},
         "nli_skipped": bool(a.no_nli),
     }
-    json.dump(report, open(REPORT, "w"), indent=2)
+    json.dump(report, open(report_path, "w"), indent=2)
 
-    print(f"\npassed {len(passed):,} / {total:,}  ->  {TRAIN}")
-    print(f"rejected {len(rejected):,}  ->  {REJECTS}\n")
+    print(f"\npassed {len(passed):,} / {total:,}  ->  {train}")
+    print(f"rejected {len(rejected):,}  ->  {rejects_path}\n")
     print(f"{'check':<16}{'rejected':>9}{'reached':>9}{'rate':>8}")
     for c in CHECKS:
         rate = fails[c] / seen[c] if seen[c] else 0
         flag = "  <- check the prompt" if seen[c] and rate > 0.3 else ""
         print(f"{c:<16}{fails[c]:>9}{seen[c]:>9}{rate:>8.1%}{flag}")
-    if len(passed) < 2000 and not a.allow_small:
+    if len(passed) < 2000 and not (a.allow_small or a.test):
         print(f"\nheads up: under 2,000 passing pairs (guide's 'done when' target)")
 
 
 def nli_contradicts(pairs, bs=32):
+    # Note: the cross-encoder truncates each (source, rewrite) pair at 512
+    # tokens, so on a really long email it only sees the start. That's fine
+    # for us because step 1 caps messages at 120 words, which is well under.
     from sentence_transformers import CrossEncoder
     model = CrossEncoder(NLI_MODEL)
     id2label = getattr(getattr(model, "config", None), "id2label", None) \
@@ -350,7 +422,7 @@ def nli_contradicts(pairs, bs=32):
 # ---------------------------------------------------------------- spot check
 def step_spotcheck(a):
     import pandas as pd
-    rows = read_jsonl(TRAIN)
+    rows = read_jsonl(OUT_DIR / "train.jsonl")
     random.seed(SEED)
     sample = random.sample(rows, max(1, round(len(rows) * 0.10)))
     people = ["yvonne", "amulya", "anuvrat"]
@@ -369,7 +441,8 @@ def step_spotcheck(a):
 # ---------------------------------------------------------------- fake test data
 def step_fake(a):
     """Builds data/generated/test_gen.jsonl from the real source files, with some
-    pairs broken on purpose, so the filter can be tested before Yvonne's batch."""
+    pairs broken on purpose, so the filter can be tested before Yvonne's batch.
+    Goes to data/test_generated/, a separate folder from the real run."""
     src = []
     for p in sorted(glob.glob(SOURCE_GLOB)):
         src += read_jsonl(p)
@@ -403,18 +476,21 @@ def step_fake(a):
             good = {"id": s["id"], "dataset": s["dataset"], "source": text,
                     "raw": "sorry, I can't produce JSON for this one"}            # json_valid (raw)
         out.append(good)
-    path = Path("data/generated/test_gen.jsonl")
+    path = TEST_GEN_DIR / "test_gen.jsonl"
     write_jsonl(out, path)
     print(f"wrote {len(out)} test pairs -> {path}")
     print("about 1 in 4 should pass cleanly, the rest each break one check on purpose")
-    print("delete it before the real run:  rm data/generated/test_gen.jsonl")
+    print("run them with:  filter --test   (writes to data/test_filtered/, never the real folder)")
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("step", choices=["filter", "spotcheck", "fake"])
+    ap.add_argument("step", choices=["filter", "spotcheck", "fake", "goldcheck"])
+    ap.add_argument("--test", action="store_true",
+                    help="filter: read data/test_generated/, write data/test_filtered/")
     ap.add_argument("--n", type=int, default=60, help="fake: how many test pairs")
     ap.add_argument("--no-nli", action="store_true", help="skip the contradiction check (quick tests)")
     ap.add_argument("--allow-small", action="store_true")
     a = ap.parse_args()
-    {"filter": step_filter, "spotcheck": step_spotcheck, "fake": step_fake}[a.step](a)
+    {"filter": step_filter, "spotcheck": step_spotcheck, "fake": step_fake,
+     "goldcheck": step_goldcheck}[a.step](a)
