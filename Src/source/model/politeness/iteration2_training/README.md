@@ -4,7 +4,7 @@ These scripts produced `models/politeness_nn_iteration2/`. They were run on a 2-
 `torch`, `spacy`, `spacy-curated-transformers`, `scikit-learn`, `pandas`, `scipy`, plus the spaCy `en_core_web_trf` package
 (its bundled RoBERTa-base weights are the starting point for fine-tuning). They expect `src/`, `data/` and `runs/` folders
 next to the corpus files and import `politeness_nn.py`, `train_politeness_nn.py` and `stanford_politeness_pipeline.py`
-from Iteration 1, so adjust paths before re-running. Inference does not need any of this: see `scripts/politeness_v2.py`.
+from Iteration 1, so adjust paths before re-running. Inference does not need any of this: see `../politeness_v2.py`.
 
 Order of execution:
 

@@ -71,8 +71,8 @@ is where most errors fall. Binary polite-versus-impolite accuracy is the more me
 ## Predict
 
 ```bash
-python3 scripts/predict_politeness_v2.py "Could you please help me with this issue?"
-python3 scripts/score_message_csv_v2.py input.csv output.csv --text-column body
+python3 Src/source/model/politeness/predict_politeness_v2.py "Could you please help me with this issue?"
+python3 Src/source/model/politeness/score_message_csv_v2.py input.csv output.csv --text-column body
 ```
 
 Sanity checks from the shipped model:
@@ -99,8 +99,8 @@ Sanity checks from the shipped model:
 - `models/politeness_nn_iteration2/evaluation.json`: full metrics for all four models.
 - `models/politeness_nn_iteration2/test_predictions.csv`: held-out predictions (shipped model and teacher).
 - `models/politeness_nn_iteration2/teacher_pseudo_labels.csv.gz`: the 179,607 teacher-scored requests.
-- `scripts/politeness_v2.py`, `predict_politeness_v2.py`, `score_message_csv_v2.py`: NumPy-only inference.
-- `scripts/iteration2_training/`: the scripts that produced the model.
+- `Src/source/model/politeness/politeness_v2.py`, `predict_politeness_v2.py`, `score_message_csv_v2.py`: NumPy-only inference.
+- `Src/source/model/politeness/iteration2_training/`: the scripts that produced the model.
 
 ## Next steps
 
