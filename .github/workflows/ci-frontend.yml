@@ -1,0 +1,56 @@
+name: CI - frontend
+
+# Checks only, on every PR and push to main. Deploying stays a manual
+# workflow_dispatch (frontend-deploy.yml) - nothing here touches AWS.
+#
+# oxlint, prettier --check and npm audit are not here yet: each is red on
+# main today. They join once the baseline is fixed (see .github/CLAUDE.md).
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/ci-frontend.yml"
+  push:
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/ci-frontend.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          # package.json engines: ^22.18.0 || >=24.12.0
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+
+      - name: Type check
+        run: npm run type-check
+
+      # Not `npm run lint`: that script runs with --fix, which would rewrite
+      # the checkout and pass instead of failing.
+      - name: Lint (eslint)
+        run: npx eslint . --max-warnings 0
+
+      - name: Build
+        run: npm run build-only
