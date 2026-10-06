@@ -95,3 +95,7 @@ models/**/training_data_snapshot.csv
 # Root virtual environment
 .venv/
 .venv311/
+
+# Training runs (LoRA adapters, merged weights, GGUF) - GPU box only, never commit
+runs/
+*.gguf
