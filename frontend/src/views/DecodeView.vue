@@ -10,6 +10,7 @@ import { useDecodesStore } from '@/stores/decodes'
 import { ELEMENT_LABELS, NOT_SPECIFIED, type DecodeResult } from '@/types/decode'
 import type { Pattern, SavedCard } from '@/types/pattern'
 import type { DecodeRecord } from '@/types/decode'
+import VoiceInput from '@/components/VoiceInput.vue'
 import {
   REVIEW_FIELD_LABELS,
   type FullReview,
@@ -639,6 +640,8 @@ async function copyDraftToClipboard() {
             :aria-describedby="state.error ? 'decode-error' : undefined"
             class="input-area__box"
           />
+
+          <VoiceInput v-model="state.message" :max-length="MAX_MESSAGE_LENGTH" />
 
           <div v-if="state.error" id="decode-error" class="error-banner" role="alert">
             <span class="error-dot" />
