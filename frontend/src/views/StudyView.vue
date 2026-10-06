@@ -425,20 +425,25 @@ function confirmDelete(id: string) {
 }
 
 .masthead__text {
-  max-width: 58ch;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 60ch;
 }
 
 .masthead h1 {
   font-family: var(--font-serif);
-  font-size: clamp(28px, 3.4vw, 38px);
+  font-size: clamp(32px, 4.4vw, 46px);
   font-weight: 500;
-  letter-spacing: -0.02em;
-  margin: 0 0 6px;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  margin: 0;
+  text-wrap: balance;
 }
 
 .masthead p {
   margin: 0;
-  font-size: 14.5px;
+  font-size: 15.5px;
   line-height: 1.6;
   color: var(--color-text-muted);
 }
