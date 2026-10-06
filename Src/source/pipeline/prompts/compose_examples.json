@@ -1,0 +1,106 @@
+[
+  {
+    "id": "example_hedged_request",
+    "source": "Hi Dana, no rush but if you get a chance could you maybe take a look at the Q3 numbers before Thursday's meeting? Thanks!",
+    "signals": [
+      {"model": "tone", "label": "casual", "confidence": 0.91},
+      {"model": "politeness", "label": "high", "confidence": 0.555},
+      {"model": "circa", "label": "indirect", "confidence": 0.41}
+    ],
+    "meaning": {
+      "ask": "Review the Q3 numbers",
+      "deadline": "before Thursday's meeting",
+      "urgency": "medium",
+      "tone": "friendly, softened",
+      "implied": "\"No rush\" is politeness; the numbers are needed before the meeting."
+    },
+    "rewrite": "Hi Dana, could you please review the Q3 numbers before Thursday's meeting? Thanks!",
+    "notes": [
+      "Made the request direct: please review the Q3 numbers.",
+      "\"No rush\" hid a real deadline, so it now reads clearly: before Thursday's meeting."
+    ]
+  },
+  {
+    "id": "example_blunt_complaint",
+    "source": "Why is the vendor report still not done? I needed it yesterday.",
+    "signals": [
+      {"model": "tone", "label": "neutral", "confidence": 0.84},
+      {"model": "politeness", "label": "low", "confidence": 0.555},
+      {"model": "circa", "label": "direct", "confidence": 0.6}
+    ],
+    "meaning": {
+      "ask": "Send the vendor report, or explain the delay",
+      "deadline": "",
+      "urgency": "high",
+      "tone": "frustrated, curt",
+      "implied": "The sender is frustrated that the report is late."
+    },
+    "rewrite": "I needed the vendor report yesterday and still don't have it. Could you send it right away, or tell me what's holding it up? I'm frustrated it's late.",
+    "notes": [
+      "Turned the question into a clear ask: send it or explain the delay.",
+      "Said the frustration out loud so it isn't left to guesswork."
+    ]
+  },
+  {
+    "id": "example_over_polite",
+    "source": "I hope you're doing well! I was just wondering whether it might be possible, if it's not too much trouble, to perhaps get the signed contract back from you at some point this week?",
+    "signals": [
+      {"model": "tone", "label": "formal", "confidence": 0.6},
+      {"model": "politeness", "label": "high", "confidence": 0.555},
+      {"model": "circa", "label": "indirect", "confidence": 0.47}
+    ],
+    "meaning": {
+      "ask": "Send back the signed contract",
+      "deadline": "this week",
+      "urgency": "medium",
+      "tone": "very polite, hesitant",
+      "implied": "This is a request with a deadline, not an optional favour."
+    },
+    "rewrite": "I hope you're doing well! Could you please send the signed contract back to me this week?",
+    "notes": [
+      "Removed the layers of hedging so the request is easy to spot.",
+      "Kept the deadline exactly as given: this week."
+    ]
+  },
+  {
+    "id": "example_already_clear",
+    "source": "The team meeting has moved to Friday at 10:00 in Room 4. Please bring your project updates.",
+    "signals": [
+      {"model": "tone", "label": "neutral", "confidence": 0.93},
+      {"model": "politeness", "label": "medium", "confidence": 0.555},
+      {"model": "circa", "label": "direct", "confidence": 0.6}
+    ],
+    "meaning": {
+      "ask": "Bring your project updates to the meeting",
+      "deadline": "Friday at 10:00",
+      "urgency": "medium",
+      "tone": "neutral, informative",
+      "implied": ""
+    },
+    "rewrite": "The team meeting has moved to Friday at 10:00 in Room 4. Please bring your project updates.",
+    "notes": [
+      "Already clear, kept as written."
+    ]
+  },
+  {
+    "id": "example_circa_reply",
+    "source": "Q: Are you coming to the team lunch on Friday?\nReply: I've got a dentist appointment that afternoon.",
+    "signals": [
+      {"model": "tone", "label": "unknown", "confidence": 0.0},
+      {"model": "politeness", "label": "medium", "confidence": 0.3},
+      {"model": "circa", "label": "indirect", "confidence": 0.58}
+    ],
+    "meaning": {
+      "ask": "",
+      "deadline": "",
+      "urgency": "low",
+      "tone": "friendly, indirect",
+      "implied": "The answer is no: the sender can't come to the lunch."
+    },
+    "rewrite": "No, I can't come to the team lunch on Friday. I've got a dentist appointment that afternoon.",
+    "notes": [
+      "Stated the answer directly: you can't come.",
+      "Kept the reason so it still reads as a friendly decline."
+    ]
+  }
+]

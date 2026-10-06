@@ -62,7 +62,7 @@ def test_tone_stubs_when_torch_is_missing(monkeypatch):
     real_import = builtins.__import__
 
     def no_torch(name, *args, **kwargs):
-        if name.startswith("torch") or name == "enron_evaluate_and_predict":
+        if name.startswith("torch") or name == "enron_register":
             raise ImportError("No module named 'torch'")
         return real_import(name, *args, **kwargs)
 
@@ -74,7 +74,7 @@ def test_tone_stubs_when_torch_is_missing(monkeypatch):
 
 def test_politeness_confidence_is_a_proxy_not_the_score():
     """The score is signed and unbounded; confidence must stay a 0-1 trust value."""
-    if not (politeness._WEIGHTS / "politeness_mlp.npz").exists():
+    if not (politeness._WEIGHTS / "politeness_cnn.npz").exists():
         pytest.skip("politeness weights not present")
     out = politeness.predict(
         "Would you mind taking a look at the deck when you have a moment? Thank you."
@@ -87,7 +87,7 @@ def test_politeness_confidence_is_a_proxy_not_the_score():
 
 
 def test_politeness_lowers_confidence_on_short_input():
-    if not (politeness._WEIGHTS / "politeness_mlp.npz").exists():
+    if not (politeness._WEIGHTS / "politeness_cnn.npz").exists():
         pytest.skip("politeness weights not present")
     short = politeness.predict("do it")
     assert not is_unavailable(short), "weights are present, so this must not stub"
@@ -95,38 +95,54 @@ def test_politeness_lowers_confidence_on_short_input():
     assert "confidence lowered" in short["note"]
 
 
-def test_tone_caps_confidence_on_the_unreliable_class(monkeypatch):
-    """casual recall is 0.30, so a confident 'casual' must not stay confident."""
-    monkeypatch.setattr(
-        tone, "add_model_dir", lambda _name: None
+def test_politeness_confidence_is_the_measured_accuracy():
+    """Not a flat 1.0: the label is right about 55% of the time on held-out data."""
+    if not (politeness._WEIGHTS / "politeness_cnn.npz").exists():
+        pytest.skip("politeness weights not present")
+    out = politeness.predict(
+        "Please review the attached contract and send me your comments by 5pm."
     )
+    _model, _vocab, metadata = politeness._load()
+    assert out["confidence"] == metadata["metrics"]["test"]["acc3"]
+    assert out["confidence"] < 0.6
+    low, high = metadata["levels"]["prediction_cutoffs"]
+    assert f"{low:+.3f}" in out["note"] and f"{high:+.3f}" in out["note"]
+
+
+def _stub_tone(monkeypatch, label, confidence):
+    """Fake enron_register so the tests don't need the real weights."""
     import sys, types
 
-    stub = types.ModuleType("enron_evaluate_and_predict")
-    stub.predict = lambda body: {
-        "model": "tone", "label": "casual", "confidence": 0.97, "note": "informal",
-    }
-    monkeypatch.setitem(sys.modules, "enron_evaluate_and_predict", stub)
-
-    out = tone.predict("haha yeah sounds good")
-    validate(out)
-    assert out["confidence"] == tone._UNRELIABLE_CAP
-    assert "recall is 0.30" in out["note"]
-
-
-def test_tone_passes_reliable_classes_through_untouched(monkeypatch):
     monkeypatch.setattr(tone, "add_model_dir", lambda _name: None)
-    import sys, types
+    scores = {"neutral": 0.0, "casual": 0.0, "formal": 0.0}
+    scores[label] = confidence
+    stub = types.ModuleType("enron_register")
+    stub.MODEL_DIR = None
+    stub.classify = lambda body: {"tone": label, "tone_scores": scores}
+    monkeypatch.setitem(sys.modules, "enron_register", stub)
 
-    stub = types.ModuleType("enron_evaluate_and_predict")
-    stub.predict = lambda body: {
-        "model": "tone", "label": "neutral", "confidence": 0.93, "note": "standard",
-    }
-    monkeypatch.setitem(sys.modules, "enron_evaluate_and_predict", stub)
+
+def test_tone_caps_confidence_on_the_unreliable_class(monkeypatch):
+    """formal precision is 0.58, so a confident 'formal' must not stay confident."""
+    _stub_tone(monkeypatch, "formal", 0.97)
+
+    out = tone.predict("Dear Mr Smith, I would appreciate your confirmation.")
+    validate(out)
+    assert out["label"] == "formal"
+    assert out["confidence"] == tone._UNRELIABLE_CAP
+    assert "precision is 0.58" in out["note"]
+
+
+@pytest.mark.parametrize("label", ["neutral", "casual"])
+def test_tone_passes_reliable_classes_through_untouched(monkeypatch, label):
+    """casual is reliable now (recall 0.85), so only formal gets capped."""
+    _stub_tone(monkeypatch, label, 0.93)
 
     out = tone.predict("Please send the report by Friday.")
+    validate(out)
+    assert out["label"] == label
     assert out["confidence"] == 0.93
-    assert out["note"] == "standard"
+    assert out["note"] == f"register reads as {label}"
 
 
 # --------------------------------------------------------------------------
