@@ -1,7 +1,21 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { BookOpen, Home, Library, LogIn, PenLine, MailQuestionMark, Settings } from '@lucide/vue'
+import {
+  BookOpen,
+  ChevronDown,
+  CircleUser,
+  Home,
+  LayoutDashboard,
+  Library,
+  LogIn,
+  LogOut,
+  MailQuestionMark,
+  PenLine,
+  Settings,
+} from '@lucide/vue'
+import { useAccountStore } from '@/stores/account'
+import { useCardsStore } from '@/stores/cards'
 import { useSettingsStore } from '@/stores/settings'
 import logoLight from '@/assets/logo.png'
 import logoDark from '@/assets/logo-dark.png'
@@ -19,14 +33,41 @@ const logoUrl = computed(() => (settingsStore.appearance === 'dark' ? logoDark :
 // Leaving those two looking like every other destination is what made the
 // nav promise seven features and deliver five - and the home page's own
 // secondary call to action pointed at one of them.
+const accountStore = useAccountStore()
+
+// Asked once per page load. It is one small request, and without it the
+// header would say "Login" to someone who is already signed in until they
+// happened to open the account page.
+onMounted(() => {
+  if (!accountStore.ready) void accountStore.refresh()
+})
+
+// Library cards follow the account, so the moment one is signed in - on
+// load, after signing in, after pairing a new device - the two sides
+// reconcile. Here rather than on the Study page: a card saved from the
+// Library while signed in should reach the server without anyone having
+// visited Study first.
+watch(
+  () => accountStore.signedIn,
+  (signedIn) => {
+    if (signedIn) void useCardsStore().syncWithAccount()
+  },
+  { immediate: true },
+)
+
+// The last item carries the account: an invitation when signed out, the
+// handle itself when signed in - which is also the only place the handle is
+// visible from every page.
+// Signed out, the account is one more destination in the row. Signed in it
+// becomes a menu instead, because by then there are several things to do
+// with it and only one of them is "look at the account page".
 const navItems = [
   { to: '/', label: 'Home', icon: Home, soon: false },
   { to: '/decode', label: 'Decoder', icon: MailQuestionMark, soon: false },
-  { to: '/compose', label: 'Compose', icon: PenLine, soon: true },
+  { to: '/compose', label: 'Compose', icon: PenLine, soon: false },
   { to: '/study', label: 'Study', icon: BookOpen, soon: false },
   { to: '/library', label: 'Library', icon: Library, soon: false },
   { to: '/settings', label: 'Settings', icon: Settings, soon: false },
-  { to: '/login', label: 'Login', icon: LogIn, soon: true },
 ]
 
 const route = useRoute()
@@ -36,30 +77,57 @@ const menuOpen = ref(false)
 const navEl = ref<HTMLElement | null>(null)
 const toggleEl = ref<HTMLButtonElement | null>(null)
 
+// The account menu. Separate state from the phone nav above: on a laptop
+// the nav is not a menu at all, and this one still is.
+const accountOpen = ref(false)
+const accountEl = ref<HTMLElement | null>(null)
+const accountToggleEl = ref<HTMLButtonElement | null>(null)
+
 watch(
   () => route.path,
   () => {
     menuOpen.value = false
+    accountOpen.value = false
   },
 )
+
+async function signOutFromMenu() {
+  accountOpen.value = false
+  await accountStore.logout()
+}
 
 // The menu covers the page on a phone, so the two ways people expect to get
 // out of it have to work: tapping away from it, and Escape. Neither did - the
 // only exits were the toggle itself and navigating somewhere.
 function onDocumentPointerDown(event: PointerEvent) {
-  if (!menuOpen.value) return
   const target = event.target as Node | null
   if (!target) return
-  if (navEl.value?.contains(target) || toggleEl.value?.contains(target)) return
-  menuOpen.value = false
+
+  if (menuOpen.value && !navEl.value?.contains(target) && !toggleEl.value?.contains(target)) {
+    menuOpen.value = false
+  }
+  if (
+    accountOpen.value &&
+    !accountEl.value?.contains(target) &&
+    !accountToggleEl.value?.contains(target)
+  ) {
+    accountOpen.value = false
+  }
 }
 
 function onDocumentKeydown(event: KeyboardEvent) {
-  if (event.key !== 'Escape' || !menuOpen.value) return
-  menuOpen.value = false
+  if (event.key !== 'Escape') return
   // Escape dismissing a menu should leave focus on the control that opened
   // it, not wherever it happened to be inside the menu.
-  toggleEl.value?.focus()
+  if (accountOpen.value) {
+    accountOpen.value = false
+    accountToggleEl.value?.focus()
+    return
+  }
+  if (menuOpen.value) {
+    menuOpen.value = false
+    toggleEl.value?.focus()
+  }
 }
 
 onMounted(() => {
@@ -114,6 +182,65 @@ onBeforeUnmount(() => {
                  a screen reader too. -->
             <span v-if="item.soon" class="nav-item__soon">soon</span>
           </RouterLink>
+
+          <RouterLink
+            v-if="!accountStore.signedIn"
+            to="/account"
+            class="nav-item"
+            :class="{ 'nav-item--active': isActive('/account') }"
+          >
+            <LogIn class="nav-item__icon" :size="16" :stroke-width="2" aria-hidden="true" />
+            Login
+          </RouterLink>
+
+          <div v-else ref="accountEl" class="account">
+            <button
+              ref="accountToggleEl"
+              type="button"
+              class="nav-item account__toggle"
+              :class="{ 'nav-item--active': isActive('/account') }"
+              :aria-expanded="accountOpen"
+              aria-haspopup="menu"
+              aria-controls="account-menu"
+              @click="accountOpen = !accountOpen"
+            >
+              <CircleUser class="nav-item__icon" :size="16" :stroke-width="2" aria-hidden="true" />
+              {{ accountStore.account?.handle }}
+              <ChevronDown class="account__caret" :size="14" :stroke-width="2" aria-hidden="true" />
+            </button>
+
+            <div v-if="accountOpen" id="account-menu" class="account__menu" role="menu">
+              <p class="account__id">
+                <span>Signed in as</span>
+                <strong>{{ accountStore.account?.handle }}</strong>
+              </p>
+
+              <RouterLink to="/account" class="account__item" role="menuitem">
+                <Settings :size="15" :stroke-width="1.8" aria-hidden="true" />
+                Account settings
+              </RouterLink>
+
+              <!-- Routed nowhere yet, so it is a label rather than a link:
+                   a menu item that goes to a blank page is worse than one
+                   that says it is not ready. -->
+              <span class="account__item account__item--soon" role="menuitem" aria-disabled="true">
+                <LayoutDashboard :size="15" :stroke-width="1.8" aria-hidden="true" />
+                Dashboard
+                <span class="nav-item__soon">soon</span>
+              </span>
+
+              <button
+                type="button"
+                class="account__item"
+                role="menuitem"
+                :disabled="accountStore.busy"
+                @click="signOutFromMenu"
+              >
+                <LogOut :size="15" :stroke-width="1.8" aria-hidden="true" />
+                Sign out
+              </button>
+            </div>
+          </div>
         </nav>
       </div>
     </header>
@@ -221,6 +348,91 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 }
 
+/* Account menu ---------------------------------------------------------- */
+
+.account {
+  position: relative;
+}
+
+.account__toggle {
+  border: none;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.account__caret {
+  opacity: 0.7;
+}
+
+/* Anchored to the toggle on a laptop. On a phone the nav is already a
+   stacked panel, so the menu joins the stack instead of floating over it -
+   see the narrow-screen block below. */
+.account__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  min-width: 212px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-frame);
+  box-shadow: 0 14px 34px rgba(58, 55, 51, 0.14);
+}
+
+.account__id {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 8px 10px 10px;
+  border-bottom: 1px solid var(--color-border-soft);
+  font-size: 12px;
+  color: var(--color-text-faint);
+}
+
+.account__id strong {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  color: var(--color-text);
+}
+
+.account__item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  margin-top: 2px;
+  padding: 9px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.account__item:hover:not(:disabled):not(.account__item--soon) {
+  background: var(--color-surface-soft);
+}
+
+.account__item--soon {
+  color: var(--color-text-faint);
+  cursor: default;
+}
+
+.account__item:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 /* Deliberately small: it is a qualifier on the label, not a second label.
    Every pixel here is a pixel of horizontal nav, and seven items already
    most of the header. */
@@ -315,6 +527,20 @@ onBeforeUnmount(() => {
 
   .nav-item {
     padding: 12px 14px;
+  }
+
+  /* The nav is already a panel here, so the account menu drops into the
+     stack rather than floating a second panel over the first. */
+  .account__menu {
+    position: static;
+    min-width: 0;
+    margin-top: 2px;
+    box-shadow: none;
+    border-color: var(--color-border-soft);
+  }
+
+  .account__item {
+    padding: 11px 12px;
   }
 
   .main {

@@ -14,6 +14,13 @@ def _split_env_list(name: str) -> list[str]:
     return [item.strip() for item in raw.split(",") if item.strip()]
 
 
+def _flag(name: str, default: bool) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _require_env(name: str) -> str:
     value = os.environ.get(name)
     if not value:
@@ -66,3 +73,32 @@ class Config:
     # call is what gives up first. When the proxy times out instead, the
     # inference service carries on generating a response nobody will read.
     INFERENCE_TIMEOUT = float(os.environ.get("INFERENCE_TIMEOUT", "90"))
+
+    # --- Accounts -------------------------------------------------------
+    # The session cookie. The site and the API are different hosts under one
+    # registrable domain (thesignalbridge.com and api.thesignalbridge.com),
+    # so the cookie is set on the parent domain and SameSite=Lax is enough -
+    # they are same-site even though they are cross-origin. Keeping the
+    # session in an HttpOnly cookie rather than a token in localStorage is
+    # the point: script on the page cannot read it.
+    SESSION_COOKIE_NAME = "bw_session"
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
+    # A Secure cookie is dropped by the browser over plain http, which is
+    # what local dev runs on - hence the switch, defaulting to the safe side.
+    SESSION_COOKIE_SECURE = _flag("SESSION_COOKIE_SECURE", True)
+    # Unset locally (the host is localhost); ".thesignalbridge.com" in prod.
+    SESSION_COOKIE_DOMAIN = os.environ.get("SESSION_COOKIE_DOMAIN") or None
+
+    # WebAuthn. The relying party is the registrable domain, so one passkey
+    # works on the site and against the API. The browser checks these, so a
+    # wrong value here fails every registration with a vague error - see
+    # docs/accounts.md.
+    WEBAUTHN_RP_ID = os.environ.get("WEBAUTHN_RP_ID", "localhost")
+    WEBAUTHN_RP_NAME = os.environ.get("WEBAUTHN_RP_NAME", "BetweenWords")
+    # Every origin the page may be served from. Checked against the origin
+    # the authenticator signed, so it cannot be inferred from the request.
+    WEBAUTHN_ORIGINS = _split_env_list("WEBAUTHN_ORIGINS") or [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ]

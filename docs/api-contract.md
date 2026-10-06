@@ -113,6 +113,143 @@ The AI model's classification output must be bounded to a fixed set of category 
 
 Implemented in `backend/app/services/ai_decoder.py` (`_CATEGORY_RULES`) and mirrored in `frontend/src/services/localPatterns.ts` (`CATEGORY_TRIGGERS`) for the offline fallback — keep both in step if this list changes again.
 
+## `POST /api/compose`
+
+**Draft — the frontend is built against this; the service does not exist yet.**
+
+The other direction from `/api/decode`. The sender pastes a message they
+have already written; the response says the same thing more explicitly,
+with a short account of what changed.
+
+The response shape is the training record from the data team's build guide
+(`meaning`, `rewrite`, `notes`), so the model's own output drops straight in
+without a translation layer. Keep these names.
+
+Request:
+
+```json
+{ "message": "string, required, non-empty, max 5000 characters" }
+```
+
+Response `200`:
+
+```json
+{
+  "stage": "compose",
+  "degraded": false,
+  "degraded_reason": [],
+  "rewrite": "Please send me the Q3 numbers before Friday's 2pm sync.",
+  "notes": [
+    "'Might be good' was a polite way of asking - this is required",
+    "The deadline was implied, so it's now stated"
+  ],
+  "meaning": {
+    "ask": "Send the Q3 numbers",
+    "deadline": "Before Friday's sync",
+    "urgency": "high",
+    "tone": "friendly",
+    "implied": "Required, not optional"
+  },
+  "signals": [{ "model": "politeness", "label": "high", "confidence": 0.65 }],
+  "checks": { "entities_kept": true, "nothing_added": true },
+  "model": "qwen3.5-4b-ft"
+}
+```
+
+`POST /api/compose/quick` runs the three classifiers only and returns
+`{ "stage": "analyse", "signals": [...] }` in milliseconds, so the page can
+paint before the rewrite lands.
+
+**No tone parameter, on purpose.** The rewrite keeps the register of the
+draft: the classifier signals tell the model what that register is, and the
+eval harness penalises a rewrite whose politeness band drops. `meaning.tone`
+is an observation about the message, never an instruction. A tone or
+formality selector would promise something the model is not trained to do -
+see [the data team's build guide](../TheSignalBridge%20—%20Data%20Team%20How-To%20Guide%20(Final%20Build).pdf).
+
+**Three states the frontend renders, so all three must be answerable:**
+
+1. **Rewritten.** `rewrite` is a string, `notes` has 2-3 entries.
+2. **Already clear.** `notes` is exactly `["Already clear, kept as written."]`
+   and the rewrite is near-identical to the source. The page says so rather
+   than presenting an unchanged message as a result.
+3. **No rewrite.** `rewrite` is `null` and `degraded` is `true` - the
+   grounding check found a dropped or invented fact, or the model could not
+   be reached. `degraded_reason` names the class of failure, never the
+   message body.
+
+**A rewrite that fails the grounding check must not be returned at all.**
+It reads as finished text and would be pasted into an email. Send `null` and
+let the page explain itself; the client drops any rewrite that arrives with
+`degraded: true` as a backstop.
+
+Response `400` / `413`: same shapes as `/api/decode`.
+
+## Accounts: `/api/account/*`
+
+Optional, and additive - every endpoint above behaves identically signed in
+or out. Authentication is a passkey (WebAuthn); there is no password and no
+email. How the flows fit together, and why, is in [accounts.md](accounts.md).
+
+Every call carries the session cookie, so the frontend sends
+`credentials: 'include'` and the API answers with
+`Access-Control-Allow-Credentials`.
+
+| endpoint | body | success | notes |
+| --- | --- | --- | --- |
+| `POST /register/options` | – | `200` WebAuthn creation options | mints a handle; writes no row yet |
+| `POST /register/verify` | the browser's attestation | `201 {handle, created_at}` | creates the account, signs in |
+| `POST /login/options` | – | `200` WebAuthn request options | no `allowCredentials` - passkeys are discoverable |
+| `POST /login/verify` | the browser's assertion | `200 {handle, created_at}` | signs in |
+| `POST /pairing` | – | `201 {code, handle, expires_at, expires_in_minutes}` | signed in only; retires any earlier code |
+| `POST /pairing/claim` | `{handle, code}` | `200` WebAuthn creation options | single use, ten-minute life |
+| `POST /pairing/verify` | the browser's attestation | `201 {handle, created_at}` | adds a passkey to the existing account, signs in |
+| `GET /me` | – | `200 {handle, created_at}` / `401` | 401 is the signed-out answer, not an error |
+| `POST /logout` | – | `200 {ok: true}` | |
+| `DELETE /api/account` | – | `200 {ok: true}` / `401` | removes the user, its passkeys and its codes |
+
+The account object is the whole of it:
+
+```json
+{ "handle": "7KQ2", "created_at": "2026-10-04T02:11:30+00:00" }
+```
+
+**Rule:** the handle is an identifier, never a credential. Four characters is
+about a million combinations, so no endpoint grants anything for knowing one
+- `/pairing/claim` takes a handle only to narrow which code it is checking.
+
+**Error shapes.** `400` for a failed or expired flow, `401` for "not signed
+in", `409` if a handle could not be allocated, `429` from the rate limiter.
+Verification failures all answer `{"error": "That passkey could not be
+verified."}` and pairing failures all answer `{"error": "That code is not
+valid. Ask for a new one."}` - wrong, expired, and unknown are deliberately
+indistinguishable, so neither endpoint can be used to discover which accounts
+exist.
+
+## Library cards: `/api/cards`
+
+Signed-in only; `401` otherwise. These are the cards an account carries
+between devices, stored as a pointer rather than as content: which curated
+pattern, when it was kept, when it was last opened.
+
+| endpoint | body | success |
+| --- | --- | --- |
+| `GET /api/cards` | – | `200 [{pattern_id, saved_at, last_opened_at}]` |
+| `PUT /api/cards/<pattern_id>` | `{saved_at?, last_opened_at?}` | `200` the stored row |
+| `DELETE /api/cards/<pattern_id>` | – | `200 {ok: true}` |
+
+`PUT` is an upsert and is meant to be replayed: a device signing in sends
+everything it has. Conflicts resolve by time - the **earliest** `saved_at`
+wins (that is when the reader actually kept it) and the **latest**
+`last_opened_at` wins. `DELETE` answers `200` whether or not a row was
+there; removing a card the server never had is the two sides agreeing.
+
+**Only library cards sync.** A card made from a decode carries an excerpt of
+the reader's own message, so it stays in the browser that made it. A second
+device therefore shows the library cards and not those - a deliberate limit,
+not a gap. The browser remains the source of truth either way: the Study
+page reads `localStorage`, and a failed sync never costs a saved card.
+
 ## Data retention
 
 No message text, extracted elements, or saved cards are ever persisted server-side or logged.
@@ -122,3 +259,9 @@ user's own device, so a decode survives a refresh and a card can point back at
 the message that produced it. The decode history is capped at 100 records.
 This is the only place message text is written to disk; nothing is uploaded,
 and Settings -> "clear" removes all of it.
+
+Accounts do not change that. A signed-in account holds a four-character
+handle, two timestamps, and the public half of each registered passkey -
+no message text, no saved cards, no email, no password hash. Saved cards
+stay in the browser whether or not anyone is signed in, which is also why
+deleting an account leaves them untouched.

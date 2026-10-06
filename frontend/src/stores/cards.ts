@@ -2,6 +2,9 @@ import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 import type { Pattern, SavedCard } from '@/types/pattern'
 import type { DecodeRecord } from '@/types/decode'
+import { fetchCards, pushCard, removeCard } from '@/services/cardSyncService'
+import { getPatterns } from '@/services/patternsService'
+import { useAccountStore } from '@/stores/account'
 
 const STORAGE_KEY = 'readtheroom.cards'
 
@@ -141,17 +144,118 @@ export const useCardsStore = defineStore('cards', () => {
       lastOpened: null,
     }
     cards.value.unshift(card)
+    void push(card)
     return card
   }
 
   function touch(id: string) {
     const card = cards.value.find((c) => c.id === id)
-    if (card) card.lastOpened = new Date().toISOString()
+    if (!card) return
+    card.lastOpened = new Date().toISOString()
+    void push(card)
+  }
+
+  function remove(id: string) {
+    const card = cards.value.find((c) => c.id === id)
+    cards.value = cards.value.filter((c) => c.id !== id)
+    // Only library cards were ever on the server, so only they need
+    // removing from it.
+    if (card && syncable(card)) void removeCard(card.patternId as string)
   }
 
   function clear() {
+    const synced = cards.value.filter(syncable)
     cards.value = []
+    for (const card of synced) void removeCard(card.patternId as string)
   }
 
-  return { cards, sortedByNeglect, isSaved, isPatternSaved, save, savePattern, touch, clear }
+  // --- Syncing ----------------------------------------------------------
+  //
+  // A card syncs only if it came from the library: `decodeId === null` and
+  // it names a pattern. A card made from a decode carries an excerpt of the
+  // reader's own message, and that never leaves the browser - which is also
+  // why a second device shows library cards and not those.
+
+  function syncable(card: SavedCard): boolean {
+    return card.decodeId === null && !!card.patternId
+  }
+
+  function push(card: SavedCard): Promise<void> {
+    if (!useAccountStore().signedIn || !syncable(card)) return Promise.resolve()
+    return pushCard(card.patternId as string, {
+      saved_at: card.savedAt,
+      last_opened_at: card.lastOpened,
+    })
+  }
+
+  /**
+   * Called when an account signs in, on whichever device.
+   *
+   * Both directions, because either side can be the one with news: a card
+   * kept here while signed out has to reach the server, and a card kept on
+   * another device has to be rebuilt here. Rebuilt, not downloaded - the
+   * server stores a pattern id, and the pattern's text comes from
+   * /api/patterns like any other library row.
+   */
+  async function syncWithAccount(): Promise<void> {
+    if (!useAccountStore().signedIn) return
+
+    const remote = await fetchCards()
+    const remoteById = new Map(remote.map((row) => [row.pattern_id, row]))
+
+    // Anything kept here that the server has not seen.
+    for (const card of cards.value.filter(syncable)) {
+      const row = remoteById.get(card.patternId as string)
+      if (!row) {
+        await push(card)
+        continue
+      }
+      // Both sides know the card: keep whichever open is later.
+      if (row.last_opened_at && (!card.lastOpened || row.last_opened_at > card.lastOpened)) {
+        card.lastOpened = row.last_opened_at
+      } else if (card.lastOpened && card.lastOpened !== row.last_opened_at) {
+        await push(card)
+      }
+    }
+
+    // Anything the server knows that this device does not.
+    const missing = remote.filter(
+      (row) => !cards.value.some((c) => c.patternId === row.pattern_id),
+    )
+    if (!missing.length) return
+
+    const patterns = await getPatterns()
+    for (const row of missing) {
+      const pattern = patterns.find((p) => p.id === row.pattern_id)
+      // A pattern that no longer exists in the library leaves its row on
+      // the server rather than becoming a card with no content.
+      if (!pattern) continue
+      cards.value.push({
+        id: newId(),
+        decodeId: null,
+        patternId: pattern.id,
+        name: pattern.name,
+        category: pattern.category,
+        implies: pattern.implies,
+        why_misread: pattern.why_misread,
+        excerpt: '',
+        unsaid: [],
+        savedAt: row.saved_at ?? new Date().toISOString(),
+        lastOpened: row.last_opened_at,
+      })
+    }
+  }
+
+  return {
+    cards,
+    sortedByNeglect,
+    isSaved,
+    isPatternSaved,
+    save,
+    savePattern,
+    touch,
+    remove,
+    clear,
+    syncWithAccount,
+  }
 })

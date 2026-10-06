@@ -49,9 +49,17 @@ const router = createRouter({
       component: () => import('@/views/PrivacyView.vue'),
     },
     {
+      // One page for both sides of an account: signing in or creating one
+      // when signed out, and the ID, pairing codes and deletion once signed
+      // in. Named for what it is rather than for one of its two states.
+      path: '/account',
+      name: 'account',
+      component: () => import('@/views/AccountView.vue')
+    },
+    {
+      // The header said "Login" for months and people bookmark things.
       path: '/login',
-      name: 'login',
-      component: () => import('@/views/LoginView.vue')
+      redirect: '/account',
     },
   ],
 })

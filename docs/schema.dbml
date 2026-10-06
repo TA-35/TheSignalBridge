@@ -1,0 +1,74 @@
+// Paste into https://dbdiagram.io to render the ERD.
+//
+// Hand-written rather than imported: dbdiagram cannot read `pg_dump`
+// output (SET, OWNER TO, CREATE SEQUENCE and nextval defaults all trip it).
+// Verified against docs/schema.sql, which IS the dump - if the two ever
+// disagree, the dump is right.
+//
+// alembic_version is left out on purpose: it is migration bookkeeping, not
+// part of the data model.
+
+Table users {
+  id varchar(36) [pk, note: 'UUID. Everything keys on this, never on the handle']
+  handle varchar(8) [unique, not null, note: '4 characters, shown to the user. Identifies, never authenticates']
+  created_at timestamptz [not null]
+  last_seen_at timestamptz [not null]
+
+  Note: 'No email, no name, no password hash.'
+}
+
+Table credentials {
+  id serial [pk]
+  user_id varchar(36) [not null, ref: > users.id]
+  credential_id bytea [unique, not null, note: "the authenticator's own id for this key"]
+  public_key bytea [not null, note: 'the private half never leaves the device']
+  sign_count integer [not null, note: 'authenticator counter; going backwards means a cloned key']
+  transports varchar(120)
+  created_at timestamptz [not null]
+  last_used_at timestamptz
+
+  Note: 'One passkey. A reader may register several - laptop, phone, security key.'
+}
+
+Table pairing_codes {
+  id serial [pk]
+  user_id varchar(36) [not null, ref: > users.id]
+  code_hash varchar(64) [unique, not null, note: 'SHA-256. The plaintext is never stored']
+  created_at timestamptz [not null]
+  expires_at timestamptz [not null, note: 'ten minutes']
+  consumed_at timestamptz [note: 'set on redemption; a code works once']
+
+  Note: 'Short-lived permission to register a passkey on a second device. Not a password: generated on demand, single use, never chosen by the user.'
+}
+
+Table user_cards {
+  id serial [pk]
+  user_id varchar(36) [not null, ref: > users.id]
+  pattern_id varchar(40) [not null, note: 'soft reference to patterns.id - deliberately not a foreign key']
+  saved_at timestamptz [not null]
+  last_opened_at timestamptz
+
+  indexes {
+    (user_id, pattern_id) [unique]
+  }
+
+  Note: 'Library cards that follow an account between devices. A pointer and two timestamps - no message text. Cards saved from a decode are not here: they carry the reader\'s own words and stay in the browser.'
+}
+
+Table patterns {
+  id serial [pk]
+  name varchar(120) [not null, note: 'the phrase itself']
+  category varchar(60) [not null, note: 'bounded to the category enum in docs/api-contract.md']
+  implies text [not null]
+  why_misread text [not null]
+
+  Note: 'Curated content the team writes. The same rows for everybody; nothing personal in here.'
+}
+
+// All three foreign keys above are ON DELETE CASCADE: deleting an account
+// takes its passkeys, its pairing codes and its cards with it.
+//
+// user_cards.pattern_id has no constraint on purpose. The library is
+// reseeded and renumbered between iterations, and a hard reference would
+// make a reseed either fail or silently delete people's saved cards. The
+// sync code skips a row whose pattern no longer exists.

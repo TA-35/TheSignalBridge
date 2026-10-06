@@ -23,7 +23,13 @@ def create_app(config_class=Config):
     # See app/limiter.py for why the rightmost entry is the safe one.
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
-    CORS(app, origins=app.config.get("CORS_ORIGINS", []))
+    # supports_credentials: the session cookie only travels on cross-origin
+    # requests if both sides opt in - the browser sends it with
+    # `credentials: "include"`, and the server has to answer with
+    # Access-Control-Allow-Credentials. Without this the account endpoints
+    # would set a cookie the next request never sends back, which looks
+    # exactly like "signing in silently does nothing".
+    CORS(app, origins=app.config.get("CORS_ORIGINS", []), supports_credentials=True)
     register_rate_limiting(app)
 
     if app.config.get("SQLALCHEMY_DATABASE_URI") is not None:

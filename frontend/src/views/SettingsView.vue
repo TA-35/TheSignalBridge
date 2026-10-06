@@ -101,7 +101,7 @@ function trapTab(event: KeyboardEvent) {
   <div class="settings">
     <div class="header">
       <h1>Comfort settings</h1>
-      <p>Set the room to your liking. Changes apply straight away.</p>
+      <p>Set the website style to your liking. Changes apply straight away.</p>
     </div>
 
     <div class="panel">
@@ -241,17 +241,27 @@ function trapTab(event: KeyboardEvent) {
   gap: 22px;
 }
 
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 60ch;
+}
+
 .header h1 {
   font-family: var(--font-serif);
-  font-size: 26px;
+  font-size: clamp(32px, 4.4vw, 46px);
   font-weight: 500;
-  letter-spacing: -0.015em;
-  margin: 0 0 6px;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  margin: 0;
+  text-wrap: balance;
 }
 
 .header p {
   margin: 0;
-  font-size: 14px;
+  font-size: 15px;
+  line-height: 1.6;
   color: var(--color-text-muted);
 }
 
