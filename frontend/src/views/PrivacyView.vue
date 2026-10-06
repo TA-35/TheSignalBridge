@@ -19,6 +19,11 @@
  *                           analytics or advertising scripts on the site.
  *   "clear it yourself"   - SettingsView calls decodesStore.clear() and
  *                           cardsStore.clear().
+ *   "no audio reaches us" - Dictate (components/VoiceInput.vue,
+ *                           composables/useSpeechInput.ts) uses the browser's
+ *                           Web Speech API; only the resulting text goes into
+ *                           the message box, and nothing is sent until the
+ *                           reader presses Decode or Compose.
  *
  * If any of those change, this page has to change with them.
  */
@@ -29,7 +34,7 @@ import { RouterLink } from 'vue-router'
 // one thing on this page that would be actively misleading.
 const CONTACT = ''
 
-const LAST_UPDATED = '16 September 2026'
+const LAST_UPDATED = '6 October 2026'
 </script>
 
 <template>
@@ -67,6 +72,24 @@ const LAST_UPDATED = '16 September 2026'
       <p class="policy__callout">
         If a message is confidential enough that sending it to a third-party AI
         provider would be a problem, do not paste it here.
+      </p>
+    </section>
+
+    <section>
+      <h2>Speaking instead of typing</h2>
+      <p>
+        The <strong>Dictate</strong> button under the message box uses your
+        browser’s built-in speech recognition. Your browser turns what you say
+        into text in the box, and you can read and correct it there. We never
+        receive any audio. The text is only sent to us when you press Decode or
+        Compose, exactly as if you had typed it.
+      </p>
+      <p>
+        That speech recognition is run by your browser’s maker, not by us, and
+        it may send the audio to their servers to recognise it. In Chrome, for
+        example, it is processed by Google’s speech service. Their privacy
+        terms apply to that audio. If you would rather nothing you say leaves
+        your device, type instead.
       </p>
     </section>
 

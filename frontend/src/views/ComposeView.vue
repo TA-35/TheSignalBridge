@@ -16,6 +16,7 @@ import {
   MessageTooLongError,
 } from '@/services/composeService'
 import { isAlreadyClear, type ComposeQuick, type ComposeResult } from '@/types/compose'
+import VoiceInput from '@/components/VoiceInput.vue'
 
 const SAMPLE =
   "Hi,\n\nWhen you get a chance, could you take a look at the Q3 deck and tighten up the numbers section? Would be great to have it before the leadership sync.\n\nThanks!"
@@ -177,6 +178,8 @@ const copyRewrite = () => copyText(rewriteText.value)
             :aria-invalid="!!state.error"
             :aria-describedby="state.error ? 'compose-error' : undefined"
           />
+
+          <VoiceInput v-model="state.message" :max-length="MAX_MESSAGE_LENGTH" />
 
           <div v-if="state.error" id="compose-error" class="error-banner" role="alert">
             <span class="error-dot" />
