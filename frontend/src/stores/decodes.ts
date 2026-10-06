@@ -1,6 +1,6 @@
 import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
-import type { DecodeRecord, DecodeResult, ElementKey } from '@/types/decode'
+import type { DecodeRecord, DecodeResult } from '@/types/decode'
 
 const STORAGE_KEY = 'readtheroom.decodes'
 

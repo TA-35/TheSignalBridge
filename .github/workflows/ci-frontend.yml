@@ -3,8 +3,8 @@ name: CI - frontend
 # Checks only, on every PR and push to main. Deploying stays a manual
 # workflow_dispatch (frontend-deploy.yml) - nothing here touches AWS.
 #
-# oxlint, prettier --check and npm audit are not here yet: each is red on
-# main today. They join once the baseline is fixed (see .github/CLAUDE.md).
+# prettier --check is not here yet: 22 files are unformatted on main. It
+# joins once they are formatted (see .github/CLAUDE.md).
 
 on:
   pull_request:
@@ -49,8 +49,18 @@ jobs:
 
       # Not `npm run lint`: that script runs with --fix, which would rewrite
       # the checkout and pass instead of failing.
+      - name: Lint (oxlint)
+        run: npx oxlint --deny-warnings .
+
       - name: Lint (eslint)
         run: npx eslint . --max-warnings 0
 
       - name: Build
         run: npm run build-only
+
+      # Runtime dependencies only - they are what ships in the bundle. The
+      # dev tree has a high advisory in braces (via @vue/eslint-config-
+      # typescript) with no fixed release; npm's only offer is a breaking
+      # downgrade. Dependabot tracks it instead.
+      - name: Audit runtime dependencies
+        run: npm audit --omit=dev --audit-level=high
