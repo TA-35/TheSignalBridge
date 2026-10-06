@@ -1,0 +1,7 @@
+# Training dependencies for train_qwen35.py - GPU box only.
+#
+# Unsloth pulls in torch, transformers v5 (required for Qwen3.5), trl, peft
+# and datasets at versions it has tested together, so they are not pinned
+# separately here. The GGUF export builds llama.cpp on first use, which
+# needs build-essential, cmake and libcurl4-openssl-dev from apt.
+unsloth
