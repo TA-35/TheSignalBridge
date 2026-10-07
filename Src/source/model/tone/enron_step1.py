@@ -307,8 +307,12 @@ PLACE_AFTER = re.compile(
     r"(?:'s)?\s+(?:Bay|Street|St\.?|Center|Centre|Park|Island|Point|Building|Tower|Plaza|Road|Rd\.?"
     r"|Avenue|Ave\.?|Hall|Field|Hotel|Club|Lake|River|Valley|Heights|Square|Station|Plant|Unit)\b")
 PHONE = re.compile(
-    r"(?<![\w.])(?:\+?1[\s.-]?)?(?:\(\d{3}\)\s?|\d{3}[\s./-])\d{3}[\s.-]\d{4}"
-    r"(?:\s*(?:x|ext\.?)\s*\d{1,5})?(?![\w])|(?<![\w.$])\d{10}(?![\w])")
+    # optional +1, area code as (713) / 713) / 713, then 646-8531 style, optional extension.
+    # no word boundary needed before "(", so "Number(713) 646-8531" and "503) 464-7404" match too
+    r"(?<!\d)(?:\+?1[\s.-]?)?(?:\(?\d{3}\)|\d{3})[\s.-]*\d{3}[\s.-]\d{4}"
+    r"(?:\s*(?:x|ext\.?)\s*\d{1,5})?(?!\d)",
+    re.I,
+)
 
 
 def step_pii(a):
@@ -519,6 +523,31 @@ def find_leaks(texts, known, ids=None, originals=None):
         if why:
             hits.append(((ids[i] if ids else i), why[:3]))
     return hits
+
+
+def step_fixphones(a):
+    """Swap any phone numbers left in the finished gold, source and reserve files
+    for consistent fakes, without re-picking messages (keeps the hand-checked gold)."""
+    import hashlib, random as _r
+    def fake(real):
+        digits = re.sub(r"\D", "", real)
+        rng = _r.Random(hashlib.sha1(digits.encode()).hexdigest())
+        return re.sub(r"\d", lambda m: str(rng.randint(0, 9)), real)
+    for path in ["data/gold/enron_gold.jsonl", "data/source/enron_source.jsonl",
+                 "data/step1/gold_reserve.jsonl"]:
+        f = Path(path)
+        if not f.exists():
+            print(f"{path}: missing, skipped"); continue
+        rows = [json.loads(l) for l in f.read_text().splitlines() if l.strip()]
+        n = 0
+        for r in rows:
+            new = PHONE.sub(lambda m: fake(m.group(0)), r["source"])
+            if new != r["source"]:
+                n += 1
+                print(f"  {r['id']}: {PHONE.findall(r['source'])}")
+                r["source"] = new
+        f.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows))
+        print(f"{path}: {n} messages fixed")
 
 
 def step_piicheck(a):
@@ -746,10 +775,10 @@ def step_swapgold(a):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("step", choices=["clean", "pii", "piicheck", "dedupe", "signals", "split", "swapgold"])
+    ap.add_argument("step", choices=["clean", "pii", "piicheck", "dedupe", "signals", "split", "swapgold", "fixphones"])
     ap.add_argument("--pool", type=int, default=10000,
                     help="how many cleaned emails go through PII + adapters")
     ap.add_argument("--drop", default="", help="swapgold: comma-separated gold ids to replace")
     a = ap.parse_args()
     {"clean": step_clean, "pii": step_pii, "piicheck": step_piicheck, "dedupe": step_dedupe,
-     "signals": step_signals, "split": step_split, "swapgold": step_swapgold}[a.step](a)
+     "signals": step_signals, "split": step_split, "swapgold": step_swapgold, "fixphones": step_fixphones}[a.step](a)
