@@ -1,8 +1,8 @@
-# Library Dataset Card: Pattern Library (25 Cards)
+# Library Dataset Card: Pattern Library (60 Cards)
 
 ## 1. Overview
 
-This dataset is 25 curated pattern-library cards, matching the backend `Pattern` schema
+This dataset is 60 curated pattern-library cards, matching the backend `Pattern` schema
 (`id`, `name`, `category`, `implies`, `why_misread`), built for ReadTheRoom's Pattern
 library / flashcard feature.
 
@@ -13,14 +13,14 @@ card before export.
 
 ## 2. Provenance
 
-- **5 cards** are real-corpus-derived, sourced from `stanford_politeness_features.csv`
+- **10 cards** are real-corpus-derived, sourced from `stanford_politeness_features.csv`
   (Stanford Politeness Corpus, see `DATA_CARD.md`). Each retains its original `Id` and
   `Normalized Score` in the working notebook (`Library_Dataset.ipynb`) as a traceability record,
-  even though those fields aren't part of the exported JSON schema. All 5 belong to the
+  even though those fields aren't part of the exported JSON schema. All 10 belong to the
   `Softened request` category.
-- **20 cards** are hand-designed by the team, not derived from any external dataset. They cover
-  the remaining 5 categories at 4 cards each.
-- **Why 5:20, not an even split:** the Stanford Politeness Corpus only annotates politeness /
+- **50 cards** are hand-designed by the team, not derived from any external dataset. They cover
+  the remaining 5 categories at 10 cards each.
+- **Why 10:50:** the Stanford Politeness Corpus only annotates politeness /
   indirectness. It has no deadline, ownership, priority, or scope annotations, so it can only
   support the `Softened request` category. This is a domain limitation of the source corpus, not
   a sampling choice.
@@ -69,7 +69,7 @@ Candidates were pulled from `stanford_politeness_features.csv` with a fixed, rep
 filter: `hedge_wordlist` OR `please` OR `counterfactual_modal` is `True` (at least one softening
 marker), AND `is_high_disagreement` is `False` AND `is_too_short` is `False` (excluding
 low-quality samples flagged in the source dataset). Candidates were then sorted by descending
-`Normalized Score` and the top 30 reviewed manually. This is a rule-based filter with a fixed,
+`Normalized Score` and reviewed manually. This is a rule-based filter with a fixed,
 inspectable definition — not a model classifying requests into the category.
 
 ## 6. Writing Style Specification
@@ -100,8 +100,8 @@ correcting.
   preserved as-is
 
 **Important attribution note:** these tone/style rules are a team design decision made
-collaboratively during Stage 3, calibrated through 3 example cards before full-scale drafting
-across the remaining 22 — they are not derived from any of the theoretical sources in Section 3.
+collaboratively during Stage 3, calibrated through 3 example cards before full-scale drafting.
+They are not derived from any of the theoretical sources in Section 3.
 The category framework is theory-grounded and citable; the tone is a product/UX choice the team
 made and owns.
 
@@ -109,7 +109,7 @@ made and owns.
 
 | Field | Type | Description |
 |---|---|---|
-| `id` | integer | Card's unique identifier, 1-25. |
+| `id` | integer | Card's unique identifier, 1-60. Existing IDs 1-25 were retained during expansion. |
 | `name` | string | The full message text being interpreted — the literal sentence a reader might receive. |
 | `category` | string | One of exactly 6 fixed values: `Softened request`, `Vague deadline`, `Unassigned owner`, `Unclear priority`, `Undefined scope`, `Feedback framing`. |
 | `implies` | string | The message's likely intended meaning, in low-pressure guiding tone. |
@@ -117,7 +117,7 @@ made and owns.
 
 ## 8. Known Limitations
 
-- **25 cards is a curated set, not a statistically representative sample.** It should not be used
+- **60 cards is a curated set, not a statistically representative sample.** It should not be used
   for statistical inference about how often any pattern occurs in real communication.
 - **Berry's ambiguity theory was developed for software requirements documents**, not
   interpersonal workplace messages. Applying it here is a cross-domain analogy, resting on the
@@ -126,14 +126,16 @@ made and owns.
 - **The tone rules in Section 6 are a team-calibrated product decision**, not tested against real
   users. They represent the team's current understanding of "low-pressure, guiding," not a
   validated effective tone.
-- **The 4 `Unassigned owner` cards have some semantic overlap with vagueness.** Phrasing like
+- **Some `Unassigned owner` cards have semantic overlap with vagueness.** Phrasing like
   "and it may be you" sits slightly between pure incompleteness and vagueness. This was reviewed
   and accepted as usable during Stage 3 human review, but these aren't textbook-clean examples of
   the theoretical distinction in Section 3.
 
 ## 9. Version Info
 
-- **Generated:** 2026-09-01
+- **Original version:** 2026-09-01 (25 cards)
+- **Expanded:** 2026-10-07 (60 cards)
 - **Notebook:** `Library_Dataset.ipynb`
 - **Output files:** `library_dataset.json`, `library_dataset_preview.md`
-- **Total cards:** 25
+- **Total cards:** 60
+- **Expansion rule:** Retain IDs 1-25 unchanged; append IDs 26-60.
