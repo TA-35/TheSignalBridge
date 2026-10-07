@@ -153,9 +153,17 @@ def register_verify():
             expected_rp_id=_rp_id(),
             expected_origin=_origins(),
         )
-    except (InvalidRegistrationResponse, ValueError, KeyError):
-        # Never echo the library's message: it quotes the response it was
-        # given, which is the reader's own device data.
+    except (InvalidRegistrationResponse, ValueError, KeyError) as exc:
+        # Never echo the library's message to the client: it quotes the
+        # response it was given, which is the reader's own device data. The
+        # server log is a different audience - without the reason here, a
+        # misconfigured RP id or origin presents as "the button does
+        # nothing" and can only be diagnosed by guesswork. Logged with the
+        # expectations, not the response.
+        current_app.logger.warning(
+            "registration verify failed: %s: %s (rp_id=%s, origins=%s)",
+            type(exc).__name__, exc, _rp_id(), _origins(),
+        )
         return jsonify({"error": "That passkey could not be verified."}), 400
 
     # Re-roll the handle rather than the whole registration if the unique
@@ -240,7 +248,12 @@ def login_verify():
             credential_public_key=credential.public_key,
             credential_current_sign_count=credential.sign_count,
         )
-    except (InvalidAuthenticationResponse, ValueError, KeyError):
+    except (InvalidAuthenticationResponse, ValueError, KeyError) as exc:
+        # Same reasoning as the registration handler above.
+        current_app.logger.warning(
+            "authentication verify failed: %s: %s (rp_id=%s, origins=%s)",
+            type(exc).__name__, exc, _rp_id(), _origins(),
+        )
         return jsonify({"error": "That passkey could not be verified."}), 400
 
     credential.sign_count = verified.new_sign_count
