@@ -1,0 +1,8 @@
+# working files from stanford_step1.py - they hold the real handles and names
+# from before the scrub, so they are never committed
+1_clean.csv
+2_pii.csv
+2_pii_log.csv
+3_dedupe.csv
+4_signals.jsonl
+handle_rows_to_eyeball.csv

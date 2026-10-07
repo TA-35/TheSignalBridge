@@ -1,0 +1,56 @@
+{
+  "corpus": 10956,
+  "split_seed": 5120,
+  "splits_used": [
+    "validation",
+    "test"
+  ],
+  "after_split": 3290,
+  "after_placeholder_drop": 3266,
+  "after_length": 3236,
+  "after_exact_dedupe": 3211,
+  "links_normalised": 529,
+  "flag_rule_copied_from": "Src/source/model/tone/enron_step1.py @ 9a1c9c5 (feature/enron-final-data, PR #13)",
+  "pii_replaced": {
+    "PERSON": 131,
+    "LEADING_NAME": 37,
+    "USER": 7,
+    "GREETING": 37,
+    "REPEAT": 5,
+    "HANDLE": 194
+  },
+  "pii_dropped": {
+    "at_or_user_left": 4,
+    "code_at_sign": 4,
+    "name_still_readable": 1
+  },
+  "after_pii": 3202,
+  "after_near_dedupe": 3202,
+  "scored": 3202,
+  "after_non_english_drop": 3200,
+  "after_failed_signal_drop": 3200,
+  "pool_flagged": 2463,
+  "pool_clear": 737,
+  "gold": 60,
+  "gold_flagged": 45,
+  "gold_clear": 15,
+  "gold_reserve": 40,
+  "near_dupes_of_gold_removed": 0,
+  "source": 1000,
+  "source_flagged": 850,
+  "source_clear": 150,
+  "site_mix": {
+    "gold": {
+      "wikipedia": 30,
+      "stack-exchange": 30
+    },
+    "gold_reserve": {
+      "stack-exchange": 23,
+      "wikipedia": 17
+    },
+    "source": {
+      "stack-exchange": 609,
+      "wikipedia": 391
+    }
+  }
+}
