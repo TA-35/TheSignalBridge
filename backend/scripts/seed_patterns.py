@@ -1,4 +1,4 @@
-"""Seed the `patterns` table from data/library_dataset/library_dataset.json.
+"""Seed the `patterns` table from data/Library_dataset/library_dataset.json.
 
 Run from backend/ with the venv active:
 
