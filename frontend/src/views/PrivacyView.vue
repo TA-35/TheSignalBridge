@@ -15,8 +15,18 @@
  *                           disclosure the page exists for. It is stated
  *                           plainly and early rather than buried, because it
  *                           is the part a reader would not guess.
- *   "no cookies"          - nothing sets document.cookie; there are no
- *                           analytics or advertising scripts on the site.
+ *   "one cookie"          - the Flask session cookie, set only by the account
+ *                           routes (backend/app/routes/account.py) and only
+ *                           once someone registers or signs in. HttpOnly,
+ *                           SameSite=Lax, Secure in production - see
+ *                           backend/app/config.py. No analytics or
+ *                           advertising scripts exist on the site, so there
+ *                           is nothing to ask consent for: a session cookie
+ *                           for a feature the reader asked for is exempt.
+ *   "an account holds"    - users, credentials, user_cards in
+ *                           backend/app/models/. A handle, timestamps, public
+ *                           keys and pattern ids. No email, no name, no
+ *                           message text - see docs/erd.md.
  *   "clear it yourself"   - SettingsView calls decodesStore.clear() and
  *                           cardsStore.clear().
  *   "no audio reaches us" - Dictate (components/VoiceInput.vue,
@@ -34,7 +44,7 @@ import { RouterLink } from 'vue-router'
 // one thing on this page that would be actively misleading.
 const CONTACT = ''
 
-const LAST_UPDATED = '6 October 2026'
+const LAST_UPDATED = '7 October 2026'
 </script>
 
 <template>
@@ -98,9 +108,11 @@ const LAST_UPDATED = '6 October 2026'
       <ul>
         <li>We do not write your messages to any database.</li>
         <li>We do not log the text of your messages.</li>
-        <li>We do not use cookies.</li>
+        <li>We do not use tracking cookies. The only cookie we set is the one
+          that keeps you signed in, and only if you create an account.</li>
         <li>We do not run analytics, tracking or advertising of any kind.</li>
-        <li>We do not have user accounts, so nothing is tied to your identity.</li>
+        <li>We do not ask for your name or your email, and an account is never
+          required to use anything here.</li>
         <li>We do not sell or share anything with anyone beyond what is described above.</li>
       </ul>
     </section>
@@ -110,14 +122,43 @@ const LAST_UPDATED = '6 October 2026'
       <p>
         Your decode history, your study cards and your settings are saved in
         your own browser, using its local storage. They stay on the device you
-        are using. They are not uploaded to us, they are not synced between your
-        devices, and we cannot see them.
+        are using, they are not uploaded to us, and we cannot see them. The one
+        exception is for signed-in accounts, and it carries no text of yours:
+        see <a href="#accounts">If you create an account</a> below.
       </p>
       <p>
         Because decode history includes the messages you pasted, clearing it
         clears them. You can do that at any time from
         <RouterLink to="/settings">Settings</RouterLink>. Clearing your browser
         data for this site has the same effect.
+      </p>
+    </section>
+
+    <section id="accounts">
+      <h2>If you create an account</h2>
+      <p>
+        An account is optional. Everything on this site works without one, and
+        nothing is kept on our servers until you choose to make one.
+      </p>
+      <p>
+        There is no password and no email address. Your device holds a passkey
+        and we keep only its public half, which cannot be used to sign in as
+        you. Alongside it we store a four-character ID, the dates your account
+        was made and last used, and — so your library cards can follow you to
+        another device — which patterns you have kept and when you last opened
+        them. That is the whole of it.
+      </p>
+      <p>
+        Your messages are not part of an account. Cards you save from a message
+        you decoded stay in that browser, because they quote your own words.
+        That is why they do not appear when you sign in somewhere else.
+      </p>
+      <p>
+        Signing in sets one cookie, which holds nothing but a session
+        identifier. It cannot be read by scripts on the page, it is not used to
+        track you, and signing out removes it. Deleting your account removes
+        your ID, your passkeys and your saved pattern list for good; you can do
+        that from the <RouterLink to="/account">account page</RouterLink>.
       </p>
     </section>
 

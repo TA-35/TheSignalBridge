@@ -4,7 +4,6 @@ import { useRouter } from 'vue-router'
 import {
   BookOpen,
   ChevronDown,
-  ChevronLeft,
   ChevronRight,
   Layers,
   Library,
@@ -13,6 +12,7 @@ import {
   SlidersHorizontal,
   Trash2,
 } from '@lucide/vue'
+import PageNav from '@/components/PageNav.vue'
 import { useCardsStore } from '@/stores/cards'
 import type { SavedCard } from '@/types/pattern'
 import { describeOpened, savedBucket } from '@/utils/relativeTime'
@@ -373,34 +373,13 @@ function confirmDelete(id: string) {
           </div>
         </section>
 
-        <div v-if="sorted.length" class="pager">
-          <span class="pager__range">{{ rangeLabel }}</span>
-          <div v-if="pageCount > 1" class="pager__nav">
-            <button type="button" class="icon-btn" :disabled="page === 1" aria-label="Previous page" @click="page--">
-              <ChevronLeft :size="16" :stroke-width="2" aria-hidden="true" />
-            </button>
-            <button
-              v-for="n in pageCount"
-              :key="n"
-              type="button"
-              class="pager__page"
-              :class="{ 'pager__page--on': n === page }"
-              :aria-current="n === page ? 'page' : undefined"
-              @click="page = n"
-            >
-              {{ n }}
-            </button>
-            <button
-              type="button"
-              class="icon-btn"
-              :disabled="page === pageCount"
-              aria-label="Next page"
-              @click="page++"
-            >
-              <ChevronRight :size="16" :stroke-width="2" aria-hidden="true" />
-            </button>
-          </div>
-        </div>
+        <PageNav
+          v-if="sorted.length"
+          v-model:page="page"
+          class="pager"
+          :page-count="pageCount"
+          :label="rangeLabel"
+        />
       </div>
     </div>
   </div>
@@ -528,9 +507,6 @@ function confirmDelete(id: string) {
    length, and letting it stretch on a wide screen only moves the cards away
    from the filters that drive them. */
 .body {
-  /* The rail's "Source" label sits above its first button; the main column
-     pays the same height back as padding so the two columns' first controls
-     line up. One number, used on both sides. */
   --rail-head: 14px;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -908,43 +884,7 @@ function confirmDelete(id: string) {
 }
 
 .pager {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding-top: 14px;
-  border-top: 1px solid var(--color-border-soft);
-}
-
-.pager__range {
-  font-size: 13px;
-  color: var(--color-text-muted);
-}
-
-.pager__nav {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.pager__page {
-  min-width: 34px;
-  padding: 7px 10px;
-  border: 1px solid var(--color-border-soft);
-  border-radius: 8px;
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
-  cursor: pointer;
-}
-
-.pager__page--on {
-  border-color: var(--color-primary-border);
-  background: var(--color-primary);
-  color: var(--color-frame);
-  font-weight: 600;
+  margin-top: 4px;
 }
 
 /* Phone. The rail's six full-width rows and their two headings filled the

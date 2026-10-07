@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   CalendarClock,
@@ -13,6 +13,7 @@ import {
   X,
   type LucideIcon,
 } from '@lucide/vue'
+import PageNav from '@/components/PageNav.vue'
 import { getPatterns } from '@/services/patternsService'
 import { useCardsStore } from '@/stores/cards'
 import type { Pattern } from '@/types/pattern'
@@ -78,6 +79,35 @@ const visible = computed(() => {
   // item while the pane said "Pick a category to start" - the nav claiming a
   // choice had been made and the content denying it.
   return activeCategory.value ? patterns.value.filter((p) => p.category === activeCategory.value) : patterns.value
+})
+
+// Six a page. The library is 60 cards now, and Overview used to put all of
+// them on one scroll - which buries the sidebar's categories under a wall of
+// phrases and makes "where was that one" a scrolling problem.
+const PAGE_SIZE = 6
+const page = ref(1)
+
+const pageCount = computed(() => Math.max(1, Math.ceil(visible.value.length / PAGE_SIZE)))
+const pageItems = computed(() => visible.value.slice((page.value - 1) * PAGE_SIZE, page.value * PAGE_SIZE))
+
+const rangeLabel = computed(() => {
+  const total = visible.value.length
+  if (!total) return ''
+  const first = (page.value - 1) * PAGE_SIZE + 1
+  const last = Math.min(page.value * PAGE_SIZE, total)
+  return `Showing ${first}–${last} of ${total} phrase${total === 1 ? '' : 's'}`
+})
+
+// Switching category or typing a search starts a new list, so page 1 is the
+// only honest place to be. Watching `visible` rather than the two inputs
+// catches the patterns arriving from the API too.
+watch(visible, () => {
+  page.value = 1
+})
+
+// A category with fewer cards can leave the reader on a page past the end.
+watch(pageCount, (count) => {
+  if (page.value > count) page.value = count
 })
 
 function addToCards(pattern: Pattern) {
@@ -168,7 +198,7 @@ function explore(pattern: Pattern) {
         <p v-else-if="isSearching && !visible.length" class="status">No phrases match "{{ searchQuery }}".</p>
 
         <div v-else class="grid">
-          <div v-for="item in visible" :key="item.id" class="item" @click="explore(item)">
+          <div v-for="item in pageItems" :key="item.id" class="item" @click="explore(item)">
             <!-- Inside a single category every card carried the same tag,
                  which told the reader nothing they had not just clicked. It
                  earns its place in Overview and in search results, where the
@@ -189,6 +219,14 @@ function explore(pattern: Pattern) {
             </div>
           </div>
         </div>
+
+        <PageNav
+          v-if="visible.length"
+          v-model:page="page"
+          class="pager"
+          :page-count="pageCount"
+          :label="rangeLabel"
+        />
       </div>
     </div>
   </div>
@@ -444,6 +482,10 @@ function explore(pattern: Pattern) {
 
 .explore:hover {
   border-color: var(--color-primary-border);
+}
+
+.pager {
+  margin-top: 18px;
 }
 
 @media (max-width: 720px) {
