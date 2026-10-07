@@ -179,3 +179,15 @@ one long back-and-forth doesn't dominate the sample.
   - `data/staging/message_enron.csv`, `email_meta_enron.csv` — 455,514 rows each
   - `data/staging/annotation_sample_v1.csv` — 400 rows, seed-locked
 - **Final row count:** 455,514
+
+## Final build update (October 2026)
+
+For the final build I came back to this corpus with a different goal: about 1,000 clean workplace messages, plus 60 gold ones, to train and test the rewrite model. Going through it again, two things in this card needed correcting, and I'd rather say so here than leave them as they are.
+
+The first is duplicates. The zero-duplicates result above holds for Message-IDs. But when I deduplicated on the message text itself (lowercased, with punctuation and spacing stripped, then hashed), 304,235 messages dropped to 119,571. So roughly 61% were exact copies of each other. The same email sits in several people's mailboxes with a different Message-ID each time, which is exactly the Enron duplication everyone talks about. A MinHash pass for near copies (Jaccard 0.85) took out about another 2%.
+
+The second is names. The limitation above about names in free text doesn't apply to the final build data any more. Names are now swapped for consistent fake ones through one shared mapping, using Presidio plus a list of about 13,000 real employee names pulled from the raw emails (routing lines like Name/HOU/ECT@ECT, "Last, First", and the To and cc lines). Phone numbers in every format get swapped too. A leak check compares each scrubbed message with its original, and a run on 10,000 emails came back with no real names or numbers left.
+
+I also filtered out more junk before sampling: spam, leftover forwarded headers, emails that are only a signature, and trading or data lines. That came to about 55,000 messages.
+
+The full steps and counts are in `docs/ENRON_STEP1_AND_FILTER.md`, and the tone model trained on this data is in `docs/models/ENRON_TONE_REGISTER.md`.

@@ -1,0 +1,32 @@
+{
+  "corpus": 455514,
+  "after_length": 311280,
+  "after_automated": 304235,
+  "after_exact_dedupe": 119571,
+  "pool": 10000,
+  "pii_replaced": {
+    "PERSON_KNOWN": 6006,
+    "PERSON": 10131,
+    "PHONE_NUMBER": 621,
+    "PERSON_AMBIGUOUS": 86,
+    "PERSON_LAST_FIRST": 180,
+    "PERSON_HEADER": 5
+  },
+  "after_near_dedupe": 9809,
+  "gold": 60,
+  "gold_flagged": 45,
+  "gold_clear": 15,
+  "near_dupes_of_gold_removed": 33,
+  "source": 1000,
+  "source_flagged": 850,
+  "source_clear": 150,
+  "after_junk": 249080,
+  "junk_dropped": {
+    "forwarded header": 34547,
+    "signature block": 8411,
+    "no sentence": 4981,
+    "trading/data lines": 4667,
+    "spam": 2549
+  },
+  "gold_reserve": 40
+}
