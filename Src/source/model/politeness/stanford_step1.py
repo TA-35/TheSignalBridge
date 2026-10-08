@@ -47,6 +47,7 @@ from pathlib import Path
 import pandas as pd
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parents[3]))   # repo root, for Src.source.*
 
 CORPUS = Path("data/Stanford_Politeness/stanford_politeness_clean.csv")
 WORK = Path("data/step1/stanford")          # NOT data/step1/ - Enron's step 1 writes there
@@ -58,25 +59,12 @@ COUNTS_OUT = WORK / "counts.json"
 IDMAP_OUT = WORK / "id_map.json"
 PII_LOG = WORK / "2_pii_log.csv"
 
-# ---- copied verbatim from Src/source/model/tone/enron_step1.py (PR #13,
-# branch feature/enron-final-data, file last changed in commit 9a1c9c5).
-# Must stay identical to Enron's.
-# flagged = needs a rewrite. Per the plan: politeness low OR high (over-polite
-# is just as unclear), circa indirect, or a hedge phrase anywhere in the text
-FLAG_RULES = {"politeness": {"low", "high"}, "circa": {"indirect"}}
-HEDGES = re.compile(
-    r"if you get a chance|when you get a chance|if you have a (?:minute|moment|sec)|when you have a (?:minute|moment|sec)"
-    r"|just (?:wondering|checking|curious|a thought|a heads up)|i was wondering|wondering if"
-    r"|circle back|touch base|might be worth|may be worth|could be worth|worth a look"
-    r"|no rush,? but|no pressure,? but|not urgent,? but|whenever you can|at your convenience"
-    r"|would be (?:great|nice|good) if|it might be (?:good|nice|helpful)|you (?:may|might) want to"
-    r"|perhaps we could|maybe we could|not sure if|if (?:possible|you can|you could)|could you possibly",
-    re.I)
-SEED = 42
-N_GOLD_FLAGGED, N_GOLD_CLEAR = 45, 15
-N_RES_FLAGGED, N_RES_CLEAR = 30, 10
-N_SRC_FLAGGED, N_SRC_CLEAR = 850, 150
-# ---- end of the verbatim block
+# The flag rule and the selection targets are shared by every dataset's
+# step 1, so they live in one place: Src/source/data_prep/flag_rule.py.
+from Src.source.data_prep.flag_rule import (  # noqa: E402
+    FLAG_RULES, HEDGES, SEED, is_flagged,
+    N_GOLD_FLAGGED, N_GOLD_CLEAR, N_RES_FLAGGED, N_RES_CLEAR, N_SRC_FLAGGED, N_SRC_CLEAR,
+)
 
 SPLIT_SEED = 5120                     # the seed the politeness model was trained with
 SPLITS_USED = ("validation", "test")  # never "train": those rows are in-sample
@@ -554,13 +542,6 @@ def near_gold(text, gold):
         if j >= NEAR_JACCARD or (min(len(s), len(g)) >= MIN_SHINGLES_FOR_CONTAIN and c >= NEAR_CONTAIN):
             return gid
     return None
-
-
-def is_flagged(r):
-    if HEDGES.search(str(r.get("source", ""))):
-        return True
-    return any(s["model"] in FLAG_RULES and str(s["label"]).lower() in FLAG_RULES[s["model"]]
-               for s in r["signals"])
 
 
 def fmt(rs, start):
