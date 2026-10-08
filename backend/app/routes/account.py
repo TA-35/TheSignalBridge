@@ -160,9 +160,13 @@ def register_verify():
         # misconfigured RP id or origin presents as "the button does
         # nothing" and can only be diagnosed by guesswork. Logged with the
         # expectations, not the response.
+        # repr(), not the bare string: part of the library's message is the
+        # origin the browser sent, so an attacker-chosen value could carry
+        # newlines and forge whole log lines. repr escapes them, and the cap
+        # keeps one bad response from flooding the journal.
         current_app.logger.warning(
             "registration verify failed: %s: %s (rp_id=%s, origins=%s)",
-            type(exc).__name__, exc, _rp_id(), _origins(),
+            type(exc).__name__, repr(str(exc))[:120], _rp_id(), _origins(),
         )
         return jsonify({"error": "That passkey could not be verified."}), 400
 
@@ -249,10 +253,10 @@ def login_verify():
             credential_current_sign_count=credential.sign_count,
         )
     except (InvalidAuthenticationResponse, ValueError, KeyError) as exc:
-        # Same reasoning as the registration handler above.
+        # Same reasoning as the registration handler above, repr included.
         current_app.logger.warning(
             "authentication verify failed: %s: %s (rp_id=%s, origins=%s)",
-            type(exc).__name__, exc, _rp_id(), _origins(),
+            type(exc).__name__, repr(str(exc))[:120], _rp_id(), _origins(),
         )
         return jsonify({"error": "That passkey could not be verified."}), 400
 
@@ -421,8 +425,11 @@ def delete_account():
     if user is None:
         return jsonify({"error": "Not signed in."}), 401
 
-    # Credentials go with the row (cascade), and there is nothing else to
-    # erase: the cards and the message text were never here.
+    # Passkeys, pairing codes and synced library cards all go with the row -
+    # every relationship cascades, and the ORM deletes the children itself
+    # rather than trusting the database to do it (see models/account.py).
+    # The message text is the one thing not erased here, because it was
+    # never here: it lives in the reader's browser.
     db.session.delete(user)
     db.session.commit()
     session.clear()

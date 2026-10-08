@@ -15,9 +15,14 @@
  *                           disclosure the page exists for. It is stated
  *                           plainly and early rather than buried, because it
  *                           is the part a reader would not guess.
- *   "one cookie"          - the Flask session cookie, set only by the account
- *                           routes (backend/app/routes/account.py) and only
- *                           once someone registers or signs in. HttpOnly,
+ *   "one cookie"          - the Flask session cookie, set by the account
+ *                           routes (backend/app/routes/account.py) as soon as
+ *                           someone starts registering or signing in. Flask's
+ *                           session carries its data IN the cookie, signed
+ *                           rather than encrypted: the account id, and the
+ *                           one-time challenge while a sign-in is in flight.
+ *                           Hence "a signed reference", not "an identifier
+ *                           only". HttpOnly,
  *                           SameSite=Lax, Secure in production - see
  *                           backend/app/config.py. No analytics or
  *                           advertising scripts exist on the site, so there
@@ -146,7 +151,9 @@ const LAST_UPDATED = '7 October 2026'
         you. Alongside it we store a four-character ID, the dates your account
         was made and last used, and — so your library cards can follow you to
         another device — which patterns you have kept and when you last opened
-        them. That is the whole of it.
+        them. While you link a new device, we also keep a short-lived pairing
+        code, stored only as a hash, valid for ten minutes and usable once.
+        That is the whole of it.
       </p>
       <p>
         Your messages are not part of an account. Cards you save from a message
@@ -154,9 +161,10 @@ const LAST_UPDATED = '7 October 2026'
         That is why they do not appear when you sign in somewhere else.
       </p>
       <p>
-        Signing in sets one cookie, which holds nothing but a session
-        identifier. It cannot be read by scripts on the page, it is not used to
-        track you, and signing out removes it. Deleting your account removes
+        Signing in sets one cookie. It holds a signed reference to your account
+        (and, briefly, a one-time sign-in challenge), nothing personal. Scripts
+        on the page cannot read it, it is not used to track you, and signing out
+        removes it. Deleting your account removes
         your ID, your passkeys and your saved pattern list for good; you can do
         that from the <RouterLink to="/account">account page</RouterLink>.
       </p>
