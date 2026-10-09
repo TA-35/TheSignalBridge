@@ -15,7 +15,7 @@ Checks, in order:
   2. notes_ok       - 1-3 notes, each under 20 words
   3. dropped_entity - every PERSON/ORG/DATE/TIME/MONEY/number in the source is in the rewrite
   4. added_entity   - nothing in the rewrite that isn't in the source
-  5. length         - rewrite is 0.5-2.5x the source word count
+  5. length         - rewrite is 0.5-2.5x the source word count (short ones: up to +12 words)
   6. contradiction  - NLI (cross-encoder/nli-deberta-v3-base) doesn't say it contradicts
 
 Run from the repo root:
@@ -98,7 +98,9 @@ def norm(text):
 
 
 def tokens(text):
-    return set(re.findall(r"[a-z0-9$%.:/\[\]_]+", norm(text)))
+    # ".", ":" and "/" are allowed inside a token so 10:00, 02/06/02 and $3.50
+    # stay whole, but not at the end: "month." closing a sentence is "month"
+    return {t.rstrip(".:/") for t in re.findall(r"[a-z0-9$%.:/\[\]_]+", norm(text))} - {""}
 
 
 STOP = {"the", "a", "an", "of", "this", "that", "next", "last", "by", "on", "in",
@@ -224,10 +226,12 @@ def check_added(r):
 
 
 def check_length(r):
-    # compared with the part that gets rewritten (the reply, for Circa)
+    # compared with the part that gets rewritten (the reply, for Circa). Short
+    # ones get up to 12 extra words: stating the answer outright ("No, I can't
+    # cover your shift on Saturday.") already more than doubles a 5-word reply
     s, w = len(split_circa(r["source"])[1].split()), len(r["rewrite"].split())
     ratio = w / max(s, 1)
-    if not 0.5 <= ratio <= 2.5:
+    if ratio < 0.5 or w > max(2.5 * s, s + 12):
         return f"length ratio {ratio:.2f} ({w} vs {s} words)"
     return None
 
