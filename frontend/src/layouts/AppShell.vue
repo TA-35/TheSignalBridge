@@ -67,6 +67,7 @@ const navItems = [
   { to: '/compose', label: 'Compose', icon: PenLine, soon: false },
   { to: '/study', label: 'Study', icon: BookOpen, soon: false },
   { to: '/library', label: 'Library', icon: Library, soon: false },
+  { to: '/progress', label: 'Progress', icon: LayoutDashboard, soon: false },
   { to: '/settings', label: 'Settings', icon: Settings, soon: false },
 ]
 
@@ -220,14 +221,11 @@ onBeforeUnmount(() => {
                 Account settings
               </RouterLink>
 
-              <!-- Routed nowhere yet, so it is a label rather than a link:
-                   a menu item that goes to a blank page is worse than one
-                   that says it is not ready. -->
-              <span class="account__item account__item--soon" role="menuitem" aria-disabled="true">
+              <!-- The progress dashboard is built now, so this is a real link -->
+              <RouterLink to="/progress" class="account__item" role="menuitem">
                 <LayoutDashboard :size="15" :stroke-width="1.8" aria-hidden="true" />
                 Dashboard
-                <span class="nav-item__soon">soon</span>
-              </span>
+              </RouterLink>
 
               <button
                 type="button"
@@ -499,9 +497,9 @@ onBeforeUnmount(() => {
 
 /* 860px used to be enough for seven items; with two of them now carrying a
    qualifier it is not, and the row spilled past the viewport between 861px
-   and roughly 1110px. The horizontal nav now only appears where it actually
-   fits. */
-@media (max-width: 1100px) {
+   and roughly 1110px. Progress adds one more item (about 110px), so the
+   horizontal nav now switches to the menu below 1220px, where it still fits. */
+@media (max-width: 1220px) {
   .menu-toggle {
     display: flex;
   }
