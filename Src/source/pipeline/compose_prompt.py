@@ -6,7 +6,12 @@ baseline, eval, and serving. If any of them formats a message differently,
 the fine-tuned model is evaluated and served on inputs it was never trained
 on. So nothing outside this module assembles a compose prompt by hand.
 
-Wording lives in prompts/compose_*.txt and the few-shot examples in
+There is one prompt and one output format for all of them: the teacher, the
+baseline and the fine-tuned model all return {"meaning", "rewrite",
+"notes"}. Working out the meaning first is part of the task, and the Compose
+page shows it to the sender.
+
+Wording lives in prompts/compose_system.txt and the few-shot examples in
 prompts/compose_examples.json, so they can be edited and diffed without
 touching Python. Any change to them changes `fingerprint()`; generated data
 records the fingerprint it was made with, so a mismatch is detectable
@@ -30,7 +35,7 @@ from typing import Any, Iterable, Mapping
 
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 
-PROMPT_VERSION = "compose-v1"
+PROMPT_VERSION = "compose-v2"
 
 # Fixed order, so the same signals always render to the same bytes.
 SIGNAL_ORDER = ("tone", "politeness", "circa")
@@ -44,9 +49,24 @@ _FAILED_LABEL = "unknown"
 # Circa sources are stored as "Q: <question>\nReply: <reply>".
 _CIRCA = re.compile(r"\AQ: (?P<question>.*?)\nReply: (?P<reply>.*)\Z", re.S)
 
+MEANING_KEYS = ("ask", "deadline", "urgency", "tone", "implied")
+URGENCY_LEVELS = ("low", "medium", "high")
+
+# `meaning` comes first so the model works out what the message means before
+# it rewrites it - decoding order is reasoning order for a model with
+# thinking switched off.
 RESPONSE_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
+        "meaning": {
+            "type": "object",
+            "properties": {
+                **{k: {"type": "string"} for k in MEANING_KEYS},
+                "urgency": {"type": "string", "enum": list(URGENCY_LEVELS)},
+            },
+            "required": list(MEANING_KEYS),
+            "additionalProperties": False,
+        },
         "rewrite": {"type": "string", "minLength": 1},
         "notes": {
             "type": "array",
@@ -55,35 +75,13 @@ RESPONSE_SCHEMA: dict[str, Any] = {
             "maxItems": 3,
         },
     },
-    "required": ["rewrite", "notes"],
-    "additionalProperties": False,
-}
-
-MEANING_KEYS = ("ask", "deadline", "urgency", "tone", "implied")
-
-# Teacher output: the meaning fields come first so the model works out what
-# the message means before it rewrites it.
-GENERATION_SCHEMA: dict[str, Any] = {
-    "type": "object",
-    "properties": {
-        "meaning": {
-            "type": "object",
-            "properties": {
-                **{k: {"type": "string"} for k in MEANING_KEYS},
-                "urgency": {"type": "string", "enum": ["low", "medium", "high"]},
-            },
-            "required": list(MEANING_KEYS),
-            "additionalProperties": False,
-        },
-        **RESPONSE_SCHEMA["properties"],
-    },
     "required": ["meaning", "rewrite", "notes"],
     "additionalProperties": False,
 }
 
 
 class ComposeOutputError(ValueError):
-    """The model's reply is not a usable {"rewrite", "notes"} object."""
+    """The model's reply is not a usable {"meaning", "rewrite", "notes"} object."""
 
 
 # --------------------------------------------------------------------------
@@ -95,11 +93,8 @@ def _read(name: str) -> str:
     return (PROMPTS_DIR / name).read_text(encoding="utf-8")
 
 
-def system_prompt(generate: bool = False) -> str:
-    text = _read("compose_system.txt").rstrip("\n")
-    if generate:
-        text += "\n" + _read("compose_generate.txt").rstrip("\n")
-    return text
+def system_prompt() -> str:
+    return _read("compose_system.txt").rstrip("\n")
 
 
 @lru_cache(maxsize=None)
@@ -116,7 +111,6 @@ def fingerprint() -> str:
     parts = [
         PROMPT_VERSION,
         _read("compose_system.txt"),
-        _read("compose_generate.txt"),
         _read("compose_examples.json"),
     ]
     return hashlib.sha256("\x00".join(parts).encode("utf-8")).hexdigest()[:12]
@@ -194,24 +188,23 @@ def user_prompt(source: str, signals: Iterable[Mapping[str, Any]] | None) -> str
             "",
         ]
     parts += [
-        "Message to rewrite:",
+        "Message or notes to rewrite:",
         f"<message>\n{message}\n</message>",
     ]
     return "\n".join(parts)
 
 
-def assistant_response(record: Mapping[str, Any], generate: bool = False) -> str:
+def assistant_response(record: Mapping[str, Any]) -> str:
     """The exact JSON text the model is trained to produce for `record`.
 
     Training targets go through here so they are byte-for-byte the format
     parse_response() reads back at serving time.
     """
-    out: dict[str, Any] = {}
-    if generate:
-        out["meaning"] = {k: record["meaning"][k] for k in MEANING_KEYS}
-    out["rewrite"] = record["rewrite"]
-    out["notes"] = list(record["notes"])
-    return json.dumps(out, ensure_ascii=False)
+    return json.dumps({
+        "meaning": {k: record["meaning"][k] for k in MEANING_KEYS},
+        "rewrite": record["rewrite"],
+        "notes": list(record["notes"]),
+    }, ensure_ascii=False)
 
 
 def build_messages(
@@ -219,21 +212,19 @@ def build_messages(
     signals: Iterable[Mapping[str, Any]] | None,
     *,
     few_shot: bool = False,
-    generate: bool = False,
 ) -> list[dict[str, str]]:
     """Chat messages for one source message.
 
-    few_shot=False  fine-tuned model: training and serving (the examples
-                    are learned, not shown).
-    few_shot=True   the untrained baseline, which needs to see examples.
-    generate=True   teacher generation: also asks for the meaning fields.
-                    Only the data-generation script sets this.
+    few_shot=False  the fine-tuned model, in training and serving: the
+                    examples are learned, not shown.
+    few_shot=True   anything untrained - the teacher generating training
+                    data and the baseline - which needs to see examples.
     """
-    messages = [{"role": "system", "content": system_prompt(generate)}]
+    messages = [{"role": "system", "content": system_prompt()}]
     if few_shot:
         for ex in examples():
             messages.append({"role": "user", "content": user_prompt(ex["source"], ex["signals"])})
-            messages.append({"role": "assistant", "content": assistant_response(ex, generate)})
+            messages.append({"role": "assistant", "content": assistant_response(ex)})
     messages.append({"role": "user", "content": user_prompt(source, signals)})
     return messages
 
@@ -242,7 +233,7 @@ def build_messages(
 # Reading the reply
 # --------------------------------------------------------------------------
 
-def parse_response(text: str, generate: bool = False) -> dict[str, Any]:
+def parse_response(text: str) -> dict[str, Any]:
     """Pull the JSON object out of a model reply and check its shape.
 
     Tolerates markdown fences and stray text around the object - small
@@ -271,12 +262,14 @@ def parse_response(text: str, generate: bool = False) -> dict[str, Any]:
     if not 1 <= len(notes) <= 3:
         raise ComposeOutputError(f"{len(notes)} notes (need 1-3)")
 
-    out: dict[str, Any] = {"rewrite": rewrite.strip(), "notes": [n.strip() for n in notes]}
-    if generate:
-        meaning = data.get("meaning")
-        if not isinstance(meaning, dict) or any(k not in meaning for k in MEANING_KEYS):
-            raise ComposeOutputError("meaning missing or incomplete")
-        if meaning["urgency"] not in ("low", "medium", "high"):
-            raise ComposeOutputError(f"urgency {meaning['urgency']!r} is not low/medium/high")
-        out = {"meaning": {k: str(meaning[k]) for k in MEANING_KEYS}, **out}
-    return out
+    meaning = data.get("meaning")
+    if not isinstance(meaning, dict) or any(k not in meaning for k in MEANING_KEYS):
+        raise ComposeOutputError("meaning missing or incomplete")
+    if meaning["urgency"] not in URGENCY_LEVELS:
+        raise ComposeOutputError(f"urgency {meaning['urgency']!r} is not low/medium/high")
+
+    return {
+        "meaning": {k: str(meaning[k]).strip() for k in MEANING_KEYS},
+        "rewrite": rewrite.strip(),
+        "notes": [n.strip() for n in notes],
+    }

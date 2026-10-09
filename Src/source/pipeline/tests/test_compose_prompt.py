@@ -14,6 +14,7 @@ SIGNALS = [
     {"model": "politeness", "label": "high", "confidence": 0.555015197568389, "note": "score +0.7"},
 ]
 MESSAGE = "no rush but could you maybe check the deck before Friday?"
+MEANING = {"ask": "Check the deck", "deadline": "", "urgency": "low", "tone": "casual", "implied": ""}
 
 
 # --------------------------------------------------------------------------
@@ -62,7 +63,7 @@ def test_user_prompt_contents():
     text = cp.user_prompt(MESSAGE, SIGNALS)
     assert f"<message>\n{MESSAGE}\n</message>" in text
     assert "- tone: casual (0.91)" in text
-    assert "note" not in text and "p(indirect)" not in text
+    assert not any(s["note"] in text for s in SIGNALS)
     assert "<question>" not in text
 
 
@@ -81,7 +82,7 @@ def test_non_circa_text_starting_with_q_is_left_alone():
 def test_zero_shot_has_no_examples():
     messages = cp.build_messages(MESSAGE, SIGNALS)
     assert [m["role"] for m in messages] == ["system", "user"]
-    assert '"meaning"' not in messages[0]["content"]
+    assert "<message>" not in messages[0]["content"]
 
 
 def test_few_shot_interleaves_every_example():
@@ -90,15 +91,24 @@ def test_few_shot_interleaves_every_example():
     assert len(messages) == 2 + 2 * n
     assert [m["role"] for m in messages[1:-1]] == ["user", "assistant"] * n
     assert messages[-1]["content"] == cp.user_prompt(MESSAGE, SIGNALS)
-    # Baseline examples show the serving format, not the teacher format.
-    assert all("meaning" not in json.loads(m["content"]) for m in messages if m["role"] == "assistant")
 
 
-def test_generation_asks_for_meaning_and_examples_show_it():
-    messages = cp.build_messages(MESSAGE, SIGNALS, few_shot=True, generate=True)
-    assert '"meaning"' in messages[0]["content"]
-    first_answer = json.loads(messages[2]["content"])
-    assert list(first_answer) == ["meaning", "rewrite", "notes"]
+def test_one_output_format_meaning_first():
+    """Teacher, baseline and fine-tuned model all answer {"meaning", "rewrite",
+    "notes"} in that order - meaning first, so it is worked out before the rewrite."""
+    assert '"meaning"' in cp.system_prompt()
+    assert list(cp.RESPONSE_SCHEMA["properties"]) == ["meaning", "rewrite", "notes"]
+    messages = cp.build_messages(MESSAGE, SIGNALS, few_shot=True)
+    for m in messages:
+        if m["role"] == "assistant":
+            assert list(json.loads(m["content"])) == ["meaning", "rewrite", "notes"]
+
+
+def test_system_prompt_carries_the_nd_rules():
+    text = cp.system_prompt().lower()
+    for phrase in ("ask first", "bullet points", "literal words", "rough notes",
+                   "do not guess", "clear is not blunt"):
+        assert phrase in text, phrase
 
 
 def test_fingerprint_is_stable():
@@ -112,7 +122,7 @@ def test_fingerprint_is_stable():
 
 @pytest.mark.parametrize("ex", cp.examples(), ids=lambda e: e["id"])
 def test_example_follows_the_contract(ex):
-    parsed = cp.parse_response(cp.assistant_response(ex, generate=True), generate=True)
+    parsed = cp.parse_response(cp.assistant_response(ex))
     assert 1 <= len(parsed["notes"]) <= 3
     assert all(len(n.split()) < 20 for n in parsed["notes"])
     _q, message = cp.split_circa(ex["source"])
@@ -124,8 +134,21 @@ def test_example_follows_the_contract(ex):
 
 def test_examples_cover_the_cases_that_matter():
     ids = {e["id"] for e in cp.examples()}
-    assert {"example_already_clear", "example_circa_reply"} <= ids
+    assert {"example_already_clear", "example_circa_reply", "example_rough_notes",
+            "example_several_asks", "example_idioms"} <= ids
     assert any(s["label"] == "unknown" for e in cp.examples() for s in e["signals"])
+
+
+def test_bullet_example_uses_the_bullet_format():
+    ex = {e["id"]: e for e in cp.examples()}["example_several_asks"]
+    assert [line for line in ex["rewrite"].splitlines() if line.startswith("- ")]
+
+
+def test_missing_information_goes_in_a_note_not_the_rewrite():
+    """Rough notes that leave something out get a note asking for it - never a guess."""
+    ex = {e["id"]: e for e in cp.examples()}["example_rough_notes"]
+    assert "thing" not in ex["rewrite"]
+    assert any("thing" in n for n in ex["notes"])
 
 
 @pytest.mark.parametrize("ex", cp.examples(), ids=lambda e: e["id"])
@@ -151,15 +174,16 @@ def test_example_passes_the_training_filter(ex):
 # --------------------------------------------------------------------------
 
 def test_parse_tolerates_fences_and_chatter():
-    reply = 'Sure!\n```json\n{"rewrite": " Hi. ", "notes": ["Kept it."]}\n```'
-    assert cp.parse_response(reply) == {"rewrite": "Hi.", "notes": ["Kept it."]}
+    body = json.dumps({"meaning": MEANING, "rewrite": " Hi. ", "notes": ["Kept it."]})
+    reply = f"Sure!\n```json\n{body}\n```"
+    assert cp.parse_response(reply) == {"meaning": MEANING, "rewrite": "Hi.", "notes": ["Kept it."]}
 
 
 def test_parse_round_trips_the_training_target():
-    ex = cp.examples()[0]
-    assert cp.parse_response(cp.assistant_response(ex)) == {
-        "rewrite": ex["rewrite"], "notes": ex["notes"],
-    }
+    for ex in cp.examples():
+        assert cp.parse_response(cp.assistant_response(ex)) == {
+            "meaning": ex["meaning"], "rewrite": ex["rewrite"], "notes": ex["notes"],
+        }
 
 
 @pytest.mark.parametrize("reply, reason", [
@@ -169,16 +193,16 @@ def test_parse_round_trips_the_training_target():
     ('{"rewrite": "x", "notes": "a"}', "notes missing"),
     ('{"rewrite": "x", "notes": []}', "0 notes"),
     ('{"rewrite": "x", "notes": ["a", "b", "c", "d"]}', "4 notes"),
+    ('{"rewrite": "x", "notes": ["a"]}', "meaning missing"),
 ])
 def test_parse_rejects_with_a_reason(reply, reason):
     with pytest.raises(cp.ComposeOutputError, match=reason):
         cp.parse_response(reply)
 
 
-def test_parse_generation_checks_meaning():
-    good = {"meaning": {k: "" for k in cp.MEANING_KEYS}, "rewrite": "x", "notes": ["a"]}
-    good["meaning"]["urgency"] = "low"
-    assert cp.parse_response(json.dumps(good), generate=True)["meaning"]["urgency"] == "low"
+def test_parse_checks_meaning():
+    good = {"meaning": dict(MEANING), "rewrite": "x", "notes": ["a"]}
+    assert cp.parse_response(json.dumps(good))["meaning"]["urgency"] == "low"
     good["meaning"]["urgency"] = "urgent"
     with pytest.raises(cp.ComposeOutputError, match="urgency"):
-        cp.parse_response(json.dumps(good), generate=True)
+        cp.parse_response(json.dumps(good))

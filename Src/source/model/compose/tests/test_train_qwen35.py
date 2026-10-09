@@ -16,8 +16,9 @@ tq = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(tq)
 cp = tq.cp
 
+MEANING = {"ask": "Send the deck", "deadline": "", "urgency": "low", "tone": "casual", "implied": ""}
 GOOD = {"id": "x1", "dataset": "enron", "source": "can u send the deck", "signals": [],
-        "meaning": {}, "rewrite": "Could you send the deck?", "notes": ["Made the ask direct."]}
+        "meaning": MEANING, "rewrite": "Could you send the deck?", "notes": ["Made the ask direct."]}
 
 
 def _write(tmp_path, rows):
@@ -32,7 +33,7 @@ def _write(tmp_path, rows):
 
 def test_load_keeps_only_the_fields_training_reads(tmp_path):
     rows = tq.load_records(_write(tmp_path, [GOOD]), set(), cp.fingerprint())
-    assert rows == [{k: GOOD[k] for k in ("id", "source", "signals", "rewrite", "notes")}]
+    assert rows == [{k: GOOD[k] for k in ("id", "source", "signals", "meaning", "rewrite", "notes")}]
 
 
 def test_load_refuses_a_gold_message(tmp_path):
