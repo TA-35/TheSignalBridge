@@ -20,7 +20,9 @@ export interface CardProgress {
   category: string
   saved: boolean // in "my cards"
   viewed: boolean // opened "See what this means"
-  reviews: string[] // dates it was reviewed in Study
+  reviews: string[] // dates it was opened again in Study
+  firstSeen?: string // date it was saved, the first time they learned it
+  cardId?: string // the saved card's id in Study, if it's saved
 }
 
 // ---------------------------------------------------------------- dates
@@ -108,10 +110,13 @@ export interface DueCard extends CardProgress {
 }
 
 export function retention(c: CardProgress, today: string, base = 1.5) {
-  if (!c.reviews.length) return null
-  const last = [...c.reviews].sort().at(-1) as string
+  // saving a card counts as the first time they learned it, then every
+  // review in Study after that makes the memory last longer
+  const exposures = [...new Set([c.firstSeen, ...c.reviews].filter((d): d is string => !!d))].sort()
+  if (!exposures.length) return null
+  const last = exposures[exposures.length - 1]
   const daysSince = daysBetween(last, today)
-  const stability = base * 2 ** (c.reviews.length - 1)
+  const stability = base * 2 ** (exposures.length - 1)
   return { retention: Math.exp(-daysSince / stability), daysSince }
 }
 

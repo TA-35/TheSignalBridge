@@ -10,8 +10,7 @@ import {
   progressByCategory, reviewReminder, usageByDay, type Energy, type Feature,
 } from '@/utils/progress'
 
-// TODO(wire-up): replace these two with the real cards store once connected
-const { cards, activity } = useProgressSources(() => [], () => [])
+const { activity, loading, libraryCards, allCards } = useProgressSources()
 
 const router = useRouter()
 const today = ref(dateKey())
@@ -28,8 +27,8 @@ watch(hideBadges, (v) => saveFlag('bw-progress-nobadges', v))
 
 // ---------------------------------------------------------------- start here
 const energy = ref<Energy>('okay')
-const due = computed(() => dueForReview(cards.value, today.value))
-const step = computed(() => nextStep(energy.value, due.value, cards.value, activity.events))
+const due = computed(() => dueForReview(allCards.value, today.value))
+const step = computed(() => nextStep(energy.value, due.value, libraryCards.value, activity.events))
 const timerPreset = ref<{ minutes: number; feature: Feature; intent: string; nonce: number }>()
 function startStep() {
   timerPreset.value = { ...step.value, nonce: Date.now() }
@@ -45,9 +44,12 @@ function later() {
   snoozedToday.value = true
   try { sessionStorage.setItem('bw-refresher-later', today.value) } catch { /* ignore */ }
 }
+// opens the most faded card. Opening it in Study counts as a review
+// (cards store touch()), so the reminder updates by itself afterwards
 function reviewNow() {
-  // TODO(wire-up): use the Study route name from the router
-  router.push({ path: '/study', query: { review: reminder.value?.cards.map((c) => c.id).join(',') } })
+  const first = reminder.value?.cards.find((c) => c.cardId)
+  if (first?.cardId) router.push({ name: 'card-review', params: { id: first.cardId } })
+  else router.push({ name: 'study' })
 }
 const ago = (d: number) => (d === 1 ? '1 day ago' : `${d} days ago`)
 
@@ -66,8 +68,8 @@ const shortDate = (k: string) =>
 const todayMinutes = computed(() => activity.events.filter((e) => e.date === today.value).reduce((a, e) => a + e.minutes, 0))
 
 // ---------------------------------------------------------------- pattern library
-const lib = computed(() => libraryProgress(cards.value))
-const byCat = computed(() => progressByCategory(cards.value))
+const lib = computed(() => libraryProgress(libraryCards.value))
+const byCat = computed(() => progressByCategory(libraryCards.value))
 const CAT_COLOURS = ['--pd-c1', '--pd-c2', '--pd-c3', '--pd-c4', '--pd-c5', '--pd-c6']
 const DONUT_C = 2 * Math.PI * 58
 const donut = computed(() => {
@@ -111,7 +113,10 @@ onMounted(() => {
 <template>
   <div class="pd-page" :class="{ 'pd-large': largeText }">
     <header class="pd-header">
-      <h1>Your progress</h1>
+      <div class="pd-masthead">
+        <h1>Your progress</h1>
+        <p>How you're getting on, at your own pace. Nothing here is a score.</p>
+      </div>
       <div class="pd-settings">
         <label class="pd-toggle"><input v-model="largeText" type="checkbox" /> Larger text</label>
         <label class="pd-toggle"><input v-model="hideBadges" type="checkbox" /> Hide badges</label>
@@ -196,7 +201,8 @@ onMounted(() => {
         <h2 id="lib-title">Pattern library</h2>
         <span class="pd-muted pd-small">{{ lib.saved + lib.mastered }} in my cards · {{ lib.opened }} of {{ lib.total }} opened</span>
       </div>
-      <div v-if="lib.total" class="pd-lib">
+      <p v-if="loading" class="pd-muted">Loading the pattern library…</p>
+      <div v-else-if="lib.total" class="pd-lib">
         <svg width="150" height="150" viewBox="0 0 150 150" role="img" :aria-label="`${lib.percentExplored}% of the library explored`">
           <circle cx="75" cy="75" r="58" fill="none" stroke="var(--pd-empty)" stroke-width="16" />
           <circle v-for="s in donut" :key="s.colour" cx="75" cy="75" r="58" fill="none" :stroke="`var(${s.colour})`" stroke-width="16"
@@ -228,7 +234,7 @@ onMounted(() => {
     </section>
 
     <section class="pd-card" aria-labelledby="usage-title">
-      <div class="pd-head"><h2 id="usage-title">Time by feature</h2><span class="pd-muted pd-small">Last 14 days, minutes</span></div>
+      <div class="pd-head"><h2 id="usage-title">Focus time by feature</h2><span class="pd-muted pd-small">Timer sessions, last 14 days, minutes</span></div>
       <div class="pd-scroll">
         <svg :viewBox="`0 0 ${CH.w} ${CH.h}`" class="pd-chart" role="img" aria-label="Minutes per day by feature, last 14 days">
           <g v-for="v in gridLines" :key="v">
@@ -269,8 +275,10 @@ onMounted(() => {
 /* Tokens for the progress page. Calm palette: no red, each section its own soft colour.
    Not scoped, so FocusTimer (a child component) shares them. All prefixed pd- to avoid clashes. */
 .pd-page {
-  --pd-bg: #ece9e3; --pd-surface: #fbfaf7; --pd-ink: #23302b; --pd-muted-c: #5e6863; --pd-line: #ddd8cf;
-  --pd-empty: #e4e0d8;
+  /* neutrals come from the app's own theme (assets/main.css) */
+  --pd-surface: var(--color-surface); --pd-ink: var(--color-text); --pd-muted-c: var(--color-text-muted);
+  --pd-line: var(--color-border-soft); --pd-empty: var(--color-surface-soft);
+  /* calm section colours: no red, each section its own soft hue */
   --pd-teal: #3d8790; --pd-teal-soft: #ddeef0;
   --pd-lavender: #7466a8; --pd-lavender-soft: #ece9f6;
   --pd-honey: #a88442; --pd-honey-soft: #f4ecdc;
@@ -280,38 +288,32 @@ onMounted(() => {
   --pd-c1: #3d8790; --pd-c2: #a88442; --pd-c3: #5e8a70; --pd-c4: #4a6fa5; --pd-c5: #7466a8; --pd-c6: #93708f;
   --pd-iron: #7a8288; --pd-bronze: #a8693a; --pd-silver: #9aa5ae; --pd-gold: #c9a227; --pd-diamond: #4fa3c7;
   --pd-accent: var(--pd-teal); --pd-accent-soft: var(--pd-teal-soft);
-  --pd-base: 16px;
+  --pd-base: 15px;
   font-size: var(--pd-base);
   color: var(--pd-ink);
-  max-width: 980px; margin: 0 auto; padding-block: 24px 48px; display: grid; gap: 18px;
+  display: grid; gap: 18px;
 }
-@media (prefers-color-scheme: dark) {
-  .pd-page {
-    --pd-bg: #161a18; --pd-surface: #1e2421; --pd-ink: #e8e6e1; --pd-muted-c: #a2a9a4; --pd-line: #2f3632; --pd-empty: #2a312d;
-    --pd-teal: #7cc3cc; --pd-teal-soft: #1c3033; --pd-lavender: #ada2de; --pd-lavender-soft: #26233a;
-    --pd-honey: #d9b577; --pd-honey-soft: #33291a; --pd-heather: #c7a9cb; --pd-heather-soft: #2c2330;
-    --pd-learned: #9cc2ab; --pd-saved: #8fb0e0; --pd-opened: #6b5a33;
-    --pd-f-decoder: #7cc3cc; --pd-f-compose: #d9b577; --pd-f-study: #8fb0e0; --pd-f-library: #c3a3dc;
-  }
-}
-.pd-page.pd-large { --pd-base: 19px; }
-.pd-page h1 { font-size: 2.2em; margin: 0; }
-.pd-page h2 { font-size: 1.1em; margin: 0; font-weight: 600; }
+.pd-page.pd-large { --pd-base: 18px; }
+.pd-masthead { display: flex; flex-direction: column; gap: 10px; max-width: 60ch; }
+.pd-page h1 { font-family: var(--font-serif); font-size: clamp(32px, 4.4vw, 46px); font-weight: 500; line-height: 1.08;
+  letter-spacing: -0.025em; margin: 0; text-wrap: balance; }
+.pd-masthead p { color: var(--pd-muted-c); font-size: 15px; line-height: 1.6; }
+.pd-page h2 { font-family: var(--font-serif); font-size: 1.2em; margin: 0; font-weight: 500; }
 .pd-header { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; justify-content: space-between; }
 .pd-settings { display: flex; gap: 16px; flex-wrap: wrap; }
 .pd-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .pd-toggle input { width: 18px; height: 18px; accent-color: var(--pd-accent); }
-.pd-card { background: var(--pd-surface); border: 1px solid var(--pd-line); border-radius: 14px; padding: 20px; display: grid; gap: 14px; min-width: 0; }
+.pd-card { background: var(--pd-surface); border: 1px solid var(--pd-line); border-radius: var(--radius-md, 14px); padding: 20px; display: grid; gap: 14px; min-width: 0; }
 .pd-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
 .pd-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .pd-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .pd-muted { color: var(--pd-muted-c); }
 .pd-small { font-size: .88em; }
 .pd-num { font-variant-numeric: tabular-nums; }
-.pd-mono { font-family: ui-monospace, 'IBM Plex Mono', monospace; font-size: .9em; }
-.pd-eyebrow { font-family: ui-monospace, 'IBM Plex Mono', monospace; font-size: .8em; color: var(--pd-muted-c); }
+.pd-mono { font-family: var(--font-mono); font-size: .9em; }
+.pd-eyebrow { font-family: var(--font-mono); font-size: .8em; color: var(--pd-muted-c); }
 .pd-page p { margin: 0; }
-.pd-page button { font: inherit; font-size: .92em; font-weight: 600; border-radius: 10px; padding: 9px 16px; cursor: pointer;
+.pd-page button { font: inherit; font-size: .92em; font-weight: 600; border-radius: var(--radius-sm, 10px); padding: 9px 16px; cursor: pointer;
   border: 1px solid var(--pd-line); background: var(--pd-surface); color: var(--pd-ink); }
 .pd-page button.pd-primary { background: var(--pd-accent); border-color: var(--pd-accent); color: var(--pd-surface); }
 .pd-page button.pd-ghost { border-color: transparent; color: var(--pd-accent); padding-inline: 8px; }
@@ -341,7 +343,7 @@ onMounted(() => {
 .pd-notice { padding: 12px 14px; border-radius: 10px; background: var(--pd-accent-soft); display: grid; gap: 10px; }
 
 .pd-days { --pd-accent: var(--pd-honey); --pd-accent-soft: var(--pd-honey-soft); }
-.pd-big { font-size: 3em; line-height: 1; font-weight: 600; color: var(--pd-honey); font-variant-numeric: tabular-nums; }
+.pd-big { font-family: var(--font-serif); font-size: 3em; line-height: 1; font-weight: 600; color: var(--pd-honey); font-variant-numeric: tabular-nums; }
 .pd-dots { display: flex; flex-wrap: wrap; gap: 6px; }
 .pd-dots i { width: 14px; height: 14px; border-radius: 50%; background: var(--pd-empty); }
 .pd-dots i.on { background: var(--pd-accent); }
