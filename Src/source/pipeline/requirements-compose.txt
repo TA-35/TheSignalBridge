@@ -1,0 +1,23 @@
+# Extra inference-service dependencies for a host that serves Compose.
+#
+#     pip install -r requirements.txt -r requirements-compose.txt
+#
+# Separate from requirements.txt on purpose: the Decode-only host and CI
+# install that file alone, and this adds ~1.5GB resident (torch, the tone
+# DistilBERT, the NLI cross-encoder). The rewrite model itself runs in
+# llama-server, which is not a Python package - see compose_service.py.
+
+# CPU wheels. The CUDA build is ~2GB more and nothing here needs a GPU.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch>=2.6
+
+# The tone model was saved with transformers 5.17. Under 4.x its tokenizer
+# passes token_type_ids that DistilBERT rejects, and tone comes back
+# "unknown" for every message - silently, because the adapter never raises.
+transformers>=5.17,<6
+
+# The grounding check's NLI. 5.1 pulls transformers back below 5 and breaks
+# tone; 6.1 runs on transformers 5.
+sentence-transformers>=6,<7
+
+# Tested together: torch 2.14.1, transformers 5.19.0, sentence-transformers 6.1.0.

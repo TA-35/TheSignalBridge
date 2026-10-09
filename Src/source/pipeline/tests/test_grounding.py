@@ -99,5 +99,7 @@ def test_real_nli_catches_a_flipped_answer():
         g.warm_up()
     except Exception as exc:  # noqa: BLE001 - no model download available here
         pytest.skip(f"NLI model unavailable: {type(exc).__name__}")
+    assert g._nli_model()[0].device.type in ("cpu", "cuda")      # never MPS, see _nli_model
     assert g.contradicts("I can come to the lunch on Friday.", "I can't come to the lunch on Friday.")
+    assert g.contradicts("Send the report by Monday.", "Send the report by Tuesday.")
     assert not g.contradicts(SOURCE, "Hi Dana, could you please check the Q3 numbers before Thursday's meeting?")

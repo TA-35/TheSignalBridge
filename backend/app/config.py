@@ -73,6 +73,11 @@ class Config:
     # call is what gives up first. When the proxy times out instead, the
     # inference service carries on generating a response nobody will read.
     INFERENCE_TIMEOUT = float(os.environ.get("INFERENCE_TIMEOUT", "90"))
+    # /api/compose: up to two model calls (one retry if the grounding check
+    # rejects the first rewrite), each capped by COMPOSE_LLM_TIMEOUT (45s) on
+    # the inference host. Must stay above twice that, for the same reason as
+    # above. Whatever proxies to this API needs a read timeout above it too.
+    COMPOSE_TIMEOUT = float(os.environ.get("COMPOSE_TIMEOUT", "100"))
 
     # --- Accounts -------------------------------------------------------
     # The session cookie. The site and the API are different hosts under one
