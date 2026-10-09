@@ -3,9 +3,21 @@
     "id": "example_hedged_request",
     "source": "Hi Dana, no rush but if you get a chance could you maybe take a look at the Q3 numbers before Thursday's meeting? Thanks!",
     "signals": [
-      {"model": "tone", "label": "casual", "confidence": 0.91},
-      {"model": "politeness", "label": "high", "confidence": 0.555},
-      {"model": "circa", "label": "indirect", "confidence": 0.41}
+      {
+        "model": "tone",
+        "label": "casual",
+        "confidence": 0.75
+      },
+      {
+        "model": "politeness",
+        "label": "high",
+        "confidence": 0.555
+      },
+      {
+        "model": "circa",
+        "label": "direct",
+        "confidence": 0.6
+      }
     ],
     "meaning": {
       "ask": "Review the Q3 numbers",
@@ -24,9 +36,21 @@
     "id": "example_blunt_complaint",
     "source": "Why is the vendor report still not done? I needed it yesterday.",
     "signals": [
-      {"model": "tone", "label": "neutral", "confidence": 0.84},
-      {"model": "politeness", "label": "low", "confidence": 0.555},
-      {"model": "circa", "label": "direct", "confidence": 0.6}
+      {
+        "model": "tone",
+        "label": "neutral",
+        "confidence": 0.95
+      },
+      {
+        "model": "politeness",
+        "label": "low",
+        "confidence": 0.555
+      },
+      {
+        "model": "circa",
+        "label": "direct",
+        "confidence": 0.6
+      }
     ],
     "meaning": {
       "ask": "Send the vendor report, or explain the delay",
@@ -35,7 +59,7 @@
       "tone": "frustrated, curt",
       "implied": "The sender is frustrated that the report is late."
     },
-    "rewrite": "I needed the vendor report yesterday and still don't have it. Could you send it right away, or tell me what's holding it up? I'm frustrated it's late.",
+    "rewrite": "Could you send me the vendor report right away, or tell me what's holding it up? I needed it yesterday and I'm frustrated it's late.",
     "notes": [
       "Turned the question into a clear ask: send it or explain the delay.",
       "Said the frustration out loud so it isn't left to guesswork."
@@ -45,9 +69,21 @@
     "id": "example_over_polite",
     "source": "I hope you're doing well! I was just wondering whether it might be possible, if it's not too much trouble, to perhaps get the signed contract back from you at some point this week?",
     "signals": [
-      {"model": "tone", "label": "formal", "confidence": 0.6},
-      {"model": "politeness", "label": "high", "confidence": 0.555},
-      {"model": "circa", "label": "indirect", "confidence": 0.47}
+      {
+        "model": "tone",
+        "label": "casual",
+        "confidence": 0.777
+      },
+      {
+        "model": "politeness",
+        "label": "high",
+        "confidence": 0.555
+      },
+      {
+        "model": "circa",
+        "label": "indirect",
+        "confidence": 0.536
+      }
     ],
     "meaning": {
       "ask": "Send back the signed contract",
@@ -63,12 +99,123 @@
     ]
   },
   {
+    "id": "example_several_asks",
+    "source": "Hey, can you update the slides and send them to Priya, and maybe book a room for Thursday's review if you get a chance?",
+    "signals": [
+      {
+        "model": "tone",
+        "label": "casual",
+        "confidence": 0.976
+      },
+      {
+        "model": "politeness",
+        "label": "high",
+        "confidence": 0.555
+      },
+      {
+        "model": "circa",
+        "label": "direct",
+        "confidence": 0.6
+      }
+    ],
+    "meaning": {
+      "ask": "Update the slides, send them to Priya, and book a room for Thursday's review",
+      "deadline": "",
+      "urgency": "medium",
+      "tone": "friendly, casual",
+      "implied": "Booking the room is a real task, not an optional extra."
+    },
+    "rewrite": "Hey, could you please do these things:\n- update the slides\n- send them to Priya\n- book a room for Thursday's review",
+    "notes": [
+      "Listed the asks so none of them gets missed.",
+      "'If you get a chance' softened a real task, so the room booking is listed too."
+    ]
+  },
+  {
+    "id": "example_rough_notes",
+    "source": "tell Sam I cant do the thing friday, maybe next week",
+    "signals": [
+      {
+        "model": "tone",
+        "label": "casual",
+        "confidence": 0.974
+      },
+      {
+        "model": "politeness",
+        "label": "medium",
+        "confidence": 0.555
+      },
+      {
+        "model": "circa",
+        "label": "direct",
+        "confidence": 0.6
+      }
+    ],
+    "meaning": {
+      "ask": "Move it to next week",
+      "deadline": "",
+      "urgency": "low",
+      "tone": "casual, brief",
+      "implied": "The sender can't make Friday and is offering next week instead."
+    },
+    "rewrite": "Hi Sam, I can't do it on Friday. Could we do it next week instead?",
+    "notes": [
+      "Turned your notes into a message, with the 'no' first.",
+      "You didn't say what 'the thing' is. Name it so Sam knows what is moving."
+    ]
+  },
+  {
+    "id": "example_idioms",
+    "source": "Let's take this offline and circle back once the dust settles. No rush.",
+    "signals": [
+      {
+        "model": "tone",
+        "label": "neutral",
+        "confidence": 0.648
+      },
+      {
+        "model": "politeness",
+        "label": "medium",
+        "confidence": 0.555
+      },
+      {
+        "model": "circa",
+        "label": "direct",
+        "confidence": 0.6
+      }
+    ],
+    "meaning": {
+      "ask": "Discuss this separately later",
+      "deadline": "",
+      "urgency": "low",
+      "tone": "friendly, deferring",
+      "implied": "The topic is being put off, with no set time to return to it."
+    },
+    "rewrite": "Let's discuss this separately and come back to it once things are calmer. It isn't urgent.",
+    "notes": [
+      "Replaced 'take this offline' and 'circle back' with plain words.",
+      "'Once the dust settles' gives no date. Add one if you have it."
+    ]
+  },
+  {
     "id": "example_already_clear",
     "source": "The team meeting has moved to Friday at 10:00 in Room 4. Please bring your project updates.",
     "signals": [
-      {"model": "tone", "label": "neutral", "confidence": 0.93},
-      {"model": "politeness", "label": "medium", "confidence": 0.555},
-      {"model": "circa", "label": "direct", "confidence": 0.6}
+      {
+        "model": "tone",
+        "label": "neutral",
+        "confidence": 0.87
+      },
+      {
+        "model": "politeness",
+        "label": "medium",
+        "confidence": 0.555
+      },
+      {
+        "model": "circa",
+        "label": "direct",
+        "confidence": 0.6
+      }
     ],
     "meaning": {
       "ask": "Bring your project updates to the meeting",
@@ -86,9 +233,21 @@
     "id": "example_circa_reply",
     "source": "Q: Are you coming to the team lunch on Friday?\nReply: I've got a dentist appointment that afternoon.",
     "signals": [
-      {"model": "tone", "label": "unknown", "confidence": 0.0},
-      {"model": "politeness", "label": "medium", "confidence": 0.3},
-      {"model": "circa", "label": "indirect", "confidence": 0.58}
+      {
+        "model": "tone",
+        "label": "unknown",
+        "confidence": 0.0
+      },
+      {
+        "model": "politeness",
+        "label": "high",
+        "confidence": 0.555
+      },
+      {
+        "model": "circa",
+        "label": "direct",
+        "confidence": 0.6
+      }
     ],
     "meaning": {
       "ask": "",

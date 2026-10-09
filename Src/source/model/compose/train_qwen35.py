@@ -14,7 +14,7 @@ Run on the GPU box, from the repo root, inside tmux:
 is missing it trains on the style-guide examples. Its job is to prove the
 path end to end - load, format, mask, train, merge, GGUF - not to learn.
 
-Reads exactly source, signals, rewrite and notes from each record. Refuses to
+Reads exactly source, signals, meaning, rewrite and notes from each record. Refuses to
 run if a training source is also a gold message (rule 2) or was generated
 with a different prompt than the current one (rule 1).
 
@@ -44,7 +44,7 @@ from Src.source.pipeline import compose_prompt as cp  # noqa: E402
 BASE_MODEL = "unsloth/Qwen3.5-4B"
 TRAIN_FILE = "data/filtered/train.jsonl"
 GOLD_GLOB = "data/gold/*_gold.jsonl"
-REQUIRED = ("source", "signals", "rewrite", "notes")
+REQUIRED = ("source", "signals", "meaning", "rewrite", "notes")
 DRY_RUN_EXAMPLES = 20
 DRY_RUN_STEPS = 5
 
@@ -182,7 +182,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--data", type=Path, default=REPO_ROOT / TRAIN_FILE)
     ap.add_argument("--name", default=None, help="run folder under runs/ (default: timestamp)")
     ap.add_argument("--model", default=BASE_MODEL)
-    ap.add_argument("--max-seq-len", type=int, default=1024)
+    # 2048, not 1024: the prompt plus a 120-word email plus the meaning/rewrite/
+    # notes answer runs past 1024 tokens, and a truncated example teaches the
+    # model to stop mid-answer.
+    ap.add_argument("--max-seq-len", type=int, default=2048)
     ap.add_argument("--epochs", type=float, default=2)
     ap.add_argument("--lr", type=float, default=2e-4)
     ap.add_argument("--batch", type=int, default=2)

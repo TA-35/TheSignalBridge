@@ -32,7 +32,9 @@ from . import compose_prompt as cp
 
 DEFAULT_URL = "http://localhost:8080"
 DEFAULT_TEMPERATURE = 0.3
-MAX_TOKENS = 512
+# A ceiling, not a target. The longest source (Enron, 439 tokens) plus
+# meaning and notes comes to ~600; a cut-off reply is invalid JSON.
+MAX_TOKENS = 1024
 
 
 class ComposeServerError(RuntimeError):
@@ -66,7 +68,7 @@ def complete(
     temperature: float = DEFAULT_TEMPERATURE,
     timeout: float = 120.0,
 ) -> dict[str, Any]:
-    """One rewrite. Returns {"rewrite", "notes"} plus `raw` and `seconds`.
+    """One rewrite. Returns {"meaning", "rewrite", "notes"} plus `raw` and `seconds`.
 
     Raises ComposeServerError if the server fails, ComposeOutputError if it
     answers with something that is not a usable rewrite.
@@ -135,6 +137,8 @@ def main(argv: list[str] | None = None) -> int:
         if "error" in r:
             print(f"ERROR  : {r['error']}")
         else:
+            m = r["meaning"]
+            print(f"MEANING: ask={m['ask']!r} deadline={m['deadline']!r} urgency={m['urgency']}")
             print(f"REWRITE: {r['rewrite']}")
             for note in r["notes"]:
                 print(f"  - {note}")
