@@ -39,6 +39,11 @@ const router = createRouter({
       component: () => import('@/views/CardReviewView.vue'),
     },
     {
+      path: '/progress',
+      name: 'progress',
+      component: () => import('@/views/ProgressView.vue'),
+    },
+    {
       path: '/settings',
       name: 'settings',
       component: () => import('@/views/SettingsView.vue'),
