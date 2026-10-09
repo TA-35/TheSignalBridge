@@ -452,8 +452,11 @@ def nli_contradicts(pairs, bs=32):
     # Note: the cross-encoder truncates each (source, rewrite) pair at 512
     # tokens, so on a really long email it only sees the start. That's fine
     # for us because step 1 caps messages at 120 words, which is well under.
+    import torch
     from sentence_transformers import CrossEncoder
-    model = CrossEncoder(NLI_MODEL)
+    # CPU unless there's CUDA: on a Mac whose GPU is busy (llama-server), MPS
+    # gave every pair the same scores without raising
+    model = CrossEncoder(NLI_MODEL, device="cuda" if torch.cuda.is_available() else "cpu")
     id2label = getattr(getattr(model, "config", None), "id2label", None) \
         or getattr(model.model.config, "id2label", None)
     labels = [id2label[i].lower() for i in range(len(id2label))] if id2label \

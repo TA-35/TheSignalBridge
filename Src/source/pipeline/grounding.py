@@ -57,12 +57,18 @@ class Grounding:
 
 
 def _nli_model():
-    """The cross-encoder and the index of its "contradiction" label, loaded once."""
+    """The cross-encoder and the index of its "contradiction" label, loaded once.
+
+    On CPU unless there is CUDA. Left to choose, it takes MPS on a Mac, and
+    with llama-server holding the GPU it gave every pair the same scores
+    without raising - "I can come" vs "I can't come" read as entailment.
+    """
     global _nli
     with _nli_lock:
         if _nli is None:
+            import torch
             from sentence_transformers import CrossEncoder
-            model = CrossEncoder(fp.NLI_MODEL)
+            model = CrossEncoder(fp.NLI_MODEL, device="cuda" if torch.cuda.is_available() else "cpu")
             id2label = model.model.config.id2label
             labels = [id2label[i].lower() for i in range(len(id2label))]
             _nli = (model, labels.index("contradiction"))

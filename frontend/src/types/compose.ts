@@ -51,6 +51,7 @@ export interface ComposeResult {
   checks?: {
     entities_kept: boolean
     nothing_added: boolean
+    no_contradiction?: boolean
   }
   model?: string
 }
@@ -62,4 +63,14 @@ export const ALREADY_CLEAR = 'Already clear, kept as written.'
 
 export function isAlreadyClear(result: ComposeResult): boolean {
   return result.notes.length === 1 && result.notes[0] === ALREADY_CLEAR
+}
+
+/** The degraded_reason values that mean the grounding check rejected a
+ *  rewrite, as opposed to no rewrite coming back at all (the service was
+ *  unreachable, timed out, or answered with something unusable). Set in
+ *  Src/source/pipeline/grounding.py. */
+export const FACT_CHECK_REASONS = ['dropped_entity', 'added_entity', 'contradiction']
+
+export function failedFactCheck(result: ComposeResult): boolean {
+  return (result.degraded_reason ?? []).some((reason) => FACT_CHECK_REASONS.includes(reason))
 }

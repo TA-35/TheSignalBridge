@@ -307,7 +307,10 @@ _cache = {}
 def predict_probs(texts, bs=64):
     import torch
     from transformers import AutoTokenizer, AutoModelForSequenceClassification
-    dev = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
+    # Not MPS. On a Mac where llama-server holds the GPU, MPS ran out of memory
+    # and returned wrong labels without raising (8 of 15 flipped in a test).
+    # CPU gives the same labels and takes ~12ms a message.
+    dev = "cuda" if torch.cuda.is_available() else "cpu"
     if "m" not in _cache:
         _cache["t"] = AutoTokenizer.from_pretrained(MODEL_DIR)
         _cache["m"] = AutoModelForSequenceClassification.from_pretrained(MODEL_DIR).to(dev).eval()
