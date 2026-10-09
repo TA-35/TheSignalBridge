@@ -1,0 +1,360 @@
+id,dataset,source,rewrite,notes,pass_fail,reason_if_fail
+stanford_01416,stanford,Can you post this somewhere with a live URL? I don't see a background image referenced in the CSS...?,Can you post this somewhere with a live URL? I don't see a background image referenced in the CSS.,"""This"" is unclear. Say what you want posted, so the reader knows. | Removed the trailing ""..."" so the question reads as a plain question.",,
+stanford_01635,stanford,"When you say "" is a string"", do you mean it's already a ? And you're casting its address to type ?","- When you say ""[term] is a string"", do you mean it's already a [type]?
+- Are you casting its address to type [type]?",Some words are missing from your message: the quoted term and both type names. | Split the two questions into bullets so each one gets an answer.,,
+enron_01498,enron,"Crystal,
+
+The asset divestiture procedure requires approval from all officers before 
+marketing/field services begin negotiations with potential buyers. Olivia 
+Bell has sent me an e-mail indicating his approval.
+
+Dakota","Crystal,
+
+The asset divestiture procedure requires approval from all officers before marketing/field services begin negotiations with potential buyers.
+
+Olivia Bell has sent me an e-mail indicating his approval.
+
+Dakota","'His approval' does not match Olivia Bell. Say whose approval it is. | No ask was included. Add what you want Crystal to do, if anything.",,
+enron_01236,enron,"Alexandria:
+
+Attached please find Brittney Mcintyre's memo for the Department of Commerce 
+Advisory Committee, along with an attachment to the memo. Please feel free 
+to contact me at [PHONE_REDACTED] with any questions. Thanks.
+
+Kaitlin Glass for Brittney Mcintyre
+
+ - BCIU White Paper v.5.doc","Alexandria:
+
+Attached please find Brittney Mcintyre's memo for the Department of Commerce Advisory Committee, along with an attachment to the memo. Please feel free to contact me at [PHONE_REDACTED] with any questions. Thanks.
+
+Kaitlin Glass for Brittney Mcintyre
+
+- BCIU White Paper v.5.doc","Already clear, kept as written.",,
+stanford_01957,stanford,"Hmm, now I feel ignorant. Are you aware of a good source we could stick in the article to back this up?","Hmm, now I feel ignorant. Do you know a good source we could include in the article to back this up?","Kept the embarrassment named, so the question doesn't read as a test. | Changed 'stick in' to 'include' for literal wording.",,
+stanford_01308,stanford,I saw your motorcycle map for Daytona. Could you do one for Indianapolis?,I saw your motorcycle map for Daytona. Could you do one for Indianapolis?,"Already clear, kept as written.",,
+enron_01065,enron,"ISAS Members and Interested Parties,
+
+Last week, Misty Le raised some very valid concerns about the E-Tag
+1.7 Specification. SRP found some time to research these issues. Our
+comments are attached. 
+
+Misty, 
+Thanks for bringing these issues to the WSCC's attention.","ISAS Members and Interested Parties,
+
+Our comments on the E-Tag 1.7 Specification are attached.
+
+Last week, Misty Le raised some very valid concerns about the E-Tag 1.7 Specification. SRP found some time to research these issues.
+
+Misty, thanks for bringing these issues to the WSCC's attention.","Moved the attachment notice to the top so the main point comes first. | No ask or deadline was stated, so none was added.",,
+enron_01521,enron,Here is an application for Kelsey when he retires. Alyssa,Here is an application for Kelsey for when he retires. Alyssa,No action is stated. Add what you want the reader to do with the application. | No retirement date is given. Add it if the reader needs it.,,
+enron_01059,enron,"Friday, October 19, 2001
+
+Dear Mackenzie,
+
+Travelocity Brooke Velasquez, your personal airfare tracking
+service, has found fare changes in 1 of your markets.
+
+Note: Fares change quickly and sell out fast. Visit Travelocity
+now to take advantage of this great opportunity! Click on this
+link or paste the URL into your browser:
+http://dps1.travelocity.com:80/fwemindiv.ctl?fw","Friday, October 19, 2001
+
+Dear Mackenzie,
+
+Travelocity Brooke Velasquez, your personal airfare tracking
+service, has found fare changes in 1 of your markets.
+
+Note: Fares change quickly and sell out fast. Visit Travelocity
+now to take advantage of this great opportunity! Click on this
+link or paste the URL into your browser:
+http://dps1.travelocity.com:80/fwemindiv.ctl?fw","Already clear, kept as written.",,
+stanford_01572,stanford,This still shows old and read messages. How do you fix that?,This still shows old and read messages. How do you fix that?,"Name what ""this"" refers to, so the reader knows what to fix. | ""Still"" suggests you reported this before. Say so if you did.",,
+enron_01941,enron,"Lavo is going to bring it in for me. 
+
+I bought QQQ today at 93. Traded 102 in afterhours trading on the island.
+
+Enron is free.
+
+Edgar","Lavo is going to bring it in for me.
+
+I bought QQQ today at 93. Traded 102 in afterhours trading on the island.
+
+Enron is free.
+
+Edgar","You didn't say what ""it"" is. Name the item so the reader knows. | Kept every figure and phrase as written, including ""on the island"" and ""Enron is free"".",,
+stanford_01307,stanford,Do you want the complete question solved yourself? What exactly is the question here?,Do you want to solve the whole question yourself? What exactly is the question here?,"""The question"" is not named. Say which question you mean. | Kept both questions as written; nothing else needed changing.",,
+stanford_01906,stanford,"""compact framework and there are no line numbers"" Huh? What language is this?","I don't understand this: ""compact framework and there are no line numbers"". What language is this about?","Said the confusion plainly instead of ""Huh?"". | Kept the quoted text exactly as written.",,
+stanford_01771,stanford,How do you compare strings? strcmp()?,How do you compare strings? Is strcmp() the way to do it?,"Turned the fragment ""strcmp()?"" into a full question. | Kept it short and casual, as written.",,
+enron_01944,enron,"The contact person is Alyssa Mcmahon at [PHONE_REDACTED]. He is out this week, so I 
+am unable to ask him what type of confidentiality agreement he needs. 
+However, his assistant was able to provide the following information.
+
+Continental Airlines, Caitlyn.
+1600 Crystal Ho
+HQSMO
+Houston, TX 77002
+
+Fax: [PHONE_REDACTED]
+
+I would suggest that we start out with a confidentiality agreement just for 
+Enron and see how far we get.
+
+Thanks for you help,
+
+-Brianna
+x39673","I would suggest that we start out with a confidentiality agreement just for Enron and see how far we get.
+
+The contact person is Alyssa Mcmahon at [PHONE_REDACTED]. Alyssa Mcmahon is out this week, so I am unable to ask what type of confidentiality agreement is needed. However, Alyssa Mcmahon's assistant was able to provide the following information.
+
+Continental Airlines, Caitlyn.
+1600 Crystal Ho
+HQSMO
+Houston, TX 77002
+
+Fax: [PHONE_REDACTED]
+
+Thanks for your help,
+
+-Brianna
+x39673","You wrote ""He"" and ""him"" for Alyssa Mcmahon. I used the name; check which is right. | Moved your suggestion to the top so the reader sees it first. | Fixed the typo ""Thanks for you help"".",,
+enron_01482,enron,"FYI, all new deals that are at NGPL/Nipsco, need to be in sitara at 
+Alyssa/NGPL. Please shout with any questions.
+PL","FYI: all new deals at NGPL/Nipsco need to be in sitara at Alyssa/NGPL. Please ask me if you have any questions.
+PL","Replaced ""shout with any questions"" with plain words. | Kept all names and the placement exactly as written.",,
+enron_01212,enron,"I will be giving a training session on Wed 9/13/00 in 21C2 from 3:00-4:30 
+pm.
+I would like for you to send to the class any new logistics personnel that 
+you might think could use a Crystal overview.
+If someone cannot make it at this time, let me know their names and I will 
+try to schedule something for them at a later time.
+
+If possible, please send me a note on who might be attending, so I can get an 
+approximate head count.
+
+Call me or e-mail me if you have any questions
+
+Jaclyn
+x37386","I will be giving a training session on Wed 9/13/00 in 21C2 from 3:00-4:30 pm.
+
+Please do these things:
+- Send any new logistics personnel who could use a Crystal overview to the class.
+- If someone cannot make it at this time, send me their names, and I will try to schedule something for them at a later time.
+- If possible, send me a note on who might be attending, so I can get an approximate head count.
+
+Call me or e-mail me if you have any questions.
+
+Jaclyn
+x37386","Listed the three asks as bullets so none is missed. | Marked the head count request as optional, since you wrote ""if possible"". | No reply deadline was given. Add one if you need answers before the session.",,
+enron_01802,enron,"Mikayla,
+Please be careful of EOL deals. I got a call on Friday evening about this 
+deal being changed but you had already left.
+It is a deal with Brianna and the volume was changed. Please check on this 
+and communicate all changes to Devin. 
+
+Thanks, Savannah","Mikayla,
+
+Please be careful of EOL deals. I got a call on Friday evening about this deal being changed, but you had already left.
+
+It is a deal with Brianna and the volume was changed. Please do these two things:
+- check on this deal
+- communicate all changes to Devin
+
+Thanks,
+Savannah","Split the two asks into bullets so neither is missed. | Kept ""EOL deals"" as written; I can't expand a term you didn't define. | No deadline was given. Add one if you need this checked by a set time.",,
+stanford_01339,stanford,Michele's solution certainly isn't optimal. Fancy giving me a basic rundown on the problem here and I'll see if I can devise a more elegant one?,Michele's solution isn't the best option. Could you give me a basic rundown of the problem? I'll see if I can come up with a better solution.,"Made the criticism of Michele's solution explicit; in writing it may read as blunt. | Replaced 'fancy', 'rundown' and 'elegant' with plain words.",,
+enron_01095,enron,"Isabella: have you spoken with Brooke or the Marval firm about this? Please 
+call me when you have a chance. Thanks. Crystal","Hi Isabella, have you spoken with Brooke or the Marval firm about this? Please call me when you have a chance. Thanks, Crystal",'This' is vague. Say which topic you mean so Isabella knows what to answer about. | Kept the request and the names exactly as written.,,
+stanford_01191,stanford,What do you call a keyword? Every [long enough] word in a string?,What do you call a keyword? Is it every word in a string that is long enough?,"Made the second part a full question so the ask is clear. | Say what ""long enough"" means if the reader needs a number.",,
+enron_01179,enron,"Attached is a current list of the NDA's we are/have worked on for your 
+groups. Please take the time to review this list and confirm the status of 
+any NDA's you are interested in.",Attached is a current list of the NDAs we are working on or have worked on for your groups. Please review this list and confirm the status of any NDAs you are interested in.,"Clarified ""are/have worked on"" to ""are working on or have worked on"". | Fixed ""NDA's"" to ""NDAs"". | No deadline is given. Add one if you need replies by a set date.",,
+stanford_01817,stanford,"Remember we had the whole edit warring on Katie article a while back? I find it curious that a recently created account posted this [URL] as their first contribution basically supporting Katie's personal website (which when you look would hardly pass [URL], I looked it at this site a while back in research and found some of the positive claims could not be verified) and wanting a complete rewrite of the article... sound familiar?","Does this look familiar? A while back we had all that edit warring on the Katie article. A recently created account has now posted this [URL] as their first contribution. It does two things:
+- supports Katie's personal website
+- asks for a complete rewrite of the article
+
+The site would hardly pass [URL]. I looked at it a while back during research and found some of the positive claims could not be verified. This looks like the same pattern to me.",Put the point first: a new account's first edit looks like the earlier pattern. | Split the account's two actions into bullets so they are easy to check. | Kept both [URL] placeholders and every claim unchanged.,,
+stanford_01938,stanford,I don't think I'll have the time to keep the flies off it all week but I'll have a go (I might get around to incorporating Steven Torres's detailed reviews too). Could you not semi it as well?,"I don't think I'll have the time to keep the flies off it all week, but I'll have a go. I might also get around to incorporating Steven Torres's detailed reviews. Could you not semi it as well?","""Keep the flies off it"" and ""semi it"" aren't clear. Say what each one means. | ""Could you not semi it as well?"" could mean ""please don't"" or ""please also"". Pick one.",,
+stanford_01284,stanford,Douglas Murray: should it be lossless? Are the images line art or photographs?,"Douglas Murray: two questions:
+- Should it be lossless?
+- Are the images line art or photographs?",You didn't say what 'it' refers to. Name the file or item. | Unclear whether 'Douglas Murray' is the reader or the sender. Make that clear.,,
+enron_01154,enron,"Thanks for forwarding them along. At some point this evening, I'll be done with the semester. Hope you guys are done soon, too. Congratulations for another semester down, and ONE to go.
+
+Best,
+Kendra","Thanks for forwarding them along. At some point this evening, I'll be done with the semester. Hope you guys are done soon, too. Congratulations for another semester down, and ONE to go.
+
+Best,
+Kendra","Already clear, kept as written.",,
+enron_01511,enron,"Crystal,
+
+A question for you:
+
+Would it be possible to very quickly amend the existing ISDA to add the name
+Glencore AG? Brant is unable to approve certain trades until this is done and 
+I
+would rather not wait for the guarantee and credit issues to be resolved as 
+this
+may take some time.
+
+Dakota","Crystal,
+
+A question for you:
+
+Would it be possible to very quickly amend the existing ISDA to add the name Glencore AG? Brant is unable to approve certain trades until this is done and I would rather not wait for the guarantee and credit issues to be resolved as this may take some time.
+
+Dakota","Already clear, kept as written.",,
+enron_01182,enron,"I will pay you Monday, but please remind me if I forget. Thanks. 
+
+ 
+ Enron North America Corp.","I will pay you Monday. Please remind me if I forget. Thanks.
+
+Enron North America Corp.",Split the promise and the reminder request into two sentences. | Kept the signature line as written.,,
+enron_01227,enron,"Could I be included in these update meetings? Rather than read the material after the fact and have you review it with me separately, it seems that it would make sense for me to be included in the update meeting that you hold with Alyssa. Assuming that Alyssa is comfortable with that, can we do that going forward? If all agree, please ask your assistant to let me know if a date has already been set for the next update. Thanks. .","Could I join the update meetings you hold with Alyssa, going forward?
+
+- Please include me in those update meetings, if Alyssa is comfortable with that.
+- Please ask your assistant to let me know if a date has already been set for the next update.
+
+It would work better for me to be in the meeting than to read the material afterwards and have you review it with me separately. Thanks.",Put the request first and split the two asks into bullets. | Kept the condition that Alyssa must be comfortable with it. | No deadline was given. Add one if you need a reply by a set date.,,
+stanford_01756,stanford,I would suggest you reconsider if using the selector is a good idea. Maybe what you want to do is possible without iterating over the zillion elements that make up a production web page?,I suggest you reconsider whether using the selector is a good idea. Maybe you can do what you want without iterating over the very large number of elements that make up a production web page.,"Replaced 'zillion' with its plain meaning: a very large number. | Kept the suggestion as a suggestion; the doubt behind it is implied, not stated.",,
+enron_01826,enron,Thanks for the update! Bethany.,Thanks for the update! Bethany.,"Already clear, kept as written.",,
+stanford_01482,stanford,"I believe you beat me to several vandalism reverts the other night, so I thought I'd give you this. We could all use more, right?",I believe you got to several vandalism reverts before I did the other night. I thought I'd give you this. We could all use more of that.,'This' is vague. Name the award or item so the reader knows what they got. | Replaced 'beat me to' with plain words: you got there first.,,
+stanford_01506,stanford,"I guess I sent you something about the [URL] project and Welsh data. But you were also somehow silent on lists like gnome-i18n, weren't you?",Were you also silent on lists like gnome-i18n? I guess I sent you something about the [URL] project and Welsh data.,"Moved the question first so the ask is easy to find. | ""Weren't you?"" became a direct question; it read as a soft accusation. | ""Something"" is vague. Say what you sent about the [URL] project and Welsh data.",,
+stanford_01351,stanford,"Should the query also be adapted for , i.e. should it be ?","Should the query also be adapted for [add the item here], i.e. should it be [add the wording here]?",Two parts of your question are blank. Add what the query should be adapted for and the wording. | Kept the rest as written; nothing else needed changing.,,
+stanford_01187,stanford,What can you tell us about the keys (e.g. are they consecutive)?,"What can you tell us about the keys? For example, are they consecutive?",You didn't say which keys. Name them so the reader knows what you mean. | Split the example into its own sentence so the question is easy to answer.,,
+stanford_01034,stanford,Sorry its not clear but what are you considering for alternatives? Are you trying to decide between a desktop client and a web client or considering Winforms over WPF ?,"Sorry, it's not clear. What alternatives are you considering? Are you deciding between:
+- a desktop client and a web client
+- Winforms and WPF","Split the two option pairs into bullets so each choice is easy to answer. | 'Sorry, it's not clear' is ambiguous. Say whether you mean your question or their reply.",,
+stanford_01418,stanford,"Not sure what you mean by _""preserve""_ the sort parameter. Do you mean ""How do I parse a URL such that it generates a list of posts on a category page using the desired sort order?""","Could you clarify what you mean by ""preserve"" the sort parameter? Do you mean ""How do I parse a URL such that it generates a list of posts on a category page using the desired sort order?""","Made the ask explicit: clarify ""preserve"" and confirm the restatement. | Kept your quoted question word for word.",,
+enron_01489,enron,"Alyssa, 
+
+Note Brianna's message below that we encouraged Luke to seek out Micheal at next week's NARUC meeting. Do you want to give Micheal the heads up as to our conversation with Luke. I think we've made progress with Maryland and it is ripe for Micheal to seal the deal. I assume you will be talking with Micheal soon, otherwise I am glad to call Kaitlyn. (We will be following up with Rosales on his ideas, too.)","Alyssa,
+
+Note Brianna's message below: we encouraged Luke to seek out Micheal at next week's NARUC meeting.
+
+- Do you want to tell Micheal about our conversation with Luke in advance?
+- Will you be talking with Micheal soon? If not, I am glad to call Kaitlyn.
+
+I think we've made progress with Maryland, and it is a good time for Micheal to finalise the deal.
+
+We will be following up with Rosales on his ideas, too.","Replaced ""heads up"" and ""seal the deal"" with plain words. | Split the two questions into bullets so each one gets an answer. | Kept next week's NARUC meeting as the timing for Luke's outreach.",,
+stanford_01849,stanford,What happens if you replace the ` Vicen c`? Still have this problem?,What happens if you replace the ` Vicen c`? Do you still have this problem?,"The term ` Vicen c` looks garbled. Spell it out so the reader knows what to replace. | Split into two clear questions: the result of the change, and whether the problem remains.",,
+enron_01124,enron,Attached is the additional confirm NG would like to move from Heartland. Are you ok with this?,Attached is the additional confirm NG would like to move from Heartland. Please reply to say whether you're ok with this.,"Made the ask explicit: reply whether you're ok with it. | ""Confirm"" is vague. Say what it is, such as a document or an approval.",,
+stanford_01770,stanford,I've got some. Want any of them?,I've got some. Want any of them?,The message doesn't say what 'them' refers to. Name the item so the reader knows. | Kept as written; the offer and the ask are already clear.,,
+enron_01599,enron,"OW, 
+
+I went through the list on the sort by pipe and highlighted the curves/mapping we can delete (yellow) and those we can change (orange). The only curves we will have left are Calvin, Daisy, HSC, Makayla Welch, and Thompsonville. I expect to be using Thompsonville in 6 months to a year. If it easier or cleaner to delete that curve and add it when we need it, that will be fine. Let me know if you have any questions.
+
+ 
+
+D","OW,
+
+I went through the list on the sort by pipe. I highlighted:
+- in yellow: the curves/mapping we can delete
+- in orange: the curves we can change
+
+The only curves we will have left are Calvin, Daisy, HSC, Makayla Welch, and Thompsonville.
+
+I expect to be using Thompsonville in 6 months to a year. If it is easier or cleaner to delete that curve and add it when we need it, that will be fine.
+
+Let me know if you have any questions.
+
+D","Split the yellow and orange highlights into a list so they are easy to scan. | Kept every name, both colors and the 6 months to a year timing unchanged. | No deadline was given, so none was added.",,
+stanford_01999,stanford,"Cameron, I feel sorry for anyone still stuck with an ATM-attached host. What did you do to the technology gods to deserve this?","Cameron, I feel sorry for anyone still stuck with an ATM-attached host. That sounds like bad luck.","The 'technology gods' line was a joke; I wrote what it means. | No ask in the message, so I did not add one.",,
+stanford_01583,stanford,"I am not sure that your removal of the ""Education"" category is defensible, in light of the central role that pederasty played in the educational systems of the Greeks and the Japanese (and its mentions in the context of Islamic pedagogy). Can you comment?","Can you comment on your removal of the ""Education"" category? I am not sure it is defensible, given the central role pederasty played in the educational systems of the Greeks and the Japanese, and its mentions in the context of Islamic pedagogy.",Moved the ask to the front so it isn't buried at the end. | Split one long sentence into two; kept your wording and your doubt.,,
+stanford_01453,stanford,Does that mean all the realiable sources are incorrect too? Was the e-mail from a reliable source?,"Two questions:
+- Does that mean all the reliable sources are incorrect too?
+- Was the e-mail from a reliable source?","Which e-mail you mean isn't clear. Name it so the reader can answer. | Listed the two questions separately so both get answered. | Fixed the spelling of ""reliable"".",,
+stanford_01931,stanford,"Thanks; I expected a decline, despite my extensive comments at [URL]. As there is nothing more to this article than listings of bylines in non-notable publications, minor book acknowledgments, uncredited movie extra roles, blog comments, paid directory listings, and unsubstantiated claims about wildly over-the-top PR accomplishments, what exactly do you consider to be the examples of ""credible notability""?","Thanks. I expected a decline, despite my extensive comments at [URL]. There is nothing more to this article than:
+- listings of bylines in non-notable publications
+- minor book acknowledgments
+- uncredited movie extra roles
+- blog comments
+- paid directory listings
+- unsubstantiated claims about wildly over-the-top PR accomplishments
+
+What exactly do you consider to be the examples of ""credible notability""?","Split the long list into bullets so each item can be read on its own. | Kept the question, the [URL] and the wording of the claim as written.",,
+stanford_01024,stanford,"First off, great work at the [URL] article. I'm just wondering why you changed the sentence back to ""During this period, defense expenditures underwent exponential growth allowing an unprecedent level of weapon acquisitions and the rapid expansion of the [URL]."" from ""During this period, defense expenditures underwent exponential growth allowing an unprecedent level of weapon acquisition and expansion of the [URL]."" The version I changed it to is more grammarically correct, don't you think?","First off, great work at the [URL] article. Could you tell me why you changed the sentence back to the earlier version?
+
+- You changed it back to: ""During this period, defense expenditures underwent exponential growth allowing an unprecedent level of weapon acquisitions and the rapid expansion of the [URL].""
+- I had changed it to: ""During this period, defense expenditures underwent exponential growth allowing an unprecedent level of weapon acquisition and expansion of the [URL].""
+
+I think my version is more grammatically correct. Do you agree?","Put the question first, then the two versions as bullets. | Fixed the typo ""grammarically"" to ""grammatically"". | Kept both quoted sentences word for word.",,
+enron_01555,enron,"If you have access to LEAP there is now a class available to learn to enter 
+your time via the eHRonline. See details below.","A class is now available to learn how to enter your time via eHRonline, if you have access to LEAP. See details below.","Moved the main point first: the class is now available. | You wrote ""see details below"" but no details are here. Add the date, time and link.",,
+enron_01591,enron,What were you saying to me? Was is dirty? I hope so.,Could you tell me again what you were saying to me? Was it dirty? I hope so.,"Fixed the typo ""Was is"" to ""Was it"". | Made the ask explicit: tell me again what you said. | ""Dirty"" is unclear here. Say plainly what you mean.",,
+enron_01958,enron,"Shaun, I added a some language to th disclaimer.","Shaun, I added some language to the disclaimer.","Fixed the typos: 'a some' and 'th'. | No ask is stated. Add what you want Shaun to do, if anything.",,
+enron_01894,enron,"Hi Edgar,
+
+I was not aware of the ""Power Play"" book tour. I'll check it out.
+
+As to the article with the Brooke professor, I think it's a great idea. I'd 
+like the Savannah Affairs team to get involved. If a visit is required, 
+interviews, etc., they should coordinate. That way, I think we'll have the 
+greatest opportunity to leverage the relationship.
+
+Isabella","Hi Edgar,
+
+I was not aware of the ""Power Play"" book tour. I'll check it out.
+
+About the article with the Brooke professor: I think it's a great idea. I'd like the Savannah Affairs team to get involved. If a visit or interviews are needed, they should coordinate. That way, I think we'll have the best chance to build on the relationship.
+
+Isabella","Replaced ""leverage the relationship"" with plain words. | No ask was aimed at Edgar, so none was added; kept as information and direction.",,
+stanford_01132,stanford,Short answer is yes. Did you want to know something more specific?,Yes. Is there something more specific you wanted to know?,"""Short answer is yes"" became a plain ""Yes"". | Kept your question about whether they want more detail.",,
+stanford_01662,stanford,I'm surprised no one has seen my sneaky joke category addition. Can I put [URL] in there as well?,Can I put [URL] in the joke category I added sneakily as well? I'm surprised no one has seen it.,Moved the question first so the ask is clear. | Made 'in there' explicit: the joke category you added. | Kept [URL] exactly as written.,,
+enron_01251,enron,"Clarence
+I am surprised that you interpret this is a new request.
+From day 1, ETS has been responsible for preparing a Level B estimate for the Sun Devil project.
+What I would like your group to do is come up with a cost estimate for all work related to the environmentsl aspect of the project from today through to completion of the project. i.e a Crystal, 2004 in service date
+Timewise, I would lime a first pass estimate by Sept 21, a second pass estimate by Sept 26, and the final complete estimate by Sept 28
+Please call me if unclear and so that we can discuss.
+Thanks","Clarence,
+
+I am surprised that you interpret this as a new request. From day 1, ETS has been responsible for preparing a Level B estimate for the Sun Devil project.
+
+What I would like your group to do is come up with a cost estimate for all work related to the environmental aspect of the project, from today through to completion of the project. That is, a Crystal, 2004 in service date.
+
+Timewise, I would like:
+- a first pass estimate by Sept 21
+- a second pass estimate by Sept 26
+- the final complete estimate by Sept 28
+
+Please call me if anything is unclear, so that we can discuss.
+
+Thanks","Listed the three estimate deadlines so none gets missed. | Fixed typos (environmental, like) without changing meaning. | Kept your surprise at the 'new request' reading; it carries the disagreement.",,
+enron_01362,enron,"Attached is the Executive Summary, the Module Diagram, and the Priority 
+Matrix, as promised.
+
+(Note: CL Matrix file contains 2 pages)","Attached is the Executive Summary, the Module Diagram, and the Priority Matrix, as promised.
+
+(Note: CL Matrix file contains 2 pages)","Already clear, kept as written.",,
+stanford_01321,stanford,And ? What is the problem ?,What is the problem?,"'And?' has nothing to refer to. Name what you are asking about. | Kept the question short; it asks for an explanation, not an action.",,
+enron_01850,enron,"I do know Jerome so I could probably approve this request. However, in my 
+staff meeting on Monday ( I know that Calvin was there, and not you), one 
+of the major points that I made centered around my approval of requests for 
+EOL access. We can discuss when we get together on Friday morning. Jerome 
+needs to put her managers name at the bottom of this form, and the manager 
+should okay this as well. --Alyssa","I do know Jerome, so I could probably approve this request. But one of the main points I made at my staff meeting on Monday was about my approval of requests for EOL access. Calvin was at that meeting, and you were not. We can discuss this when we get together on Friday morning.
+
+For this form:
+- Jerome needs to put her manager's name at the bottom of the form.
+- The manager should approve it as well.
+
+--Alyssa","Put the two form requirements in a list so they are easy to act on. | Kept ""probably"" — you did not commit to approving it yourself. | You did not say what ""this request"" is. Name it if the reader may not know.",,
+stanford_01176,stanford,"Tanya, if you are a surgeon, there's a good chance that Intuitive Surgical would bring a robot to your home or office for free so that you could test drive it without further obligation. What have you got to lose?","Tanya, if you are a surgeon, there's a good chance that Intuitive Surgical would bring a robot to your home or office for free, so you could try it out with no further obligation. There is nothing to lose by asking.","Replaced 'test drive it' with its literal meaning: try it out. | Turned 'What have you got to lose?' into plain words: nothing to lose by asking. | No ask was stated, so none was added.",,
+stanford_01888,stanford,i noticed you changed [URL] to [URL]. do you think the same should be done for [URL]?,I noticed you changed [URL] to [URL]. Should the same change be made to [URL]? Please let me know what you think.,"Named what 'the same' means: the same change. | Added that a reply is wanted, since it was a question.",,
+enron_01264,enron,"Find attached below Calvin Bell's voice mail message of Friday, 3/29/02.
+
+ENA HR
+x7404
+x8321","Calvin Bell's voice mail message from Friday, 3/29/02 is attached below.
+
+ENA HR
+x7404
+x8321","Changed 'Find attached below' to 'is attached below' so it reads plainly. | No ask was stated, so none was added; kept as information only.",,
+stanford_01192,stanford,"Thanks. Aside from rewrites and creations (which I've no mind for), anything in particular you see that I should focus on, or is it going okay?","Thanks. I don't want to work on rewrites and creations. Other than those, is there anything in particular I should focus on? Or is it going okay?","Made ""I've no mind for"" literal: you don't want those tasks. | Split the long question into two short ones so it's easy to answer.",,
+stanford_01417,stanford,"Sorry, I didn't get it. Can you explain a bit more?","Sorry, I didn't get it. Can you explain a bit more?","'It' is vague. Say what you didn't get, such as the message or the file.",,
+enron_01356,enron,"ISO Market Participants,
+
+(This is an important notice - it may have been sent yesterday, but is being
+sent or resent today to insure you receive it)","ISO Market Participants,
+
+This is an important notice. It may have been sent yesterday, but it is being sent or resent today to ensure you receive it.",The notice itself is missing. Add what the notice is about. | Split the parenthesis into two sentences and changed 'insure' to 'ensure'.,,

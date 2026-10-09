@@ -1,0 +1,34 @@
+{
+  "total": 2000,
+  "passed": 1873,
+  "rejected": 127,
+  "per_dataset_in": {
+    "enron": 1000,
+    "stanford": 1000
+  },
+  "per_dataset_passed": {
+    "enron": 919,
+    "stanford": 954
+  },
+  "rejected_by_check": {
+    "gold_overlap": 0,
+    "prompt_version": 0,
+    "json_valid": 1,
+    "notes_ok": 4,
+    "dropped_entity": 74,
+    "added_entity": 30,
+    "length": 4,
+    "contradiction": 14
+  },
+  "reject_rate_of_pairs_reaching_check": {
+    "gold_overlap": 0.0,
+    "prompt_version": 0.0,
+    "json_valid": 0.001,
+    "notes_ok": 0.002,
+    "dropped_entity": 0.037,
+    "added_entity": 0.016,
+    "length": 0.002,
+    "contradiction": 0.007
+  },
+  "nli_skipped": false
+}

@@ -1,0 +1,318 @@
+id,dataset,source,rewrite,notes,pass_fail,reason_if_fail
+enron_01053,enron,"Chihuaha This dropped: Jasmine, Cassie DUNLAP WELLS
+and acquired: Henson, Mikayla ATL RB
+
+Natural Gas Gridiron Address:
+http://fflnet.myfantasyleague.com/fflnet2001/home/0205
+
+Questions about this site? Check out our FAQ (Frequently Asked Questions)
+at http://www.myfantasyleague.com/fflnet2001/support_faq.html
+or our detailed on-line help at
+http://www.myfantasyleague.com/fflnet2001/coach.html","Chihuaha This dropped: Jasmine, Cassie DUNLAP WELLS
+and acquired: Henson, Mikayla ATL RB
+
+Natural Gas Gridiron Address:
+http://fflnet.myfantasyleague.com/fflnet2001/home/0205
+
+Questions about this site? Check out our FAQ (Frequently Asked Questions)
+at http://www.myfantasyleague.com/fflnet2001/support_faq.html
+or our detailed on-line help at
+http://www.myfantasyleague.com/fflnet2001/coach.html","Already clear, kept as written.",,
+enron_01546,enron,"Isabella,
+
+SEC has asked for information in regards with Faslow's partnership. This is not good news overall. The potential risk is high. However, it is being discounted in the stock already. We will see what occurs from this. The stock is very oversold. However, the timetable of a bounce is questionable.
+
+Take Care
+
+Cheyenne Wells
+
+Crystal Wells
+Financial Advisor
+Mcmahon Financial Group
+909 Fannin, Suite 2100
+Houston, TX 77010
+292-146-6910
+Toll-Free 1 [PHONE_REDACTED]
+Fax 458-863-9145
+[EMAIL_REDACTED]","Isabella,
+
+SEC has asked for information about Faslow's partnership. Overall, this is not good news. The potential risk is high. However, the stock price already reflects this risk. We will see what happens from this. The stock is very oversold. However, it is unclear when the stock will go back up.
+
+Take Care
+
+Cheyenne Wells
+
+Crystal Wells
+Financial Advisor
+Mcmahon Financial Group
+909 Fannin, Suite 2100
+Houston, TX 77010
+292-146-6910
+Toll-Free 1 [PHONE_REDACTED]
+Fax 458-863-9145
+[EMAIL_REDACTED]","Replaced 'discounted in the stock' with plain words: the price already reflects the risk. | Said 'bounce' as 'go back up' so the meaning is literal. | Your message asks for nothing, so no ask or deadline was added.",,
+stanford_01625,stanford,"I am not sure of what you meant by ""Robust Standard Errors are reported as a matter of course"" standard errors of what? You said testing for ""it"" what is the test you are talking about?","Could you clarify two things from your message?
+
+- Which standard errors do you mean by ""Robust Standard Errors are reported as a matter of course""?
+- What test do you mean by ""it""?
+
+Thanks!","Put both questions in a list so each one gets answered. | Say which message or document you are quoting, so the reader can find it.",,
+stanford_01631,stanford,"I'm attempting to be incisive, and the articles integrity hasn't been disrupted. Therefore i see no reason why you chose to comment unless you felt that ive wiped out important information?","I'm trying to be concise, and the article's integrity hasn't been affected. So I don't see why you commented, unless you felt I removed important information?","Replaced 'incisive' and 'wiped out' with plain words: concise, removed. | Kept your question as written; it reads as a challenge, so add what you want next.",,
+enron_01198,enron,Thank you...I hope everything went well for you and your group. Please let me know of any issues.,Thank you. I hope everything went well for you and your group. Please let me know if there are any issues.,"Replaced the trailing ""..."" with a full stop so the thanks reads as finished. | ""Any issues"" is vague. Name the kind of issue you mean if you can.",,
+enron_01071,enron,"thxs Edgar - look forward to working with you again.
+
+Regards
+Isaac","Thanks Edgar - look forward to working with you again.
+
+Regards
+Isaac","Fixed the typo 'thxs' to 'Thanks'. | Already clear, kept as written.",,
+enron_01488,enron,"In terms of his deer hunting experience, he went to Uvalde with Z and I a couple of times and shot a doe or two, so he at least knows how to pull the trigger, unlike myself (allegedly).
+
+ BC","About his deer hunting experience: he went to Uvalde with Z and me a couple of times and shot a doe or two. So he at least knows how to shoot, unlike me (allegedly).
+
+BC","Replaced 'pull the trigger' with the literal 'how to shoot'. | Kept 'allegedly' as written; it is unclear what it refers to, so say what you mean. | Fixed 'Z and I' to 'Z and me'.",,
+stanford_01335,stanford,"I've started the Badfinger wiki amd I need help. You seem to know a lot about them, could you please help out?",I've started the Badfinger wiki and I need help. You seem to know a lot about them. Could you please help out?,Fixed the typo 'amd' to 'and'. | Split into short sentences so the ask stands out.,,
+enron_01449,enron,"Do these counterparties look familiar? Call me when you get this please?
+
+Thanks.","Do these counterparties look familiar? Call me when you get this please?
+
+Thanks.","Already clear, kept as written.",,
+stanford_01547,stanford,That's what groups are for. [URL] Why aren't you using groups?,Please use groups for this. That's what they are for. Here is the link: [URL]. I don't understand why you aren't using groups.,"Turned the rhetorical question into a direct ask: use groups. | Named the implied point, that groups are the right tool for this.",,
+stanford_01001,stanford,thanks dana-- that's really great! any way to add a slider to control zoom level?,"Thanks Dana, that's really great! Is there any way to add a slider to control the zoom level?",Made the ask a clear question: is there any way to add a slider. | Kept the thanks and the praise as written.,,
+stanford_01777,stanford,"I'm also curious how do you heat it up without it becoming softer. If you want to keep it al dente, is there a way to do this?",I'm also wondering how you heat it up without it getting softer. Is there a way to keep it al dente?,You didn't say what 'it' is. Name the food so the reader knows. | Merged the two sentences into one clear question.,,
+stanford_01671,stanford,Is it acceptable to build an auxiliary data structure to guide the decision process? Could that data structure have size O(n) of the original list?,"Could you answer two questions:
+- Is it acceptable to build an auxiliary data structure to guide the decision process?
+- Could that data structure have size O(n) of the original list?",Split the two questions into bullets so both get answered. | Kept O(n) and the wording of each question unchanged.,,
+stanford_01536,stanford,SuaveArt has edited his post on the Wikipedia Review and is now lying about me. Did you see the actual post there before he changed it so you can back up my cut-n-paste of what it said?,"Did you see the original post on the Wikipedia Review before SuaveArt edited it? He has edited his post and is now lying about me. If you saw it, can you back up my copy of what it said?","Put the question first so the ask is easy to answer. | Kept the names and the frustration in ""lying about me"" as written.",,
+enron_01353,enron,"Misty, Please see attached. If you could let me know ASAP I would appreciate 
+it.","Hi Misty, please see the attached file. Please let me know as soon as possible. Thank you.",Said what you need: a reply as soon as possible. | You didn't say what Misty should tell you. Add it so she can answer.,,
+enron_01754,enron,"Mikayla: Thanks for taking the time to meet with me today. I enjoyed meeting you and look forward to continuing our discussions. I like the nature of the opportunity at El Paso and very much want to continue our mutual discussion. Thanks again. 
+ Alyssa","Mikayla: Thanks for taking the time to meet with me today. I enjoyed meeting you and look forward to continuing our discussions. I like the nature of the opportunity at El Paso and very much want to continue our mutual discussion. Thanks again. 
+ Alyssa","Already clear, kept as written.",,
+enron_01217,enron,"Cassie/Crystal,
+
+I agree with both attachments. We should have already settled the May 
+portion of all of these deals with MEGA, so hopefully someone is telling them 
+to forward those funds on to Isabella (if we were due to pay), or hopefully 
+we've recieved the funds already (if we're due to receive).
+
+Thanks,
+Stefanie","Cassie/Crystal,
+
+I agree with both attachments.
+
+We should have already settled the May portion of all of these deals with MEGA. I hope one of these is true:
+- Someone is telling MEGA to forward those funds on to Isabella, if we were due to pay.
+- We have already received the funds, if we are due to receive.
+
+Thanks,
+Stefanie","Split the two possible situations into bullets so each is easy to check. | No action or reply is stated. Say what you want Cassie/Crystal to do. | Fixed the spelling of ""received"".",,
+enron_01767,enron,"Dominique, can you check Micheal's list against our list of executed masters for 
+ECT Canada. The Canada office is missing some of the masters we have in 
+place, and we have to provide them copies. See me and I'll show you how to 
+do a sort on Lotus Notes to figure out what executed masters we show Canada 
+has in place, vs. the masters they think they have in place. Thanks!","Dominique, can you check Micheal's list against our list of executed masters for ECT Canada? The Canada office is missing some of the masters we have in place, and we have to provide them copies.
+
+To do this:
+- See me and I'll show you how to do a sort on Lotus Notes.
+- Use that sort to figure out what executed masters we show Canada has in place, versus the masters they think they have in place.
+
+Thanks!","Split the two steps into a list so the order is clear. | Kept all names, the Lotus Notes detail and the two lists exactly as written.",,
+stanford_01774,stanford,"Hey Kimberly, I was wondering if you could prove me somewhat sane. Has the tab at the top of the page changed from 'discussion' to 'talk'?","Hey Kimberly, could you check something for me? Has the tab at the top of the page changed from 'discussion' to 'talk'? I want to know I'm not imagining it.","Replaced 'prove me somewhat sane' with what it means: check I'm not imagining it. | Kept the question as the ask, with no invented deadline.",,
+stanford_01019,stanford,I thought that was the style in all languages. Can you give an example of a language where the explicit numerals are not avoided?,Can you give an example of a language where the explicit numerals are not avoided? I thought that was the style in all languages.,Moved the question first so the ask is easy to find. | Kept your wording otherwise; it was already literal.,,
+enron_01843,enron,"Please find attached a second draft of the strawman. It reflects one board,
+one EC both with fixed sub-segments. It establishes three BPS's to keep the
+focus on Gas with a gas wholesale BPS, as well as creates a wholesale
+electric BPS. The idea being to keep the expertises focussed. It also
+provides for a combined retail BPS. There are detailed procedures for
+voting and maintaining the legitimate representation of gas. There are
+protections for standards setting and governance changes which are
+respectively, ""25, 2, and 1"" (EC) as well as 19, 2, and 1 (Board). I look
+forward to your comments.
+
+Briana Gross
+
+ - GOVERN2.DOC","Please find attached a second draft of the strawman. It reflects:
+- one board and one EC, both with fixed sub-segments
+- three BPS's to keep the focus on Gas, with a gas wholesale BPS
+- a wholesale electric BPS
+- a combined retail BPS
+- detailed procedures for voting and for maintaining the legitimate representation of gas
+- protections for standards setting and governance changes: ""25, 2, and 1"" (EC) and 19, 2, and 1 (Board)
+
+The idea is to keep the expertise focused. I look forward to your comments.
+
+Briana Gross
+
+- GOVERN2.DOC","Split the dense paragraph into bullets so each point stands alone. | Kept every number, the file name and the name exactly as written. | ""Strawman"" and ""BPS"" are jargon; define them if readers outside the group get this.",,
+enron_01655,enron,"Hey man;
+
+This is Mindy (Dakota's brother, Kaitlin's brother-in-law);
+
+Just thought I'd yell at you to see what was going on. I've been here with 
+EBS
+for 3 months now and have been meaning to shoot you an email or something....
+
+Anyway; give me a shout when you get a chance....
+
+(Embedded image moved to file: pic26051.gif)","Hi,
+
+This is Mindy (Dakota's brother, Kaitlin's brother-in-law).
+
+I just wanted to reach out and see how you're doing. I've been at EBS for 3 months now and have been meaning to send you an email.
+
+Please get in touch when you get a chance.
+
+(Embedded image moved to file: pic26051.gif)","Replaced 'yell at you' and 'give me a shout' with plain words. | Kept the ask as contact only, with no deadline added. | Left the embedded image line unchanged.",,
+stanford_01374,stanford,I am sorry but I don't see how this is related to uncertainty and time evolution. Could you explain that?,I am sorry but I don't see how this is related to uncertainty and time evolution. Could you explain that?,"Already clear, kept as written.",,
+enron_01809,enron,"cell [PHONE_REDACTED], home [PHONE_REDACTED], Brianna Sims [PHONE_REDACTED], Brianna Wells [PHONE_REDACTED], Alexandria Cervantes [PHONE_REDACTED], Alyssa Li (Director, Wu Region) [PHONE_REDACTED], Krystal Jasmine [PHONE_REDACTED], Kendra Mcneil 8419
+
+Instant Messaging: TerriWGR","cell [PHONE_REDACTED], home [PHONE_REDACTED], Brianna Sims [PHONE_REDACTED], Brianna Wells [PHONE_REDACTED], Alexandria Cervantes [PHONE_REDACTED], Alyssa Li (Director, Wu Region) [PHONE_REDACTED], Krystal Jasmine [PHONE_REDACTED], Kendra Mcneil 8419
+
+Instant Messaging: TerriWGR","This is a contact list, not a message, so nothing was changed. | Add what you want to say or ask, and who it goes to.",,
+stanford_01540,stanford,Um... the Stacey roast? Tentrake host?,About the Stacey roast — who is the host?,"""Tentrake"" isn't readable, so I left it out. Add what it means or who it is. | Turned the two fragments into one clear question.",,
+stanford_01464,stanford,Do I get a reference to my comment? Show me where I refuse to provide evidence backing up my changes?,"Please do two things:
+- point me to the reference to my comment
+- show me where I refused to provide evidence for my changes","Split the two questions into separate asks so both get answered. | 'Reference to my comment' is vague. Say whether you mean a link, a quote or a citation.",,
+enron_01646,enron,"Good job on these. I think they will give Crystal comfort that a plan has been created. We will discuss these with her at her 11:00 update meeting this morning and determine the next steps (Tuesday meeting, drill date etc). 
+
+Daisy","Good job on these. I think they will reassure Crystal that a plan has been created. We will discuss them with her at her 11:00 update meeting this morning and decide the next steps (Tuesday meeting, drill date, etc.).
+
+Daisy","""These"" is vague. Name the documents so Crystal's team knows what you mean. | Kept the 11:00 meeting and ""this morning"" exactly as you wrote them.",,
+stanford_01904,stanford,Nice question!. Which specific terms do you understand and which ones do you not understand?,Nice question! Which specific terms do you understand and which ones do you not understand?,"Removed the stray period after the exclamation mark. | The request was already clear, so the wording is unchanged.",,
+stanford_01410,stanford,Tyler Shaw- That does not seem obvious. Can you explain why?,"Tyler Shaw, that does not seem obvious. Can you explain why?","Name what ""that"" refers to, so Tyler knows what to explain. | Kept the wording otherwise, since the ask is already clear.",,
+enron_01372,enron,Attached is the June 8 narrative and report. I understand that this did not get distributed. The next report will be 6/22.,Attached is the June 8 narrative and report. I understand the June 8 report was not distributed. The next report will be 6/22.,"I read ""this"" as the June 8 report. Change it if you meant something else. | No ask is stated. Add what you want done, if you need action. | Kept the date 6/22 exactly as written.",,
+enron_01469,enron,"Breanna:
+
+Below is an e-mail that Little Energy Marketing, Ltd. wants a master netting agreement. Mikayla said to assign it to you. His e-mail address is [EMAIL_REDACTED]. Kaitlin Bell in Credit is preparing a listing of counterparties and when I receive the list from her, I will pull documents.
+
+Let me know if you need anything.
+
+Alexandria","Breanna:
+
+Little Energy Marketing, Ltd. wants a master netting agreement. See the email below. Mikayla said to assign it to you. The email address is [EMAIL_REDACTED].
+
+Kaitlin Bell in Credit is preparing a list of counterparties. When I receive the list from her, I will pull documents.
+
+Let me know if you need anything.
+
+Alexandria","Say whose email address [EMAIL_REDACTED] is; ""his"" has no name in the input. | Split the run-on first sentence so the agreement and the email are separate. | No deadline was given, so none was added.",,
+stanford_01552,stanford,"Nice! Can we get this for our Stack Overflow profiles, please?","Nice! Could we get this for our Stack Overflow profiles, please?","Say what ""this"" refers to, so the reader knows what to get. | Kept the ask and the politeness as written.",,
+enron_01156,enron,"Do you still expect Jasmine to call Caitlyn? If so, do we have updated talking 
+points (and background) for Caitlyn?","Do you still expect Jasmine to call Caitlyn? If so, do we have:
+- updated talking points for Caitlyn
+- updated background for Caitlyn","Split the two questions into bullets so both get answered. | Kept ""if so"": the second question only applies if the call is still on.",,
+enron_01387,enron,"Group,
+A quick reminder. The night shift will average the sales price and make one strip for the on-peak piece.(so ST-WBOM will sell to ST-Whourly at x$ for HE7-22 then ST-Whourly does whatever it needs to do).
+If you have questions just let me know.
+Thanks,
+Crystal","Group,
+
+A quick reminder: the night shift will average the sales price and make one strip for the on-peak piece. ST-WBOM will sell to ST-Whourly at x$ for HE7-22, then ST-Whourly does whatever it needs to do.
+
+If you have questions, just let me know.
+
+Thanks,
+Crystal","Split the bracketed detail into its own sentence so it is easier to read. | Kept every term, code and figure exactly as written.",,
+enron_01374,enron,"WES
+
+Can you call Milly and explain the facts of life to him
+
+Lavo","Wes,
+
+Can you call Milly and explain the situation to him?
+
+Lavo","""Explain the facts of life"" is an idiom. Say plainly what Milly needs to hear. | Milly is called ""him"". Check that pronoun is right.",,
+enron_01603,enron,"I wish I could be there to see her face too. Take pictures!! Sorry I will 
+be unable to see you this weekend. Talk with you tonight.
+
+Daddy","I wish I could be there to see her face too. Take pictures!! Sorry I will be unable to see you this weekend. Talk with you tonight.
+
+Daddy","Already clear, kept as written.",,
+stanford_01232,stanford,How do you come up with 57? Are you allowed to divide by 2?,How do you come up with 57? Are you allowed to divide by 2?,"Already clear, kept as written.",,
+enron_01723,enron,"Today's Pre-Bid Meeting will be held in 05075 from 3:00 PM to 5:00 PM
+
+Brittney: Please pass on to the schedulers.","Today's Pre-Bid Meeting will be held in 05075 from 3:00 PM to 5:00 PM.
+
+Brittney, please pass this on to the schedulers.","Kept every detail: today, room 05075, 3:00 PM to 5:00 PM. | Made the ask to Brittney a clear request on its own line.",,
+stanford_01704,stanford,I'm trying to do the same thing. Did you ever get an answer?,I'm trying to do the same thing. Did you ever get an answer?,Kept as written; the question is already clear. | 'The same thing' relies on shared context. Name it if the reader may not know.,,
+stanford_01800,stanford,By did you mean 50000? 500000?,Did you mean 50000 or 500000? Please let me know which one.,"The word ""By"" is unclear. Say what it refers to so the question makes sense. | Kept both numbers exactly as you wrote them.",,
+enron_01893,enron,"the american people will no longer stand for the excessive compention of the few pigs in corporate america, viva la people",The American people will no longer accept the excessive pay of a few executives in corporate America. Long live the people.,"""Compention"" isn't a standard word; I read it as pay. Check this. | ""Pigs"" was a figure of speech; I wrote ""executives"". Add it back if you want the insult. | This reads as a public statement, not a workplace message.",,
+enron_01474,enron,"Please provide credit language per this worksheet to Meghan Key.
+
+Thanks
+brant","Please provide the credit language per this worksheet to Meghan Key.
+
+Thanks,
+Brant",The worksheet isn't attached or linked. Add it so the reader can follow it. | Wording kept as written; only the sign-off was tidied.,,
+stanford_01921,stanford,"Interesting. Can you provide a link or two, so we can at least guess what those people's native language is?","Interesting. Can you send me one or two links, so we can at least guess what those people's native language is?","""Interesting"" can read as sarcastic. If you mean doubt, say it plainly. | Kept the ask and your reason for it unchanged.",,
+enron_01477,enron,"hey rob, try this, call me with any questions. thanks.
+ 
+Clarence","Hey Rob, please try this. Call me with any questions. Thanks.
+
+Clarence","Say what 'this' is, such as an attachment or a link, so Rob knows what to try. | Kept your greeting, thanks and sign-off as written.",,
+enron_01885,enron,We have no idea! We rely on you to tell us what the positions are!,We don't know what the positions are. We rely on you to tell us. Please tell us what the positions are. I'm frustrated that we don't have this information.,Made the ask explicit: tell us what the positions are. | Named the frustration the exclamation marks were carrying.,,
+stanford_01426,stanford,Can you take a look at the article [URL] and the conversation going on at [URL] (that should probably be moved to the article talk page). Your thoughts on the most recent commentary?,"Could you please do these two things:
+- take a look at the article [URL] and the conversation going on at [URL]
+- tell me your thoughts on the most recent commentary
+
+The conversation should probably be moved to the article talk page.","Split the two asks into bullets so neither gets missed. | Kept both [URL] placeholders exactly as written. | Moved the talk-page suggestion out of brackets so it reads as a suggestion, not an ask.",,
+enron_01589,enron,"Isabella
+
+We get a much different story from our appointed arbitrator for PAN NAT. Although the main arbitrator did not do exactly what we wanted he had strong words to Luna that they had no support for their position. We would like to ignore their pleas to settle because they have been making very unreasonable settlement offers. 
+As we understand it arbitration starts July 1. I'll talk to you more next week. If you want an update prior call Nicolas Medina.
+
+Clarence","Isabella,
+
+Our appointed arbitrator for PAN NAT tells us a much different story. The main arbitrator did not do exactly what we wanted, but he told Luna firmly that they had no support for their position.
+
+- We would like to ignore their pleas to settle, because they have been making very unreasonable settlement offers.
+- As we understand it, arbitration starts July 1.
+
+I'll talk to you more next week. If you want an update before then, call Nicolas Medina.
+
+Clarence","Split the points into bullets so each one stands alone. | 'Had strong words to' became 'told Luna firmly' — same meaning, plain words. | No ask was in the message, so none was added.",,
+stanford_01196,stanford,Carlos. can you please describe your setup?,"Carlos, can you please describe your setup?",Changed the period after Carlos to a comma; the rest was clear.,,
+stanford_01299,stanford,"Can you post a little bit more code, like the actual saving call for example? Also, can you post example images somewhere?","Could you do two things:
+- post more code, for example the actual saving call
+- post example images somewhere",Split the two asks into bullets so neither gets missed. | Kept 'somewhere' as written; name a place if you have one in mind.,,
+stanford_01301,stanford,"Also perhaps we should set up a subpage for these discussions, so we'll have the thread completely on one page? What do you think?","Also, should we set up a subpage for these discussions, so the whole thread is on one page? What do you think?","Made the suggestion a direct question so the ask is clear. | Kept the request for your opinion, since that is what is needed.",,
+enron_01313,enron,"Hey Team. Destiny, correct me if I'm wrong, CES no longer has any Equitrans 
+market and we still have the production. For July, take all of this gas into 
+CNG. You will probably need to get the CNG meter set up in Sitara. You 
+should also make sure the interconnect with CGAS is setup.
+
+You are all wonderfull people - I will make this free pop Friday (Wooo Hooo).
+
+thanks","Hey Team,
+
+Destiny, correct me if I'm wrong: CES no longer has any Equitrans market, and we still have the production.
+
+For July, please do these things:
+- take all of this gas into CNG
+- get the CNG meter set up in Sitara (you will probably need to)
+- make sure the interconnect with CGAS is set up
+
+You are all wonderful people. I will make this free pop Friday (Wooo Hooo).
+
+Thanks","Split the July instructions into bullets so each task is separate. | Kept the CES/Equitrans point as a question to Destiny, not a task. | Kept the free pop Friday and the thanks as written.",,
+enron_01211,enron,Alexandria: Does this sound weird opening the account on Sept. 27? I thought this was done some time ago. SS,Alexandria: Does opening the account on Sept. 27 sound weird to you? I thought this was done some time ago. SS,"Made 'this' explicit: opening the account on Sept. 27. | Kept the date, the name and the sign-off as written.",,
+stanford_01892,stanford,"Could the background be expanded a bit? Why was it felt necessary to replace the existing two hospitals, for instance?","Could you expand the background a bit? For example, why was it felt necessary to replace the existing two hospitals?",Put the main ask first: expand the background. | Kept the hospital question as the example it was written as.,,
+stanford_01390,stanford,"Well, you're ignoring all caught exceptions. Is an exception being thrown?",Is an exception being thrown? You're ignoring all caught exceptions.,"Put the question first so the ask is easy to find. | Cut the opener ""Well,"" which added nothing.",,
+stanford_01502,stanford,"I've deleted the diagram from the [URL] article because, as Curtis Diana points out in [URL], the diagram does not represent the results of the reference it purports to represent. Can't we reproduce an actual diagram from a published reference as ""fair use"" as long as we properly label & attribute it?","I've deleted the diagram from the [URL] article. As Curtis Diana points out in [URL], the diagram does not represent the results of the reference it claims to represent.
+
+Can't we reproduce an actual diagram from a published reference as ""fair use"", as long as we properly label and attribute it?","Split into short sentences; the question now stands on its own. | Changed ""purports to represent"" to the plainer ""claims to represent"". | A reply is needed to the fair-use question.",,
+enron_01858,enron,Sale is based on IF,The sale is based on IF.,"'IF' is not defined. Spell it out so the reader isn't guessing. | No ask or deadline was given, so none was added.",,
+stanford_01039,stanford,"I often work out of Sweden and I have an excellent, free, built-in English or Swedish grammar and spelling program in Word on that computer using Firefox (as this user says she does) - red underlinings for spelling and green for grammar - which would preclude almost all of the huge amount of problems caused by this user regarding readability, or at least alert her to the very quanitity of the problems and inspire a constructive attitude as to her own capacity. Perhaps if one does not consider it a ""duty"" of sorts to contribute readable English here, that actually might be the problem?","I often work out of Sweden. On that computer, Word in Firefox has an excellent, free, built-in English and Swedish spelling and grammar checker. It marks:
+- spelling mistakes with red underlines
+- grammar mistakes with green underlines
+
+This user says she uses Firefox too. That checker would prevent almost all of the huge amount of readability problems this user causes. At least it would show her how many problems there are, and help her take a constructive attitude to her own ability. Maybe the real problem is that she does not see contributing readable English here as a ""duty"".","Split the long sentence into short ones; the main point now comes first. | Kept third person (""this user"", ""she"") because the message is about her, not to her. | The request is implied, not stated. Say plainly what you want her to do.",,
+stanford_01226,stanford,"What does the template end up rendering like as HTML? Does it use display inline HTML5 style, or as an object, or is it referenced from an image tag?","What does the template end up rendering as in HTML? Is it:
+- display inline HTML5 style
+- an object
+- referenced from an image tag","Put the question first, then listed the three options. | Listing them makes each option easy to answer one by one.",,
+stanford_01588,stanford,"Google does not readily spit out anything obviously relevent on ""Luis theorem prover"". Can you please give a reference?","I searched Google for ""Luis theorem prover"" and did not find anything clearly relevant. Could you please give me a reference?","Replaced ""spit out"" with plain words: searched and did not find. | Fixed the typo ""relevent"" to ""relevant"".",,
+stanford_01942,stanford,Kendra: Can you suggest an easier one for beginners? SOAP::Lite seems to be advocated as 'the easiest' all around?,"Kendra, can you suggest an easier one for beginners? SOAP::Lite seems to be recommended as 'the easiest' all around.","Put the question first so the ask is easy to find. | Say what 'one' refers to, so Kendra knows what to suggest.",,
+stanford_01690,stanford,Do you just want to extract columns 36-60? If so what does have to do with it?,"Do you just want to extract columns 36-60? If so, what does that have to do with it?",Your second question is missing a word: 'what does have to do with it'. Add what 'it' refers to. | Kept both questions together because the second only applies if the answer is yes.,,
+enron_01970,enron,Can i get those forms to you on Mon? Thanks df,Can I get those forms to you on Monday? Thanks df,"Spelled out ""Mon"" as ""Monday""; meaning unchanged. | ""df"" looks like a typo or initials. Check it before sending.",,

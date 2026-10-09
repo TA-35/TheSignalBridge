@@ -1,0 +1,342 @@
+id,dataset,source,rewrite,notes,pass_fail,reason_if_fail
+enron_01257,enron,you didn't answer my question.,"You didn't answer my question. Could you answer it, please?","Made the request explicit: answer the question. | Name which question you mean, so it can't be skipped again.",,
+enron_01615,enron,"I never heard from you regarding this. What's up? Also, I left you a message regarding Hesco this morning. Please call -
+
+Bethany","Hi, I haven't heard back from you about this. Can you tell me what's happening? I also left you a message about Hesco this morning. Please call me.
+
+Bethany","'This' is vague. Name the topic so they know what you mean. | Made both asks clear: reply about this, and call you about Hesco.",,
+enron_01323,enron,"Isabella,
+
+Since Terrence has already booked EB4180, should we just plan on meeting there at 8:30 since the meeting may already be in progress. 
+
+Thanks, Bethany.","Isabella,
+
+Terrence has already booked EB4180. Should we plan to meet there at 8:30, since the meeting may already be in progress?
+
+Thanks,
+Bethany",Made 'there' explicit as EB4180 so the question stands alone. | Split the long sentence so the question is easy to answer.,,
+stanford_01494,stanford,"As a side-question, how do you prevent the kefir from developing little tiny, useless curds, and instead evenly thickening into something like yogurt?","Side question: how do you prevent the kefir from developing little tiny, useless curds? I want it to thicken evenly into something like yogurt instead.","Split the long question into two sentences, one idea each. | Kept the 'side question' framing so it stays separate from the main topic.",,
+stanford_01209,stanford,"Do you mean something like ""Intrateam 30-minute meeting""? Or does it have to be one word?","Do you mean something like ""Intrateam 30-minute meeting""? Or does it have to be one word?","Already clear, kept as written.",,
+enron_01939,enron,"I will ask Brittney to set up a meeting for us this week. Your name has been on 
+my list to call - a trip to the Thornton Bowl last week cut my week short, so I 
+will look forward to getting with you this week. --Alyssa",I will ask Brittney to set up a meeting for us this week. Your name has been on my list to call. A trip to the Thornton Bowl last week cut my week short. I look forward to getting with you this week. --Alyssa,"Put the meeting plan first so the point is clear. | Split the long sentence about the Thornton Bowl trip into short ones. | No ask here, so nothing was added for the reader to do.",,
+enron_01209,enron,"Edgar
+ 
+I wish you and your family all the best. I has truly been my privilege to work with you and get to know you over the last several years. You and your group has taught me a lot and I feel very grateful for this.
+ 
+It has been a sad ending to a phenomenal period at Enron. The one thing that no one can take from us is the experince we gained and the relationships we've made.
+ 
+Madison Medina and Best Wishes
+ 
+Madison Garner","Edgar,
+
+I wish you and your family all the best. It has truly been my privilege to work with you and get to know you over the last several years. You and your group have taught me a lot, and I feel very grateful for this.
+
+It has been a sad ending to a phenomenal period at Enron. The one thing that no one can take from us is the experience we gained and the relationships we've made.
+
+Madison Medina and Best Wishes
+
+Madison Garner","Fixed typos like ""I has"" and ""experince""; your meaning is unchanged. | The line ""Madison Medina and Best Wishes"" is unclear. Check it before sending.",,
+stanford_01121,stanford,"So your goal, as stated above, is not complete? You have stated the goal for row A, but then you also have goals for the other rows?","Could you clarify two things:
+- Is your goal, as stated above, not complete?
+- You stated the goal for row A. Do you also have goals for the other rows?",Split the two questions into a list so both get answered. | Made the second question explicit instead of leaving it as a trailing phrase.,,
+stanford_01242,stanford,What is the declaration for then? Does it have a member?,What is the declaration for then? Does it have a member?,"Name which declaration you mean so the reader knows what to answer. | Say what 'a member' is here: a person, or a field on the form?",,
+stanford_01442,stanford,"What do you mean by ""All rows are sorted, and all columns are sorted""? for example, [1,4;2,3],how is that sorted according to your precondition?","What do you mean by ""All rows are sorted, and all columns are sorted""? For example, take [1,4;2,3]. How is that sorted according to your precondition?",Moved the question to the front so the ask is clear. | Kept your example and the wording of the precondition unchanged.,,
+enron_01494,enron,"Brooke,
+
+Have you been able to get the Credit Ticket for the Enron North America/Upstream Master?
+Have you had a chance to discuss the Master Committed Reserves contract with Kendra Rush? 
+
+Thanks,
+Luke","Brooke,
+
+Could you let me know:
+- whether you have the Credit Ticket for the Enron North America/Upstream Master
+- whether you have discussed the Master Committed Reserves contract with Kendra Rush
+
+Thanks,
+Luke",Listed the two questions as bullets so both are easy to answer. | Kept all names and contract terms exactly as written. | No deadline is given. Add one if you need a reply by a set day.,,
+enron_01621,enron,your choice of anderson or watters and taylor,It's your choice: Anderson or Watters and Taylor.,Made the choice explicit: either Anderson or Watters and Taylor. | You didn't say what the choice is about. Add that for the reader.,,
+enron_01018,enron,"Crystal,
+
+Presently my title is Sr. Specialist. (although that may be changing) My 
+location is 3078A (That is like to change soon as well, but I'll still be on 
+30) Our mail stop is EB3081so that may be better to use, as it's right next 
+to our assistant. 
+
+Please let me know if you need anything else from me.","Hi Crystal,
+
+Here are my details:
+
+- Title: Sr. Specialist (this may be changing)
+- Location: 3078A (this may change soon, but I'll still be on 30)
+- Mail stop: EB3081 — this may be better to use, since it's right next to our assistant
+
+Please let me know if you need anything else from me.","Listed the three details so each one is easy to find. | Kept every value exactly as written, including 30 and EB3081. | '30' is kept as written; spell it out if Crystal may not know it.",,
+enron_01361,enron,"Mariah, I agree and will monitor this proceeding as suggested. We did enter an appearance in this docket and therefore have the right to file comments or participate in the event that an issue arises which we want to address or protest. gh","Mariah, I agree and will monitor this proceeding as suggested. We did enter an appearance in this docket and therefore have the right to file comments or participate in the event that an issue arises which we want to address or protest. gh",Trailing 'gh' may be a stray keystroke or your initials; remove it if unintended.,,
+enron_01761,enron,are you guys using all your tickets? i can buy one today if you guys are using yours. probably a good idea for me to buy it anyway. i think that i am going in sat morning.,"Hi, are you all using all your tickets? If you are using yours, I can buy one today. I think I'm going Saturday morning. It's probably a good idea for me to buy one anyway.",Split the run-on sentences so each idea stands alone. | Kept 'today' and 'Saturday morning' exactly as you wrote them.,,
+stanford_01680,stanford,Can I ask: was this really the implication that you intended in making this change? And do you really think the RfC expressed consensus support for such a position?,"Can I ask two things about this change?
+- Did you intend this implication when you made the change?
+- Do you think the RfC showed consensus support for this position?
+
+I'm asking because I'm skeptical that the RfC supported it.","Split the two questions into a list so both get answered. | The word 'really' signalled doubt, so I said the doubt out loud.",,
+enron_01849,enron,looks great. thanks for your help.,looks great. thanks for your help.,"Already clear, kept as written.",,
+stanford_01859,stanford,Great work you've been doing on this. Would you agree with me that International Political Economy should be capitalised?,Great work you've been doing on this. I think International Political Economy should be capitalised. Do you agree?,"Split the question into your view plus a direct question, so the ask is clear. | Kept the praise at the start.",,
+enron_01590,enron,"Peterman,
+DP&L called.. they are having trouble checking out a deal from October 5th. They sounded all twisted off so I told them that you would call them Monday.. 
+
+The guys name is Mia Wyatt @ [PHONE_REDACTED]","Peterman,
+
+DP&L called. They are having trouble checking out a deal from October 5th. They sounded upset, so I told them you would call them on Monday.
+
+The person's name is Mia Wyatt at [PHONE_REDACTED].","Replaced ""all twisted off"" with ""upset"" so the feeling is clear. | Kept the call-back day as Monday and the October 5th date exactly. | ""Checking out a deal"" is vague. Add what the deal is if you know.",,
+stanford_01610,stanford,"Any thoughts on what we should do with this? Delete it as a duplicate, or copy to Commons and rename?","What do you think we should do with this? Two options:
+- delete it as a duplicate
+- copy it to Commons and rename it",Split the two options into bullets so they are easy to compare. | 'This' is vague. Name the item so the reader knows what you mean.,,
+enron_01284,enron,"Good morning all!
+
+Dominique just called and has let me know that she will be in the office today around 11:30 am; she is not feeling well this morning. If you should need anything, please feel free to contact me directly.
+
+Krystal
+Enron Wholesale Services
+[PHONE_REDACTED]","Good morning all!
+
+Dominique just called. She is not feeling well this morning, so she will be in the office today around 11:30 am. If you need anything, please contact me directly.
+
+Krystal
+Enron Wholesale Services
+[PHONE_REDACTED]","Put the reason and the 11:30 am arrival in one sentence. | Cut ""feel free to"" as filler; kept the greeting and sign-off. | ""Anything"" is vague. Say what it refers to if you can.",,
+stanford_01224,stanford,"The policy is tricky - I guess it comes down to whether or not you think the account is going to be disruptive, and whether it is appropriate to guess that ahead of time. On the other hand, looks like another overreaction to Kathleen, in my opinion - what do you think?","The policy is tricky. I guess it comes down to:
+- whether or not you think the account is going to be disruptive
+- whether it is appropriate to guess that ahead of time
+
+On the other hand, it looks like another overreaction to Kathleen, in my opinion. What do you think?","Split the long sentence into a short lead and a list of the two points. | ""The policy"" and ""the account"" are unnamed. Name them if the reader may not know which ones.",,
+stanford_01396,stanford,I've had enough of this. What would you think about filing a RfC?,I've had enough of this. What do you think about filing an RfC? I'd like your view.,"Kept ""I've had enough of this"" so the frustration behind the idea is clear. | ""What would you think about"" softened a proposal; now it asks directly for their view.",,
+stanford_01889,stanford,Please don't mention other languages when we're discussing the English wikipedia! Why are you limiting yourself only to the Abrahamic concepts of God?,"Two things:
+- Please don't mention other languages when we're discussing the English Wikipedia.
+- Why are you limiting yourself only to the Abrahamic concepts of God?",Split the request and the question so each one gets an answer. | Kept your direct wording; the frustration still comes through.,,
+enron_01436,enron,"Hi,
+
+How was the rest of your weekend?
+
+I miss you,
+Mackenzie","Hi,
+
+How was the rest of your weekend?
+
+I miss you,
+Mackenzie","Already clear, kept as written.",,
+enron_01100,enron,adjustment - 50 less cruise missles,Adjustment: 50 fewer cruise missiles.,"You didn't say what this adjusts. Name the item or document. | Say who should make the change, and by when if there is a date.",,
+stanford_01700,stanford,well... where is the problem? what results are you getting?,Where is the problem? What results are you getting?,"Split the two questions into separate sentences so each is easy to answer. | Dropped the ""well..."" filler; kept the casual tone. | You didn't name the problem or project. Add it if the reader needs it.",,
+stanford_01875,stanford,"Sean, your dislike of vignetting is hardly a reason to judge something as too subjective and therefore to close it. Is this site for technicians or photographers?","Sean, your dislike of vignetting is not a good reason to judge something as too subjective, and not a good reason to close it. Is this site for technicians or photographers?",Split the long sentence so the objection is easier to follow. | You don't say what you want done. Add whether you want it reopened.,,
+stanford_01017,stanford,"Good job working on the list, thanks. Could you make sure you move them from ""To do"" to ""Done"" when you finish?","Good job working on the list, thanks. Could you make sure you move them from ""To do"" to ""Done"" when you finish?","Already clear, kept as written.",,
+enron_01814,enron,"The best I could do was the Cypress course at 10:00 am Monday, January 21. The Diamond course was booked unitl later. Didn't want to tee off too late. Unless they lied to me, the fee plus cart is $36.
+
+Ce ya there.
+
+Crystal Foster","The best I could do was the Cypress course at 10:00 am Monday, January 21. The Diamond course was booked until later. I didn't want to start too late. The fee plus cart is $36, if the information I was given is correct.
+
+See you there.
+
+Crystal Foster","Fixed the typo 'unitl' to 'until'. | Replaced 'tee off' and 'unless they lied to me' with plain wording. | No ask in this message, so none was added.",,
+enron_01795,enron,"This is an issue we need to stay on top of. Angel: could you please put 
+some background together for everyone on the list?","This is an issue we need to keep watching. Angel, could you please put some background together for everyone on the list?",Replaced the idiom 'stay on top of' with 'keep watching'. | 'The list' isn't named. Say which list so Angel knows who gets it.,,
+enron_01597,enron,"Brooke,
+
+Just wanted to check and see if you had received my last two emails. If so, 
+I'd love to know what you think about the whole situation. If not, let me 
+know and I will resend the emails.
+
+Jerome","Brooke,
+
+Just wanted to check and see if you had received my last two emails. If so, I'd love to know what you think about the whole situation. If not, let me know and I will resend the emails.
+
+Jerome","Already clear, kept as written.",,
+stanford_01436,stanford,"I've steadily become more interested in getting this article up to FA, but I'm having trouble finding sources that actually analyze contemporary R&B instead of the entire [URL] genre. Do you have any advice or would you be interested in working on it together?","Do you have any advice, or would you be interested in working on this article with me?
+
+I've steadily become more interested in getting this article up to FA. I'm having trouble finding sources that actually analyze contemporary R&B, instead of the entire [URL] genre.",Moved the ask to the top so it isn't buried at the end. | Kept FA and [URL] exactly as written.,,
+stanford_01403,stanford,I don't know if I understand correctly: Do you want to add a new image tag to your div tag? Where do you have your list?,"I'm not sure I understand correctly. Could you answer these two questions:
+- Do you want to add a new image tag to your div tag?
+- Where is your list?",Split the two questions into bullets so both get answered. | 'Your list' is vague. Name which list you mean.,,
+stanford_01608,stanford,How lay are we talking about here? Do you have some knowledge of Galilean dynamics and Newtonian mechanics?,How much of a beginner are you? Do you have some knowledge of Galilean dynamics and Newtonian mechanics?,Replaced 'lay' with 'beginner' so the question is clear. | Kept both questions; the second names the knowledge you mean.,,
+enron_01846,enron,"Brooke, 
+Per our conversation yesterday, attached is the Unocal Term Sheet for your review and comment. This is a non-binding proposal. Note that the items in red are either questionable items or rates/prices that need to be confirmed and/or filled in. 
+ 
+
+The compression guys are meeting with Unocal tomorrow (Friday) early afternoon to discuss the project and term sheet.
+
+Please advise.
+
+Thanks, Madison Moon
+3-9620","Brooke,
+
+Per our conversation yesterday, attached is the Unocal Term Sheet for your review and comment. Please review it and send me your comments.
+
+- This is a non-binding proposal.
+- The items in red are either questionable items or rates/prices that need to be confirmed and/or filled in.
+
+The compression team is meeting with Unocal tomorrow (Friday) early afternoon to discuss the project and term sheet.
+
+Please advise.
+
+Thanks,
+Madison Moon
+3-9620","Listed the two red-item points as bullets so they are easy to check. | 'Please advise' is vague. Say what you need from Brooke. | No deadline was given, so none was added.",,
+stanford_01518,stanford,"Should I move it myself, or would you like me to walk you thru it? Have you read [URL]?","Do you want me to move it myself, or would you like me to walk you through it? Have you read [URL]?",'Walk you thru' is now 'walk you through'. | You didn't say what 'it' is. Name it so the reader knows what you mean.,,
+stanford_01511,stanford,"Jon Ok. Why are you requesting that people enter their entire URL, instead of just their ID?","Jon, OK. Why are you asking people to enter their entire URL instead of just their ID?","Kept it as a question, since it needs an answer from Jon. | 'Requesting that people enter' became 'asking people to enter' for plain wording. | 'OK' was left in; remove it if it wasn't meant as an acknowledgement.",,
+stanford_01694,stanford,"So, Gabrielle, you're not interested? Have you ever read [URL] article?","Gabrielle, are you not interested? Have you read the article at [URL]?",Split the two questions so each is easy to answer. | 'You're not interested?' assumes her answer. Ask plainly if you want her view.,,
+enron_01508,enron,"Savannah, your credit worksheets reflect ENA posting cash. Is this a mistake?
+
+I am trying to revise these draft masters and then I will tackle TGS.
+
+I still have severe laryngitis so I cannot speak but I can communicate via 
+e-mail or a paralegal.
+
+Thanks. Crystal","Savannah,
+
+Is it a mistake that your credit worksheets reflect ENA posting cash?
+
+I still have severe laryngitis, so I cannot speak. I can communicate by email or through a paralegal.
+
+I am revising these draft masters, and then I will work on TGS.
+
+Thanks,
+Crystal","Put your question first so Savannah sees the ask immediately. | Kept the laryngitis note so she knows to reply by email, not by phone. | ""These draft masters"" is vague; name them if Savannah won't know which ones.",,
+enron_01704,enron,"Seems to be a consensus among those of you I heard from that Bethany is
+the place to be tonight. If there are people who think this idea sucks, I am
+more than willing to alter plans. But, as of now, we'll meet up at
+Jaliscience about 9:00. I'll call Cassidy when I get into town, so he can be
+the go to guy for questions, etc. You're welcome Cassidy. See you tonight.","Here's the plan for tonight.
+
+- Most of the people I heard from agree that Bethany is the place to be tonight.
+- As of now, we'll meet up at Jaliscience about 9:00.
+- If you think this idea is bad, tell me and I'm willing to change the plans.
+- I'll call Cassidy when I get into town, so he's the person to ask your questions. You're welcome, Cassidy.
+
+See you tonight.",Bethany and Jaliscience both appear. Say which one is the meeting place. | Put the plan first and listed the details so nothing gets missed. | Replaced 'go to guy' with 'the person to ask'.,,
+enron_01149,enron,"Clarence, what did you do with this? Thanks. Crystal","Hi Clarence, could you tell me what you did with this? Thanks, Crystal","'This' is unnamed. Say which item or file you mean so Clarence can answer. | Made it a clear request for a reply, kept your greeting and sign-off.",,
+stanford_01254,stanford,"Any suggestions on what admin-specific readings I should be starting to go through, and what order? E.g., the actual mechanics of how to do some of the admin-related stuff?","Hi, do you have any suggestions on:
+- which admin-specific readings I should start going through
+- what order I should read them in
+
+I mean the practical side, like the actual mechanics of how to do the admin-related tasks. Thanks!",Split your two questions into bullets so both get answered. | Turned the example into a plain sentence about wanting the practical mechanics.,,
+enron_01695,enron,"Hey- both of you guys did a great job on Noah's deal. The pricing was done 
+correctly. The swing I wasn't aware of, but 5000+- per month is not a big 
+deal. The problem was that offers didn't get stood on.","Hi both, you both did a great job on Noah's deal. The pricing was done correctly. I wasn't aware of the swing, but 5000+- per month is not a big deal. The problem was that the offers didn't get stood on.","""Offers didn't get stood on"" is unclear. Say what happened to the offers. | ""The swing"" is undefined. Name it so they know what you mean. | Kept your praise and the 5000+- per month figure as written.",,
+stanford_01105,stanford,172 has refused to materially defend his take on NOR in terms of any criteria in [URL] even abrasively deleting a query from a newbie on the subject in his talk page. Is it possible to get some official clarification on the NOR policy before this becomes a precedent?,"Is it possible to get some official clarification on the NOR policy before this becomes a precedent?
+
+172 has refused to defend his position on NOR using any of the criteria in [URL]. He also deleted a newbie's question on the subject from his talk page, and did it abrasively.",Put the ask first: official clarification on the NOR policy. | Split the long sentence so each point stands alone. | You didn't say who should give the clarification. Name them.,,
+stanford_01997,stanford,"Non-standard framing techniques are usually not recommended for load-bearing or external walls. I would assume this is to go over an existing wall of some kind, such as a block wall in a basement?","I assume this is going over an existing wall of some kind, such as a block wall in a basement. Is that right?
+
+Non-standard framing techniques are usually not recommended for load-bearing or external walls.",Put your question first so it's easy to answer. | Turned the trailing assumption into a direct question: 'Is that right?' | Kept the caution as its own sentence; no facts changed.,,
+enron_01318,enron,"While mid-September was the target date for mailing the Registration Package
+for Prague 2001, we are still awaiting registration materials produced in the
+Czech Republic. They are complete; however, not yet shipped! After 40 years
+of Communism, their picture of efficiency is fuzzy.
+
+Our new mailing target date is ""within a couple of weeks"".
+
+As previously stated, for Cyber List members, the Registration Form will
+reach you as an e-mail attachment the same day we mail the Registration
+Package from WPO. Print it - complete it - fax it back to WPO ASAP.
+
+On behalf of the Committee,
+
+Clarence SPARKS. Mcmillan","While mid-September was the target date for mailing the Registration Package for Prague 2001, we are still waiting for registration materials produced in the Czech Republic. The materials are complete, but they have not been shipped yet. After 40 years of Communism, their idea of what counts as efficient is not the same as ours.
+
+Our new mailing target date is ""within a couple of weeks"".
+
+As stated before, for Cyber List members the Registration Form will reach you as an email attachment on the same day we mail the Registration Package from WPO. Please do these three things:
+- print the Registration Form
+- complete the Registration Form
+- fax it back to WPO as soon as possible
+
+On behalf of the Committee,
+
+Clarence SPARKS. Mcmillan","Made the three steps a list: print, complete, fax back the Registration Form. | Reworded the remark about efficiency; it may read as a criticism of the Czech team.",,
+stanford_01648,stanford,What exactly do you want to do? Display list of images or something else?,"What exactly do you want to do? Do you want to display a list of images, or something else?",Made the two options a clear choice instead of a fragment.,,
+stanford_01643,stanford,"I saw that you gave this user two warnings within 1 minute. Is it possible that this user made the second bad edit, whatever it was, before seeing the first warning?","Could this user have made the second bad edit, whatever it was, before seeing the first warning? I saw that you gave this user two warnings within 1 minute.","Put your question first so it is easy to answer. | Kept 'whatever it was' because you do not know what the edit was. | You could add why you are asking, if you want that on record.",,
+stanford_01971,stanford,"What do you mean by: ""we would like to test whether it is an vis-a-vis the general population""? and ""single sample S""?","Could you explain what you mean by these two phrases?
+- ""we would like to test whether it is an vis-a-vis the general population""
+- ""single sample S""","Split the two questions into a list so both get answered. | Kept both quoted phrases exactly as written, including the wording.",,
+enron_01812,enron,"My recollection is that I gave it to Katelyn around the time it came in, but I 
+wouldn't swear to it. I'll check around here.
+
+Misty","I think I gave it to Katelyn around the time it came in, but I'm not certain. I'll check around here.
+
+Misty",You didn't say what 'it' is. Name the item so the reader knows. | Replaced 'wouldn't swear to it' with 'I'm not certain'.,,
+stanford_01098,stanford,"give me your personal opinion, is an article with citations and written in a mature manner, about shart, ever going to remain without being deleted? or will i just waste my time if i make it?","Give me your personal opinion: if I write an article about shart that has citations and is written in a mature manner, will it stay up, or will it be deleted? Or would I just be wasting my time if I make it?",Fixed the grammar and typos so the question reads clearly. | Kept it as one question with the ask first: your personal opinion.,,
+enron_01104,enron,can you tell me what kind of things he said,Can you tell me what kind of things he said?,"You didn't name who 'he' is. Add his name so the reader knows. | Ask is clear and comes first, so the wording is kept.",,
+enron_01350,enron,"i thought i heard something but i wasn't sure. i just didn't buy it. how is 
+everything going?","I thought I heard something, but I wasn't sure. I just didn't believe it. How is everything going?","""Something"" and ""it"" are unclear. Say what you heard and didn't believe. | Replaced ""didn't buy it"" with ""didn't believe it"".",,
+stanford_01741,stanford,"For a single one-off script, for a web project (e.g. Rails, Sinatra, or other) or are you creating utility code that you want available for many scripts?","Could you tell me which of these applies?
+- a single one-off script
+- a web project (e.g. Rails, Sinatra, or other)
+- utility code you want available for many scripts",The original never said what the script or code is for. Name it so the question is clear. | Split the three options into a list so they are easy to compare.,,
+enron_01136,enron,"Mikayla,
+
+As a first cut at the Storage facilities, you might want to list the companies which Alexandria recommended, adding according to size of facility as necessary to round out the list. You can always re-prioritize the list as you make calls and/or get more information.
+
+I note the pipelines list is in alphabetical order. What does the order look like if you prioritize using the strategy you identified?
+
+Will you guys be maintaining some kind of spreadsheet or other to track progress with each company?
+
+How soon do you anticipate contacting the top 5 on each list?
+
+Mia","Mikayla,
+
+For a first cut at the Storage facilities, please list the companies Alexandria recommended. Add companies by size of facility as needed to make the list complete. You can re-prioritize the list as you make calls and/or get more information.
+
+Could you answer these questions:
+- The pipelines list is in alphabetical order. What does the order look like if you prioritize using the strategy you identified?
+- Will you guys maintain a spreadsheet or something similar to track progress with each company?
+- How soon do you expect to contact the top 5 on each list?
+
+Thanks,
+Mia","Put the list request first, then the three questions as bullets so each gets an answer. | 'You might want to' read as a soft instruction, so it is now a clear request. | No deadline was given, so none was added.",,
+stanford_01320,stanford,"So you see KV, just in case you missed the point, you are in the naughty chair in the naughty corner because of your own baloney, baloney that you bring yourself. Now, didn't you like that story?","KV, in case it wasn't clear: you are in trouble because of your own nonsense, nonsense you bring on yourself. I expect you don't like hearing that.","Replaced 'naughty chair' and 'baloney' with their literal meaning. | The closing question was sarcasm, so it now states what it means. | This reads as a personal attack. Check you want to send it as written.",,
+enron_01567,enron,"I can make the call, let me know call in #. Thanks.",I can make the call. Please send me the call-in number (#). Thanks.,Made the ask explicit: send the call-in number. | Kept your '#' placeholder as written.,,
+enron_01028,enron,"Hi,
+
+Did you receive the PPL paperwork?
+
+Please let me know when this has been completed as we have several deals 
+which need to be executed.
+
+I'll forward a copy to you if you wish,
+
+Thanks,
+Dakota","Hi,
+
+Please let me know two things:
+- whether you received the PPL paperwork
+- when it is completed
+
+We have several deals that need to be executed, so I need to know when this is done.
+
+I'll forward a copy to you if you wish.
+
+Thanks,
+Dakota",Split the two asks into a list so neither is missed. | Made the reason explicit: several deals are waiting on this.,,
+stanford_01505,stanford,Doing it under the guidance of the relevant [URL] would be a good idea as the folks that are active in the project will be best placed to advise on which templates and styles fit in with the rest of the project. What is the page/subject you are working on?,It would be a good idea to do this under the guidance of the relevant [URL]. The people active in the project are best placed to advise on which templates and styles fit with the rest of the project. What page or subject are you working on?,Split the long sentence and replaced 'the folks' with 'the people'. | 'Doing it' is vague. Name what 'it' is so the reader knows what you mean.,,
+stanford_01652,stanford,"Wait, that wasn't the question, was it. What appears after these that I don't have?","Wait, that wasn't the question, was it? What appears after these that I don't have?","Unclear what ""these"" refers to. Name it so the reader can answer. | Unclear who you are asking. Name the person you want a reply from.",,
+enron_01651,enron,"Did the numbers that we gave you yesterday on Operations hold up after your meeting with UBS?
+
+Krystal Vega is calling me to get names. Our primary focus yesterday was on number of positions. We identified names in most cases, but not all. Before that is finalized and I pass names along to Krystal, I wanted to know if we were okay with the numbers. Please let me know. Names can be finalized this afternoonis we are set on numbers. 
+
+--Alyssa
+x35926
+
+Cell: [PHONE_REDACTED]","Did the numbers we gave you yesterday on Operations hold up after your meeting with UBS? Please let me know.
+
+Context:
+- Krystal Vega is calling me to get names.
+- Yesterday our primary focus was on number of positions.
+- We identified names in most cases, but not all.
+- I want to know if we are okay with the numbers before the names are finalized and I pass them to Krystal.
+- If we are set on numbers, names can be finalized this afternoon.
+
+--Alyssa
+x35926
+
+Cell: [PHONE_REDACTED]","Put your question first, since that is the reply you need. | Broke the background into bullets so the ask is not buried. | Fixed the typo 'afternoonis' to 'afternoon if'.",,
