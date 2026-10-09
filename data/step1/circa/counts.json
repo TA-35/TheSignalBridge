@@ -1,0 +1,18 @@
+{
+  "dataset": "circa",
+  "working_pool": 9864,
+  "flagged": 7354,
+  "clear": 2510,
+  "gold": {
+    "flagged": 45,
+    "clear": 15
+  },
+  "reserve": {
+    "flagged": 30,
+    "clear": 10
+  },
+  "source": {
+    "flagged": 850,
+    "clear": 150
+  }
+}
