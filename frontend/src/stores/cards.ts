@@ -5,6 +5,7 @@ import type { DecodeRecord } from '@/types/decode'
 import { fetchCards, pushCard, removeCard } from '@/services/cardSyncService'
 import { getPatterns } from '@/services/patternsService'
 import { useAccountStore } from '@/stores/account'
+import { useActivityStore } from '@/stores/activity'
 
 const STORAGE_KEY = 'readtheroom.cards'
 
@@ -152,6 +153,8 @@ export const useCardsStore = defineStore('cards', () => {
     const card = cards.value.find((c) => c.id === id)
     if (!card) return
     card.lastOpened = new Date().toISOString()
+    // counts as a review for the progress dashboard's refresher (once a day)
+    useActivityStore().markReviewed([card.patternId ?? card.id])
     void push(card)
   }
 

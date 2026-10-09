@@ -16,11 +16,13 @@ import {
 import PageNav from '@/components/PageNav.vue'
 import { getPatterns } from '@/services/patternsService'
 import { useCardsStore } from '@/stores/cards'
+import { useActivityStore } from '@/stores/activity'
 import type { Pattern } from '@/types/pattern'
 
 const router = useRouter()
 const route = useRoute()
 const store = useCardsStore()
+const activity = useActivityStore()
 
 const patterns = ref<Pattern[]>([])
 const loading = ref(true)
@@ -115,6 +117,8 @@ function addToCards(pattern: Pattern) {
 }
 
 function explore(pattern: Pattern) {
+  // counts as "opened" on the progress dashboard
+  activity.markViewed(pattern.id)
   // Preview only - saving is an explicit choice made on the detail page.
   // Carries the category along so "back" and paging stay inside it - but
   // not while searching, since results there can span every category.
