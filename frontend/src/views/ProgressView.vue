@@ -132,7 +132,7 @@ onMounted(() => {
       <p class="pd-muted pd-small">How much energy do you have right now?</p>
       <div class="pd-row pd-seg" role="group" aria-label="Energy level">
         <button v-for="e in (['low', 'okay', 'good'] as const)" :key="e" type="button" :aria-pressed="energy === e" @click="energy = e">
-          {{ e[0].toUpperCase() + e.slice(1) }}
+          {{ e.charAt(0).toUpperCase() + e.slice(1) }}
         </button>
       </div>
       <div class="pd-step">
@@ -279,10 +279,12 @@ onMounted(() => {
   --pd-surface: var(--color-surface); --pd-ink: var(--color-text); --pd-muted-c: var(--color-text-muted);
   --pd-line: var(--color-border-soft); --pd-empty: var(--color-surface-soft);
   /* calm section colours: no red, each section its own soft hue */
-  --pd-teal: #3d8790; --pd-teal-soft: #ddeef0;
-  --pd-lavender: #7466a8; --pd-lavender-soft: #ece9f6;
-  --pd-honey: #a88442; --pd-honey-soft: #f4ecdc;
-  --pd-heather: #86698b; --pd-heather-soft: #f0e8f0;
+  /* soft fills are mixed from the theme's surface, so they turn dark in dark mode
+     instead of staying pale behind light text */
+  --pd-teal: #3d8790; --pd-teal-soft: color-mix(in srgb, var(--pd-teal) 16%, var(--pd-surface));
+  --pd-lavender: #7466a8; --pd-lavender-soft: color-mix(in srgb, var(--pd-lavender) 18%, var(--pd-surface));
+  --pd-honey: #a88442; --pd-honey-soft: color-mix(in srgb, var(--pd-honey) 16%, var(--pd-surface));
+  --pd-heather: #86698b; --pd-heather-soft: color-mix(in srgb, var(--pd-heather) 16%, var(--pd-surface));
   --pd-learned: #5e8a70; --pd-saved: #6f92c8; --pd-opened: #e9cf98;
   --pd-f-decoder: #3d8790; --pd-f-compose: #a88442; --pd-f-study: #6c8ebf; --pd-f-library: #9b7bb4;
   --pd-c1: #3d8790; --pd-c2: #a88442; --pd-c3: #5e8a70; --pd-c4: #4a6fa5; --pd-c5: #7466a8; --pd-c6: #93708f;
@@ -315,11 +317,11 @@ onMounted(() => {
 .pd-page p { margin: 0; }
 .pd-page button { font: inherit; font-size: .92em; font-weight: 600; border-radius: var(--radius-sm, 10px); padding: 9px 16px; cursor: pointer;
   border: 1px solid var(--pd-line); background: var(--pd-surface); color: var(--pd-ink); }
-.pd-page button.pd-primary { background: var(--pd-accent); border-color: var(--pd-accent); color: var(--pd-surface); }
-.pd-page button.pd-ghost { border-color: transparent; color: var(--pd-accent); padding-inline: 8px; }
+.pd-page button.pd-primary { background: var(--pd-accent); border-color: var(--pd-accent); color: #fff; }
+.pd-page button.pd-ghost { border-color: transparent; color: var(--pd-accent-ink); padding-inline: 8px; }
 .pd-page button:disabled { opacity: .5; cursor: default; }
 .pd-page button:focus-visible, .pd-page input:focus-visible, .pd-page select:focus-visible { outline: 3px solid var(--pd-accent); outline-offset: 2px; }
-.pd-seg button[aria-pressed='true'] { background: var(--pd-accent-soft); border-color: var(--pd-accent); color: var(--pd-accent); }
+.pd-seg button[aria-pressed='true'] { background: var(--pd-accent-soft); border-color: var(--pd-accent); color: var(--pd-accent-ink); }
 .pd-page input[type='text'], .pd-page select { font: inherit; font-size: .95em; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--pd-line);
   background: var(--pd-surface); color: var(--pd-ink); width: 100%; }
 
@@ -343,7 +345,7 @@ onMounted(() => {
 .pd-notice { padding: 12px 14px; border-radius: 10px; background: var(--pd-accent-soft); display: grid; gap: 10px; }
 
 .pd-days { --pd-accent: var(--pd-honey); --pd-accent-soft: var(--pd-honey-soft); }
-.pd-big { font-family: var(--font-serif); font-size: 3em; line-height: 1; font-weight: 600; color: var(--pd-honey); font-variant-numeric: tabular-nums; }
+.pd-big { font-family: var(--font-serif); font-size: 3em; line-height: 1; font-weight: 600; color: var(--pd-accent-ink); font-variant-numeric: tabular-nums; }
 .pd-dots { display: flex; flex-wrap: wrap; gap: 6px; }
 .pd-dots i { width: 14px; height: 14px; border-radius: 50%; background: var(--pd-empty); }
 .pd-dots i.on { background: var(--pd-accent); }
@@ -370,6 +372,11 @@ onMounted(() => {
 .pd-badge.locked { opacity: .45; }
 .pd-badge svg { width: 44px; height: 44px; }
 .pd-badge small { color: var(--pd-muted-c); }
+
+/* accent used as text: pulled towards the ink colour, so it darkens on a light theme
+   and lightens on a dark one. Set on every card, not just the page, because each
+   section swaps --pd-accent and a custom property is worked out where it's declared. */
+.pd-page, .pd-page .pd-card { --pd-accent-ink: color-mix(in srgb, var(--pd-accent) 70%, var(--pd-ink)); }
 
 @media (max-width: 560px) {
   .pd-step, .pd-refresh { grid-template-columns: 1fr; }

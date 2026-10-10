@@ -33,7 +33,7 @@ export function dateKey(d: Date = new Date()): string {
 }
 
 function parseKey(k: string): Date {
-  const [y, m, d] = k.split('-').map(Number)
+  const [y = 0, m = 1, d = 1] = k.split('-').map(Number)
   return new Date(y, m - 1, d)
 }
 
@@ -64,7 +64,7 @@ export function badgeStatus(openDays: string[]) {
   const total = new Set(openDays).size
   const earned = BADGES.filter((b) => total >= b.days)
   const next = BADGES.find((b) => total < b.days) ?? null
-  const prevDays = earned.length ? earned[earned.length - 1].days : 0
+  const prevDays = earned[earned.length - 1]?.days ?? 0
   return {
     total,
     earned,
@@ -113,8 +113,8 @@ export function retention(c: CardProgress, today: string, base = 1.5) {
   // saving a card counts as the first time they learned it, then every
   // review in Study after that makes the memory last longer
   const exposures = [...new Set([c.firstSeen, ...c.reviews].filter((d): d is string => !!d))].sort()
-  if (!exposures.length) return null
   const last = exposures[exposures.length - 1]
+  if (!last) return null
   const daysSince = daysBetween(last, today)
   const stability = base * 2 ** (exposures.length - 1)
   return { retention: Math.exp(-daysSince / stability), daysSince }
