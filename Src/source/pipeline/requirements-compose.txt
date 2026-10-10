@@ -16,6 +16,10 @@ torch>=2.6
 # "unknown" for every message - silently, because the adapter never raises.
 transformers>=5.17,<6
 
+# The tone adapter loads Src/source/model/tone/enron_register.py, which
+# imports pandas at the top; without it tone is "unknown" for every message.
+pandas>=2.2
+
 # The grounding check's NLI. 5.1 pulls transformers back below 5 and breaks
 # tone; 6.1 runs on transformers 5.
 sentence-transformers>=6,<7

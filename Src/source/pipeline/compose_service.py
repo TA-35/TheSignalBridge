@@ -19,6 +19,15 @@ Settings come from the environment (or the .env files config.py loads):
     COMPOSE_MODEL_NAME   reported back as `model`.
     COMPOSE_LLM_TIMEOUT  seconds per model call (default 45).
 
+Or, on a host too small for the models, hand Compose to another copy of this
+service that has them - in our deployment the uni GPU server, reached through
+an SSH tunnel (infra/compose-tunnel/):
+
+    COMPOSE_REMOTE_URL     that service. /compose and /compose/quick are
+                           forwarded there unchanged and nothing loads here.
+    COMPOSE_REMOTE_TIMEOUT seconds to wait for it (default 95, under the
+                           backend's 100 so this side gives up first).
+
 A rewrite is returned only if it passes the grounding check. If it fails, or
 the reply isn't usable, the model is asked once more at a lower temperature;
 if that fails too, the answer is rewrite = null with the failure classes. A
@@ -29,8 +38,10 @@ Never logs or stores message text.
 """
 from __future__ import annotations
 
+import json
 import os
 import sys
+import urllib.request
 from typing import Any, Iterable
 
 from Src.source.pipeline import compose_client, compose_prompt as cp, grounding
@@ -62,12 +73,29 @@ def settings() -> dict[str, Any]:
         "model": (os.environ.get("COMPOSE_MODEL_NAME", "").strip()
                   or ("qwen3.5-4b-baseline" if few_shot else "qwen3.5-4b-ft")),
         "timeout": float(os.environ.get("COMPOSE_LLM_TIMEOUT", "45")),
+        "remote": os.environ.get("COMPOSE_REMOTE_URL", "").strip(),
+        "remote_timeout": float(os.environ.get("COMPOSE_REMOTE_TIMEOUT", "95")),
     }
+
+
+def _remote(base: str, path: str, message: str, timeout: float) -> dict[str, Any]:
+    """POST the message to the remote Compose service. Raises on any failure."""
+    request = urllib.request.Request(
+        base.rstrip("/") + path, data=json.dumps({"message": message}).encode("utf-8"),
+        headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        return json.loads(response.read().decode("utf-8"))
 
 
 def signals(message: str) -> list[dict[str, Any]]:
     """The three classifiers in the contract shape. The adapters never raise:
     a failed one comes back as label "unknown", confidence 0.0."""
+    remote = settings()["remote"]
+    if remote:
+        try:
+            return _remote(remote, "/compose/quick", message, 5.0)["signals"]
+        except Exception:  # noqa: BLE001 - stage one is only an early paint
+            return []
     return cp.clean_signals([tone.predict(message), politeness.predict(message),
                              circa.predict(message)])
 
@@ -86,6 +114,15 @@ def degraded(reasons: Iterable[str], *, signals: list | None = None,
 
 def compose(message: str) -> dict[str, Any]:
     conf = settings()
+    if conf["remote"]:
+        try:
+            out = _remote(conf["remote"], "/compose", message, conf["remote_timeout"])
+        except Exception:  # noqa: BLE001 - unreachable, timed out or erroring
+            return degraded([MODEL_UNAVAILABLE], model=conf["model"])
+        if out.get("degraded"):
+            out["rewrite"] = None       # never pass on a rewrite that wasn't verified
+        return out
+
     sig = signals(message)
     if not conf["url"]:
         return degraded([NOT_CONFIGURED], signals=sig, model=conf["model"])

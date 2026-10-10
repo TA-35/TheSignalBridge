@@ -105,7 +105,8 @@ def create_service(warm: bool = True) -> Flask:
             "has_credentials": bool(config.llm.api_key),
             "max_message_chars": config.max_message_chars,
             "compose": {
-                "enabled": bool(compose["url"]),
+                "enabled": bool(compose["url"] or compose["remote"]),
+                "remote": bool(compose["remote"]),
                 "model": compose["model"],
                 "few_shot": compose["few_shot"],
                 "max_message_chars": compose_service.MAX_MESSAGE_CHARS,

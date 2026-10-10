@@ -2,6 +2,8 @@
 are faked, so these run in CI with no model, no torch and no network."""
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from Src.source.pipeline import compose_client, compose_prompt as cp, compose_service as cs, grounding
@@ -166,3 +168,80 @@ def test_an_unexpected_error_still_answers_degraded(client, fake, monkeypatch):
 def test_health_says_whether_compose_is_on(client, fake):
     compose = client.get("/health").get_json()["compose"]
     assert compose["enabled"] is True and compose["max_message_chars"] == cs.MAX_MESSAGE_CHARS
+
+
+# --------------------------------------------------------------------------
+# Remote mode: a small host hands Compose to another service (the uni GPU
+# server through a tunnel) and loads nothing itself
+# --------------------------------------------------------------------------
+
+class _Reply:
+    def __init__(self, payload):
+        self._body = json.dumps(payload).encode()
+
+    def read(self):
+        return self._body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        return False
+
+
+@pytest.fixture
+def remote(monkeypatch):
+    """COMPOSE_REMOTE_URL set; records every request urllib makes."""
+    monkeypatch.delenv("COMPOSE_LLM_URL", raising=False)
+    monkeypatch.setenv("COMPOSE_REMOTE_URL", "http://127.0.0.1:18100")
+    sent = []
+
+    def answer(payload):
+        def fake_urlopen(req, timeout=None):
+            sent.append({"url": req.full_url, "body": json.loads(req.data), "timeout": timeout})
+            if isinstance(payload, Exception):
+                raise payload
+            return _Reply(payload)
+        monkeypatch.setattr(cs.urllib.request, "urlopen", fake_urlopen)
+
+    monkeypatch.setattr(compose_client, "complete", lambda *a, **k: pytest.fail("must not call a local model"))
+    monkeypatch.setattr(grounding, "check", lambda *a, **k: pytest.fail("must not check locally"))
+    answer.sent = sent
+    return answer
+
+
+def test_remote_compose_returns_the_remote_answer(remote):
+    answer = {"stage": "compose", "degraded": False, "degraded_reason": [], "rewrite": "Could you check it?",
+              "notes": ["Made the ask direct."], "meaning": MEANING, "model": "qwen3.5-4b-ft"}
+    remote(answer)
+    assert cs.compose(MESSAGE) == answer
+    assert remote.sent == [{"url": "http://127.0.0.1:18100/compose", "body": {"message": MESSAGE}, "timeout": 95.0}]
+
+
+def test_remote_degraded_answer_never_carries_a_rewrite(remote):
+    remote({"stage": "compose", "degraded": True, "degraded_reason": ["dropped_entity"],
+            "rewrite": "leaked", "notes": [], "meaning": cs.EMPTY_MEANING})
+    out = cs.compose(MESSAGE)
+    assert out["rewrite"] is None and out["degraded_reason"] == ["dropped_entity"]
+
+
+def test_unreachable_remote_degrades(remote):
+    remote(OSError("tunnel down"))
+    out = cs.compose(MESSAGE)
+    assert out["degraded"] is True and out["degraded_reason"] == [cs.MODEL_UNAVAILABLE]
+    assert out["rewrite"] is None
+
+
+def test_remote_quick_stage(remote):
+    remote({"stage": "analyse", "signals": SIGNALS})
+    assert cs.signals(MESSAGE) == SIGNALS
+    assert remote.sent[0]["url"] == "http://127.0.0.1:18100/compose/quick"
+    remote(TimeoutError())
+    assert cs.signals(MESSAGE) == []
+
+
+def test_health_says_compose_is_remote(remote):
+    pytest.importorskip("flask")
+    from Src.source.pipeline.service import create_service
+    compose = create_service(warm=False).test_client().get("/health").get_json()["compose"]
+    assert compose["enabled"] is True and compose["remote"] is True
