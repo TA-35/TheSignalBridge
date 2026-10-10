@@ -39,8 +39,11 @@ handle and retries up to eight times if it collides.
 
 ## Database
 
-Three tables, in two migrations: `b2c7a1d4e905` (users, credentials) and
-`c93e60f12a47` (pairing codes).
+Three account tables, in two migrations: `b2c7a1d4e905` (users, credentials)
+and `c93e60f12a47` (pairing codes). Three more hang off `users` and hold what
+an account carries between devices: `user_cards` (`d41b8c20f7e3`) and
+`user_activity` + `user_phrase_events` (`e7a3c95d1f20`), described at the end
+of this section.
 
 ### `users`
 
@@ -89,6 +92,33 @@ the children itself, and the database constraint is the backstop for a
 `DELETE` run by hand. SQLite does not enforce foreign keys by default, and
 the test suite caught exactly this - "delete my account" was leaving
 credentials behind.
+
+### `user_activity` and `user_phrase_events`
+
+The progress dashboard's data (`routes/progress.py`, `/api/progress`).
+Pointers and counts only; the focus timer's free-text intent stays in the
+browser.
+
+| `user_activity` column | type | notes |
+| --- | --- | --- |
+| `user_id` | FK → `users.id` | `ON DELETE CASCADE` |
+| `device_id` | `varchar(36)` | random, made by the browser |
+| `date` | `varchar(10)` | `YYYY-MM-DD`, the reader's own day |
+| `feature` | `varchar(16)` | `opened` / `decoder` / `compose` / `study` / `library` |
+| `minutes` | `int` | highest wins on upsert |
+
+Unique on `(user_id, device_id, date, feature)`.
+
+| `user_phrase_events` column | type | notes |
+| --- | --- | --- |
+| `user_id` | FK → `users.id` | `ON DELETE CASCADE` |
+| `pattern_id` | `varchar(40)` | library pattern |
+| `kind` | `varchar(10)` | `viewed` / `reviewed` |
+| `date` | `varchar(10)` | |
+
+Unique on `(user_id, pattern_id, kind, date)`. Both relationships are declared
+from the child side with `cascade="all, delete-orphan"`, for the same reason
+as the note on cascades below.
 
 ## The three flows
 

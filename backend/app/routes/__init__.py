@@ -3,6 +3,7 @@ from .cards import bp as cards_bp
 from .compose import bp as compose_bp
 from .decode import bp as decode_bp
 from .patterns import bp as patterns_bp
+from .progress import bp as progress_bp
 from .review import bp as review_bp
 
 
@@ -18,3 +19,6 @@ def register_blueprints(app):
     # Library cards that follow an account between devices. Signed-in only,
     # and the browser remains the source of truth - see routes/cards.py.
     app.register_blueprint(cards_bp, url_prefix="/api/cards")
+    # Progress-dashboard data, same rules as cards: signed-in only, browser is
+    # the source of truth, no free text - see routes/progress.py.
+    app.register_blueprint(progress_bp, url_prefix="/api/progress")

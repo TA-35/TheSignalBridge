@@ -2,15 +2,20 @@
 // Progress dashboard. Calm by design: one next step, gentle reminders,
 // badges for total days used (never streaks), and no missed days anywhere.
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import FocusTimer from '@/components/progress/FocusTimer.vue'
 import { useProgressSources } from '@/composables/useProgressSources'
+import { useAccountStore } from '@/stores/account'
 import {
   BADGES, FEATURES, badgeStatus, dateKey, dueForReview, libraryProgress, nextStep,
   progressByCategory, reviewReminder, usageByDay, type Energy, type Feature,
 } from '@/utils/progress'
 
 const { activity, loading, libraryCards, allCards } = useProgressSources()
+// The dashboard is for signed-in accounts, which is what lets the days and
+// badges follow someone to another device. Activity is still counted on this
+// device while signed out, and joins the account on sign-in.
+const account = useAccountStore()
 
 const router = useRouter()
 const today = ref(dateKey())
@@ -28,7 +33,7 @@ watch(hideBadges, (v) => saveFlag('bw-progress-nobadges', v))
 // ---------------------------------------------------------------- start here
 const energy = ref<Energy>('okay')
 const due = computed(() => dueForReview(allCards.value, today.value))
-const step = computed(() => nextStep(energy.value, due.value, libraryCards.value, activity.events))
+const step = computed(() => nextStep(energy.value, due.value, libraryCards.value, activity.allEvents))
 const timerPreset = ref<{ minutes: number; feature: Feature; intent: string; nonce: number }>()
 function startStep() {
   timerPreset.value = { ...step.value, nonce: Date.now() }
@@ -65,7 +70,7 @@ const dots = computed(() => {
 const recent = computed(() => [...activity.events].filter((e) => e.intent).reverse().slice(0, 5))
 const shortDate = (k: string) =>
   k === today.value ? 'Today' : new Date(`${k}T00:00`).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })
-const todayMinutes = computed(() => activity.events.filter((e) => e.date === today.value).reduce((a, e) => a + e.minutes, 0))
+const todayMinutes = computed(() => activity.allEvents.filter((e) => e.date === today.value).reduce((a, e) => a + e.minutes, 0))
 
 // ---------------------------------------------------------------- pattern library
 const lib = computed(() => libraryProgress(libraryCards.value))
@@ -86,7 +91,7 @@ const donut = computed(() => {
 const pct = (n: number, total: number) => (total ? `${(n / total) * 100}%` : '0%')
 
 // ---------------------------------------------------------------- time by feature chart
-const usage = computed(() => usageByDay(activity.events, today.value, 14))
+const usage = computed(() => usageByDay(activity.allEvents, today.value, 14))
 const chartTop = computed(() => Math.ceil(Math.max(30, ...usage.value.map((r) => r.total)) / 15) * 15)
 const CH = { w: 640, h: 220, l: 34, b: 28, t: 10 }
 const plotH = CH.h - CH.b - CH.t
@@ -111,7 +116,30 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="pd-page" :class="{ 'pd-large': largeText }">
+  <!-- Until /me answers, "signed out" would be a guess, so show nothing yet -->
+  <div v-if="!account.ready" class="pd-page" aria-busy="true" />
+
+  <div v-else-if="!account.signedIn" class="pd-page">
+    <header class="pd-masthead">
+      <h1>Your progress</h1>
+      <p>How you're getting on, at your own pace. Nothing here is a score.</p>
+    </header>
+    <section class="pd-card pd-start pd-signedout" aria-labelledby="signin-title">
+      <h2 id="signin-title">Sign in to see your progress</h2>
+      <p>
+        Your progress is kept with your account, so your days and badges follow you to any device.
+        There's no email and no password, just a passkey on your device.
+      </p>
+      <p class="pd-muted pd-small">
+        The days you use Between Words are still counted on this device, and they join your account when you sign in.
+      </p>
+      <div class="pd-row">
+        <RouterLink to="/account" class="pd-link-button">Sign in or create an account</RouterLink>
+      </div>
+    </section>
+  </div>
+
+  <div v-else class="pd-page" :class="{ 'pd-large': largeText }">
     <header class="pd-header">
       <div class="pd-masthead">
         <h1>Your progress</h1>
@@ -326,6 +354,11 @@ onMounted(() => {
   background: var(--pd-surface); color: var(--pd-ink); width: 100%; }
 
 .pd-start { --pd-accent: var(--pd-teal); --pd-accent-soft: var(--pd-teal-soft); border-left: 5px solid var(--pd-accent); }
+.pd-signedout p { max-width: 62ch; line-height: 1.6; }
+.pd-page .pd-link-button { display: inline-block; font-weight: 600; font-size: .92em; padding: 9px 16px; border-radius: var(--radius-sm, 10px);
+  background: var(--pd-accent); color: #fff; text-decoration: none; }
+.pd-page .pd-link-button:hover { color: #fff; filter: brightness(1.08); }
+.pd-page .pd-link-button:focus-visible { outline: 3px solid var(--pd-accent); outline-offset: 2px; }
 .pd-step { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; padding: 14px; border-radius: 12px; background: var(--pd-accent-soft); }
 .pd-step p { font-size: 1.05em; max-width: 60ch; }
 

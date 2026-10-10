@@ -15,6 +15,7 @@ import {
   Settings,
 } from '@lucide/vue'
 import { useAccountStore } from '@/stores/account'
+import { useActivityStore } from '@/stores/activity'
 import { useCardsStore } from '@/stores/cards'
 import { useSettingsStore } from '@/stores/settings'
 import logoLight from '@/assets/logo.png'
@@ -50,7 +51,11 @@ onMounted(() => {
 watch(
   () => accountStore.signedIn,
   (signedIn) => {
-    if (signedIn) void useCardsStore().syncWithAccount()
+    if (!signedIn) return
+    void useCardsStore().syncWithAccount()
+    // Progress follows the account the same way: days, minutes and reviews
+    // kept on this device reach the account, and the account's come back.
+    void useActivityStore().syncWithAccount()
   },
   { immediate: true },
 )
@@ -61,15 +66,17 @@ watch(
 // Signed out, the account is one more destination in the row. Signed in it
 // becomes a menu instead, because by then there are several things to do
 // with it and only one of them is "look at the account page".
-const navItems = [
+// Progress is for signed-in accounts (it's what makes the days and badges
+// follow someone between devices), so it only joins the row once signed in.
+const navItems = computed(() => [
   { to: '/', label: 'Home', icon: Home, soon: false },
   { to: '/decode', label: 'Decoder', icon: MailQuestionMark, soon: false },
   { to: '/compose', label: 'Compose', icon: PenLine, soon: false },
   { to: '/study', label: 'Study', icon: BookOpen, soon: false },
   { to: '/library', label: 'Library', icon: Library, soon: false },
-  { to: '/progress', label: 'Progress', icon: LayoutDashboard, soon: false },
+  ...(accountStore.signedIn ? [{ to: '/progress', label: 'Progress', icon: LayoutDashboard, soon: false }] : []),
   { to: '/settings', label: 'Settings', icon: Settings, soon: false },
-]
+])
 
 const route = useRoute()
 const isActive = (to: string) => (to === '/' ? route.path === '/' : route.path.startsWith(to))
