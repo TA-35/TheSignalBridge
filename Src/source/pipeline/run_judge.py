@@ -9,10 +9,10 @@ position bias.
 Resumable: already-judged ids in judge_pairs.jsonl are skipped on a rerun.
 
 Usage (from repo root):
-  python -m Src.source.pipeline.run_judge ^
-      --source data/gold_drafts/enron_gold_draft.jsonl ^
-      --a eval/baseline.jsonl --a-name baseline ^
-      --b eval/run1.jsonl     --b-name run1 ^
+  python -m Src.source.pipeline.run_judge \
+      --source data/gold_drafts/enron_gold_draft.jsonl \
+      --a eval/baseline.jsonl --a-name baseline \
+      --b eval/run1.jsonl     --b-name run1 \
       --out eval/enron
 """
 from __future__ import annotations

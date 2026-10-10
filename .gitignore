@@ -101,4 +101,3 @@ runs/
 *.gguf
 
 eval/_fake/
-*.gguf
