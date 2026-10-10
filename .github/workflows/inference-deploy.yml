@@ -14,6 +14,10 @@ on:
         description: "Deploy without running the test suite (not recommended)"
         type: boolean
         default: false
+      with_compose:
+        description: "Also install Compose's dependencies (requirements-compose.txt, ~1.5GB resident; needs a 4GB host)"
+        type: boolean
+        default: false
 
 jobs:
   deploy:
@@ -88,7 +92,10 @@ jobs:
           rsync -az --delete \
             --exclude '__pycache__' --exclude '.pytest_cache' --exclude '.env' \
             -e "ssh -i ~/.ssh/deploy_key" Src/ "$REMOTE:~/inference/Src/"
-          rsync -az --delete \
+          # Weights too big for git (the tone model's model.safetensors) are
+          # copied to the host by hand; excluding them keeps --delete from
+          # wiping them on every deploy.
+          rsync -az --delete --exclude '*.safetensors' \
             -e "ssh -i ~/.ssh/deploy_key" models/ "$REMOTE:~/inference/models/"
           rsync -az --exclude '__pycache__' \
             -e "ssh -i ~/.ssh/deploy_key" backend/app/services/extraction.py \
@@ -132,6 +139,9 @@ jobs:
             test -d .venv || python3 -m venv .venv
             .venv/bin/pip install --quiet --upgrade pip
             .venv/bin/pip install --quiet -r Src/source/pipeline/requirements.txt
+            if [ "${{ inputs.with_compose }}" = "true" ]; then
+              .venv/bin/pip install --quiet -r Src/source/pipeline/requirements-compose.txt
+            fi
             sudo systemctl restart inference
           '
 

@@ -15,7 +15,12 @@ import {
   MAX_MESSAGE_LENGTH,
   MessageTooLongError,
 } from '@/services/composeService'
-import { isAlreadyClear, type ComposeQuick, type ComposeResult } from '@/types/compose'
+import {
+  failedFactCheck,
+  isAlreadyClear,
+  type ComposeQuick,
+  type ComposeResult,
+} from '@/types/compose'
 import VoiceInput from '@/components/VoiceInput.vue'
 
 const SAMPLE =
@@ -274,7 +279,7 @@ const copyRewrite = () => copyText(rewriteText.value)
             <section class="card card--blocked">
               <strong>
                 {{
-                  state.result.degraded_reason?.length
+                  failedFactCheck(state.result)
                     ? "The rewrite didn't pass our fact check, so we're not showing it."
                     : "The rewriter couldn't be reached."
                 }}

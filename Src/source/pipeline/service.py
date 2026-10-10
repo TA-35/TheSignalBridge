@@ -18,6 +18,11 @@ Two endpoints, because the frontend renders in two stages:
                     no network call and no token spend.
     POST /review    the full pipeline including the LLM. 5-9s.
 
+    POST /compose/quick   Compose stage one: the three classifiers only.
+    POST /compose         Compose stage two: the rewrite, grounding-checked.
+                          See compose_service.py. Off until COMPOSE_LLM_URL
+                          is set, and its models only load when it is on.
+
     GET  /health    liveness plus which model is configured.
 
 Run it:
@@ -42,6 +47,7 @@ if str(_REPO_ROOT) not in sys.path:
 
 from flask import Flask, jsonify, request  # noqa: E402
 
+from Src.source.pipeline import compose_service  # noqa: E402
 from Src.source.pipeline.analysis import analyse  # noqa: E402
 from Src.source.pipeline.config import load  # noqa: E402
 from Src.source.pipeline.pipeline import run  # noqa: E402
@@ -72,6 +78,10 @@ def _warm_up() -> None:
         # The adapters already degrade to their unavailable stubs, so the
         # service still serves; it just pays the load cost on first use.
         pass
+    # Compose's models (tone on torch, the NLI cross-encoder) are ~1.5GB more,
+    # so they load only on a host that serves Compose.
+    if compose_service.settings()["url"]:
+        compose_service.warm_up()
 
 
 def create_service(warm: bool = True) -> Flask:
@@ -86,6 +96,7 @@ def create_service(warm: bool = True) -> Flask:
         No secret is echoed - only whether a key resolved at all.
         """
         config = load()
+        compose = compose_service.settings()
         return jsonify({
             "status": "ok",
             "version": SERVICE_VERSION,
@@ -93,6 +104,13 @@ def create_service(warm: bool = True) -> Flask:
             "model": config.llm.model,
             "has_credentials": bool(config.llm.api_key),
             "max_message_chars": config.max_message_chars,
+            "compose": {
+                "enabled": bool(compose["url"] or compose["remote"]),
+                "remote": bool(compose["remote"]),
+                "model": compose["model"],
+                "few_shot": compose["few_shot"],
+                "max_message_chars": compose_service.MAX_MESSAGE_CHARS,
+            },
         })
 
     @app.post("/analyse")
@@ -150,6 +168,39 @@ def create_service(warm: bool = True) -> Flask:
             }), 200
 
         return jsonify({"stage": "review", **result})
+
+    def _compose_message():
+        """The message, or the 400/413 answer for it."""
+        message = _message_from(request.get_json(silent=True))
+        if not message.strip():
+            return None, (jsonify({"error": "Please enter a message"}), 400)
+        if len(message) > compose_service.MAX_MESSAGE_CHARS:
+            return None, (jsonify({
+                "error": f"Message is too long (limit is "
+                         f"{compose_service.MAX_MESSAGE_CHARS} characters)."
+            }), 413)
+        return message, None
+
+    @app.post("/compose/quick")
+    def compose_quick_endpoint():
+        """Compose stage one: how the draft reads, from the classifiers."""
+        message, error = _compose_message()
+        if error:
+            return error
+        return jsonify({"stage": "analyse", "signals": compose_service.signals(message)})
+
+    @app.post("/compose")
+    def compose_endpoint():
+        """Compose stage two: the rewrite, or rewrite = null if it can't be
+        verified. Never raises past here, same as /review."""
+        message, error = _compose_message()
+        if error:
+            return error
+        try:
+            return jsonify(compose_service.compose(message))
+        except Exception as exc:  # noqa: BLE001 - the service must not 500
+            # Name the failure class, never the message body.
+            return jsonify(compose_service.degraded([f"compose error: {type(exc).__name__}"]))
 
     return app
 

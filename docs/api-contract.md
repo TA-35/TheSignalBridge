@@ -115,7 +115,9 @@ Implemented in `backend/app/services/ai_decoder.py` (`_CATEGORY_RULES`) and mirr
 
 ## `POST /api/compose`
 
-**Draft — the frontend is built against this; the service does not exist yet.**
+**Built, not yet deployed.** The backend route is `backend/app/routes/compose.py`;
+the work happens on the inference service (`Src/source/pipeline/compose_service.py`),
+which needs `requirements-compose.txt` and a llama-server running the rewrite model.
 
 The other direction from `/api/decode`. The sender pastes a message they
 have already written; the response says the same thing more explicitly,
@@ -128,8 +130,11 @@ without a translation layer. Keep these names.
 Request:
 
 ```json
-{ "message": "string, required, non-empty, max 5000 characters" }
+{ "message": "string, required, non-empty, max 2000 characters" }
 ```
+
+2000, not Decode's 5000: the model was trained on messages up to ~1,500
+characters, and much past 2,000 its reply outgrows its token budget.
 
 Response `200`:
 
@@ -151,10 +156,24 @@ Response `200`:
     "implied": "Required, not optional"
   },
   "signals": [{ "model": "politeness", "label": "high", "confidence": 0.65 }],
-  "checks": { "entities_kept": true, "nothing_added": true },
+  "checks": { "entities_kept": true, "nothing_added": true, "no_contradiction": true },
   "model": "qwen3.5-4b-ft"
 }
 ```
+
+`degraded_reason` values:
+
+| value | meaning |
+| --- | --- |
+| `dropped_entity`, `added_entity`, `contradiction` | the grounding check rejected the rewrite, twice (it retries once at a lower temperature) |
+| `invalid_output` | the model's reply wasn't usable, twice |
+| `model_unavailable` | llama-server couldn't be reached or errored; not retried |
+| `not_configured` | `COMPOSE_LLM_URL` isn't set on the inference host |
+| `check_unavailable` | the grounding check couldn't run, so nothing could be verified |
+| `inference service ...`, `compose error: ...` | the proxy or the service failed; names the error class only |
+
+The page words the first row as "didn't pass our fact check" and everything
+else as "couldn't be reached" (`failedFactCheck` in `frontend/src/types/compose.ts`).
 
 `POST /api/compose/quick` runs the three classifiers only and returns
 `{ "stage": "analyse", "signals": [...] }` in milliseconds, so the page can

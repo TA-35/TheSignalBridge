@@ -76,3 +76,35 @@ def test_circa_only_checks_the_reply():
     assert fp.split_circa(src)[1] == "I'm swamped this week."
     assert fp.check_dropped(r) is None          # Nobu and Friday live in the question
     assert fp.check_length(r) is None           # 9 vs 4 words is fine against the reply
+
+
+# The next four come from the teacher bake-off, where good DeepSeek pairs were
+# rejected: "end of month" kept as "...the end of the month." read as dropped
+# because the token was "month.", and a stated "no" to a 5-word Circa reply
+# went over 2.5x.
+
+def test_tokens_drop_sentence_end_punctuation_only():
+    t = fp.tokens("Timesheets are due at the end of the month. Call at 10:00 on 02/06/02, it costs $3.50.")
+    assert {"month", "10:00", "02/06/02", "$3.50"} <= t
+    assert not any(w.endswith(".") for w in t)
+
+
+def test_entity_closing_a_sentence_still_counts_as_kept():
+    rw = "Timesheets are due at the end of the month."
+    assert fp.present("end of month", rw, fp.norm(rw), fp.tokens(rw))
+    gone = "Timesheets are due soon."
+    assert not fp.present("end of month", gone, fp.norm(gone), fp.tokens(gone))
+
+
+def test_short_circa_reply_can_state_the_answer():
+    r = {"source": "Q: Can you cover my shift on Saturday?\nReply: I would if I could.",
+         "rewrite": "Sorry, I can't cover your shift on Saturday. I would if I could."}
+    assert fp.check_length(r) is None           # 13 vs 5 words: over 2.5x, inside +12
+
+
+def test_length_limits_still_hold():
+    five = "I would if I could."
+    assert fp.check_length({"source": five, "rewrite": " ".join(["word"] * 18)})       # 5 + 12 = 17 max
+    forty = " ".join(["word"] * 40)
+    assert fp.check_length({"source": forty, "rewrite": " ".join(["word"] * 101)})     # 2.5 x 40 = 100 max
+    assert fp.check_length({"source": forty, "rewrite": " ".join(["word"] * 19)})      # under 0.5x

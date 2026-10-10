@@ -99,3 +99,5 @@ models/**/training_data_snapshot.csv
 # Training runs (LoRA adapters, merged weights, GGUF) - GPU box only, never commit
 runs/
 *.gguf
+
+eval/_fake/

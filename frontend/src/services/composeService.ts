@@ -2,9 +2,11 @@ import type { ComposeQuick, ComposeResult } from '@/types/compose'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL as string | undefined
 
-// Kept in sync with MAX_MESSAGE_LENGTH in the decode and review services,
-// and with the backend's own limit.
-export const MAX_MESSAGE_LENGTH = 5000
+// Lower than Decode's 5000: the rewrite model was trained on messages up to
+// ~1,500 characters, and much past 2,000 its reply outgrows its token budget.
+// Kept in sync with backend/app/routes/compose.py and the inference service's
+// compose_service.py, which both enforce it too.
+export const MAX_MESSAGE_LENGTH = 2000
 
 // The message is the sender's own draft, so a verdict on it belongs to the
 // form, not to the fallback path - same split as decodeService.
