@@ -1,0 +1,12 @@
+{
+  "locked_at": "2026-10-11T11:35:10+1100",
+  "per_dataset": 60,
+  "files": {
+    "data/gold/enron_gold.jsonl": "868e9560955f756425d2d1f24efd0d911a3cdd244cdd58e83696b3f26607c68f",
+    "data/gold_drafts/enron_gold_draft.jsonl": "8fde89328e8856155a418418196f4877b4c776ea5c3af3a51b9f3dcfb83e7c79",
+    "data/gold/stanford_gold.jsonl": "53d0bfa0afa688b51375556cc47d1dee1f295dc7968edcca75122a9d795956f1",
+    "data/gold_drafts/stanford_gold_draft.jsonl": "6c439657b622c57f217eda8125a7212e4e27dda872be7c7f45c766a75dbe826f",
+    "data/gold/circa_gold.jsonl": "6f3cfe1fa15a3bb1c41e9f0b8ce3f44987349e37214c4d3387dc68f8c8d6b9d6",
+    "data/gold_drafts/circa_gold_draft.jsonl": "b845bbae4e938385f11b2e7c26228de02644ade4704d1938a083945e4403402a"
+  }
+}
