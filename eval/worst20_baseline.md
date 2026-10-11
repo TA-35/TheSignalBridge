@@ -2,33 +2,18 @@
 
 Ranked by: no usable answer, then failing the grounding check, then losing to the baseline in both judge orders, then the rubric score; ties go to the lower BERTScore.
 
-## 1. enron_00015 (enron)
+## 1. stanford_00057 (stanford)
 
-- dropped ['6', '3', '5', '4', '2', '1']
-- rubric meaning_kept 0, clarity 2, warmth 1, notes_accurate 0 (3/8)
+- dropped ['Practical']
+- rubric meaning_kept 1, clarity 1, warmth 1, notes_accurate 0 (3/8)
 
-**Message:** Cassie: 
+**Message:** Herlihy & Shavit's book, The Art of Multiprocessor Programming, or "Lock-free linked lists and skip lists" or java.util.concurrent or Practical lock-freedom. Have you considered using a concurrent hash table like a hopscotch hash table?
 
-1) Review updated critical systems list / flow diagram
-2) Review transaction scenario summary
-3) Review global data documentation
-4) Review first cut TAGG/ERMS, Enpower, TDS data capture scenario for financial trading
-5) Define USER/IT SWAT teams for Monday and Tuesday to complete test scenarios. (We will need full time commitments from key users to work with us)
-6) Discuss next steps and workplan goals
+**Rewrite:** Herlihy & Shavit's book, The Art of Multiprocessor Programming, covers topics like 'Lock-free linked lists and skip lists' and java.util.concurrent. Have you considered using a concurrent hash table, such as a hopscotch hash table?
 
-Thanks.
+*Notes:* Listed the book title and topics exactly as given. / Clarified the suggestion: consider using a concurrent hash table like a hopscotch hash table.
 
-**Rewrite:** Please complete these tasks before Monday and Tuesday:
-- Review the updated critical systems list and flow diagram
-- Review the transaction scenario summary
-- Review the global data documentation
-- Review the first cut TAGG/ERMS, Enpower, and TDS data capture scenario for financial trading
-- Define USER/IT SWAT teams for Monday and Tuesday (full-time commitment required from key users)
-- Discuss next steps and workplan goals
-
-*Notes:* Turned the numbered list into clear bullet points. / Made the 'full time commitments' requirement explicit in the bullet point. / Removed the name 'Cassie' as it was not in the input text.
-
-BERTScore vs gold: 0.635
+BERTScore vs gold: 0.566
 
 ## 2. enron_00017 (enron)
 
@@ -47,20 +32,9 @@ Alyssa
 
 BERTScore vs gold: 0.782
 
-## 3. stanford_00057 (stanford)
+## 3. enron_00030 (enron)
 
-- dropped ['Practical']
-- rubric meaning_kept 1, clarity 1, warmth 1, notes_accurate 0 (3/8)
-
-**Message:** Herlihy & Shavit's book, The Art of Multiprocessor Programming, or "Lock-free linked lists and skip lists" or java.util.concurrent or Practical lock-freedom. Have you considered using a concurrent hash table like a hopscotch hash table?
-
-**Rewrite:** Herlihy & Shavit's book, The Art of Multiprocessor Programming, covers topics like 'Lock-free linked lists and skip lists' and java.util.concurrent. Have you considered using a concurrent hash table, such as a hopscotch hash table?
-
-*Notes:* Listed the book title and topics exactly as given. / Clarified the suggestion: consider using a concurrent hash table like a hopscotch hash table.
-
-## 4. enron_00030 (enron)
-
-- dropped ['[PHONE_REDACTED]', 'Brianna Beltran', 'Enron Americas-Office', 'Brittney Obrien']
+- dropped ['Enron Americas-Office', 'Brittney Obrien', '[PHONE_REDACTED]', 'Brianna Beltran']
 - rubric meaning_kept 0, clarity 2, warmth 2, notes_accurate 0 (4/8)
 
 **Message:** Edgar Levine wants to meet with you today-can you give me a time that would be good for you?
@@ -88,7 +62,35 @@ Please reply to all three questions today.
 
 BERTScore vs gold: 0.463
 
-## 5. enron_00003 (enron)
+## 4. stanford_00018 (stanford)
+
+- NLI reads it as contradicting the message
+- rubric meaning_kept 0, clarity 2, warmth 2, notes_accurate 0 (4/8)
+
+**Message:** Thanks. As an aside, since this did turn out to be factual, just very hard to source, do you think the community would countenance an unblock request from Linda if he accepted some strict unblock conditions (such as packing in the 'systemic bias' thing, discussing his edits in a less confrontational manner etc)?
+
+**Rewrite:** Thanks. Since this was factual but hard to source, could you ask Linda if she would accept an unblock request if he agreed to strict conditions, such as removing the 'systemic bias' point and discussing his edits less confrontationally?
+
+*Notes:* Turned the long, indirect question into a clear request to ask Linda. / Listed the specific conditions (removing bias, less confrontational edits) as bullet points for clarity.
+
+BERTScore vs gold: 0.542
+
+## 5. circa_09218 (circa)
+
+- NLI reads it as contradicting the message
+- rubric meaning_kept 1, clarity 2, warmth 1, notes_accurate 0 (4/8)
+
+**Question:** Would you like to have dinner?
+
+**Message:** I've only just eaten.
+
+**Rewrite:** No, I've already eaten.
+
+*Notes:* Turned the statement into a clear 'no' so the answer is immediate. / Removed the question context since the reply is self-contained.
+
+BERTScore vs gold: 0.573
+
+## 6. enron_00003 (enron)
 
 - dropped ['Parks.doc']
 - rubric meaning_kept 1, clarity 1, warmth 2, notes_accurate 0 (4/8)
@@ -122,7 +124,7 @@ Kaylee Gamble
 
 BERTScore vs gold: 0.693
 
-## 6. enron_00048 (enron)
+## 7. enron_00048 (enron)
 
 - dropped ['Katelyn et al']
 - rubric meaning_kept 1, clarity 1, warmth 2, notes_accurate 0 (4/8)
@@ -148,7 +150,7 @@ Dakota
 
 BERTScore vs gold: 0.727
 
-## 7. enron_00053 (enron)
+## 8. enron_00053 (enron)
 
 - NLI reads it as contradicting the message
 - rubric meaning_kept 0, clarity 2, warmth 2, notes_accurate 0 (4/8)
@@ -170,33 +172,9 @@ Kaitlyn
 
 BERTScore vs gold: 0.743
 
-## 8. circa_09218 (circa)
+## 9. enron_00057 (enron)
 
-- NLI reads it as contradicting the message
-- rubric meaning_kept 1, clarity 2, warmth 1, notes_accurate 0 (4/8)
-
-**Question:** Would you like to have dinner?
-
-**Message:** I've only just eaten.
-
-**Rewrite:** No, I've already eaten.
-
-*Notes:* Turned the statement into a clear 'no' so the answer is immediate. / Removed the question context since the reply is self-contained.
-
-## 9. stanford_00018 (stanford)
-
-- NLI reads it as contradicting the message
-- rubric meaning_kept 0, clarity 2, warmth 2, notes_accurate 0 (4/8)
-
-**Message:** Thanks. As an aside, since this did turn out to be factual, just very hard to source, do you think the community would countenance an unblock request from Linda if he accepted some strict unblock conditions (such as packing in the 'systemic bias' thing, discussing his edits in a less confrontational manner etc)?
-
-**Rewrite:** Thanks. Since this was factual but hard to source, could you ask Linda if she would accept an unblock request if he agreed to strict conditions, such as removing the 'systemic bias' point and discussing his edits less confrontationally?
-
-*Notes:* Turned the long, indirect question into a clear request to ask Linda. / Listed the specific conditions (removing bias, less confrontational edits) as bullet points for clarity.
-
-## 10. enron_00057 (enron)
-
-- dropped ['[PHONE_REDACTED]', '3892', '2', '1', 'Kendra St. Calvin\nEB 3892']
+- dropped ['Kendra St. Calvin\nEB 3892', '2', '[PHONE_REDACTED]', '3892']
 - rubric meaning_kept 2, clarity 2, warmth 1, notes_accurate 0 (5/8)
 
 **Message:** Kiara:
@@ -234,7 +212,7 @@ Let me know if you have any problems with this.
 
 BERTScore vs gold: 0.428
 
-## 11. enron_00050 (enron)
+## 10. enron_00050 (enron)
 
 - dropped ['Jasmin Mccormick', 'Enron Net Works']
 - rubric meaning_kept 2, clarity 2, warmth 1, notes_accurate 0 (5/8)
@@ -253,6 +231,19 @@ Enron Net Works _ Global Data Mgt.
 *Notes:* Already clear, kept as written.
 
 BERTScore vs gold: 0.428
+
+## 11. stanford_00007 (stanford)
+
+- dropped ['PS']
+- rubric meaning_kept 2, clarity 2, warmth 1, notes_accurate 0 (5/8)
+
+**Message:** PS, I would seriously like an answer to my question above. What is your native language and where do you come from?
+
+**Rewrite:** Please tell me your native language and where you are from. I need an answer to my previous question.
+
+*Notes:* Removed the 'PS' and softened 'I would like' to make the request direct. / Added 'I need' to carry the implied frustration and urgency of wanting an answer now.
+
+BERTScore vs gold: 0.575
 
 ## 12. enron_00010 (enron)
 
@@ -284,7 +275,7 @@ BERTScore vs gold: 0.668
 
 ## 13. enron_00014 (enron)
 
-- dropped ['L.L.C.', '0830']
+- dropped ['0830', 'L.L.C.']
 - rubric meaning_kept 1, clarity 2, warmth 2, notes_accurate 0 (5/8)
 
 **Message:** Attached is a draft of an Assignment whereby ECT-PR-C, L.L.C. assigns its
@@ -332,7 +323,6 @@ BERTScore vs gold: 0.722
 ## 14. enron_00026 (enron)
 
 - dropped ['Edgar']
-- added ['tomorrow']
 - rubric meaning_kept 1, clarity 1, warmth 2, notes_accurate 1 (5/8)
 
 **Message:** Sounds good. If you talk to Kaitlin Brittney or any one else mention Saturday night. I have to pick up some jeans at Underground so I will stop by and visit you tommorow. 
@@ -345,18 +335,7 @@ Edgar
 
 BERTScore vs gold: 0.775
 
-## 15. stanford_00007 (stanford)
-
-- dropped ['PS']
-- rubric meaning_kept 2, clarity 2, warmth 1, notes_accurate 0 (5/8)
-
-**Message:** PS, I would seriously like an answer to my question above. What is your native language and where do you come from?
-
-**Rewrite:** Please tell me your native language and where you are from. I need an answer to my previous question.
-
-*Notes:* Removed the 'PS' and softened 'I would like' to make the request direct. / Added 'I need' to carry the implied frustration and urgency of wanting an answer now.
-
-## 16. stanford_00024 (stanford)
+## 15. stanford_00024 (stanford)
 
 - dropped ["woun't understand"]
 - rubric meaning_kept 2, clarity 1, warmth 1, notes_accurate 1 (5/8)
@@ -367,40 +346,22 @@ BERTScore vs gold: 0.775
 
 *Notes:* Removed 'Anyway' as filler. / Kept the hesitation about the language so the sender's doubt is clear.
 
-## 17. enron_00023 (enron)
+BERTScore vs gold: 0.908
 
-- dropped ['3', '2']
-- rubric meaning_kept 1, clarity 2, warmth 1, notes_accurate 2 (6/8)
-- politeness fell high -> medium
+## 16. stanford_00028 (stanford)
 
-**Message:** The meeting is at 1:00 p.m. today. Kaitlin, if you come to my office we will walk over to Crystal's office and have the meeting there.
+- dropped ['2014']
+- rubric meaning_kept 1, clarity 1, warmth 2, notes_accurate 2 (6/8)
 
-I have spoken to Noah and got a good data dump from him - - there is no need for him to join us this afternoon. I have the trader's name - - we should call him during our meeting.
+**Message:** Thanks for the username change. Now, one last thingu2014since the account 'Dalahxe4st' already exists on Swedish Wikipedia and doesn't appear to have been taken over automatically, where should I go to take care of that?
 
-In order to move forward we need three things:
+**Rewrite:** Thanks for the username change. Since the account 'Dalahxe4st' already exists on Swedish Wikipedia and wasn't taken over automatically, where should I go to handle it?
 
- 1. The PwC valuation of the financial contracts;
- 2. A better understanding of the physical contracts and what happened;
- 3. A good data dump from the trader.
+*Notes:* Removed the filler 'one last thing' and 'now' for clarity. / Replaced 'take care of that' with 'handle it' for literal meaning.
 
-Once we have this information we should approach SDGE. Let's aim at having "first contact" tomorrow morning.
+BERTScore vs gold: 0.770
 
-**Rewrite:** The meeting is today at 1:00 p.m. Here is what we need to do:
-- Kaitlin, come to my office first. We will walk to Crystal's office for the meeting there.
-- I have spoken to Noah; he does not need to join us this afternoon.
-- We need to call the trader during the meeting. I have his name.
-- We need three things to move forward:
-  - The PwC valuation of the financial contracts
-  - A better understanding of the physical contracts and what happened
-  - A good data dump from the trader
-- Once we have this, we should approach SDGE.
-- Let's aim for 'first contact' tomorrow morning.
-
-*Notes:* Turned the paragraph into a clear list of steps and asks. / Made the location sequence explicit: come to my office, then walk to Crystal's. / Removed filler like 'good data dump' and kept the literal meaning of the three required items.
-
-BERTScore vs gold: 0.719
-
-## 18. enron_00008 (enron)
+## 17. enron_00008 (enron)
 
 - dropped ['a good night']
 - rubric meaning_kept 2, clarity 2, warmth 2, notes_accurate 0 (6/8)
@@ -413,41 +374,95 @@ BERTScore vs gold: 0.719
 
 BERTScore vs gold: 0.781
 
-## 19. stanford_00028 (stanford)
+## 18. enron_00004 (enron)
 
-- dropped ['2014']
-- rubric meaning_kept 1, clarity 1, warmth 2, notes_accurate 2 (6/8)
+- dropped ['2']
 
-**Message:** Thanks for the username change. Now, one last thingu2014since the account 'Dalahxe4st' already exists on Swedish Wikipedia and doesn't appear to have been taken over automatically, where should I go to take care of that?
+**Message:** Luke, 2 things, do you have any of the letters that the producers sent to Dominion, I would like one of those AND who are you talking to at Dominion?
+ 
+Thanks
 
-**Rewrite:** Thanks for the username change. Since the account 'Dalahxe4st' already exists on Swedish Wikipedia and wasn't taken over automatically, where should I go to handle it?
+**Rewrite:** Luke, please do these two things:
+- send me the letters the producers sent to Dominion
+- tell me who you are talking to at Dominion
 
-*Notes:* Removed the filler 'one last thing' and 'now' for clarity. / Replaced 'take care of that' with 'handle it' for literal meaning.
+Thanks
 
-## 20. enron_00055 (enron)
+*Notes:* Turned the run-on sentence into two clear bullet points. / Removed the comma splice to make the two distinct asks obvious.
 
-- dropped ['the end of week']
-- added ['the end of the week']
+BERTScore vs gold: 0.488
 
-**Message:** Cheyenne,
+## 19. enron_00052 (enron)
 
-Well, today things suck, but overall everything is great. I lost about $100,000 this morning because I'm an idiot, but it's not completely my fault. Anyway, you should definitely take an earlier flight so we could go to dinner or something. Too bad it's not at the end of week so you could stay over, even though if you wanted to, you could. I could leave work pretty much anytime on wednesday, so just let me know. If you don't have my work number, its [PHONE_REDACTED]. Thanks.
+- dropped ['FedExed', 'Caitlyn']
 
-Kelsey
+**Message:** Dear Isabella,
+?
+The electronic copies of the Transwestern Compressor stations reports 
+completed by Statistical Research are attached as PDF files. The reports are 
+considered to be drafts and we look foward to receiving reviewers comments. 
+There are three PDF files:
+?
+transwest1 which contains the report for compressor station 1;
+?
+transwest1_sitecard which contains the ASM site card for the site recorded 
+at compressor station 1 and;
+?
+transwest2 which contains the report for compressor station 2.
+?
+I have also FedExed a hard copy of these documents to Joann Thornton for AM 
+delivery tomorrow.
+?
+Best regards,
+?
+Crystal Prince
+Statistical Research, Caitlyn
+Senior Project Director
+ - transwest2.pdf
+ - transwest1_sitecard.pdf
+ - transwest1.pdf
 
-**Rewrite:** Hey Cheyenne,
+**Rewrite:** Dear Isabella,
 
-Today was rough, but overall things are good. I lost about $100,000 this morning, but it's not my fault.
+Attached are the draft reports for the Transwestern Compressor stations (PDF files):
+- transwest1.pdf (Compressor station 1)
+- transwest1_sitecard.pdf (ASM site card for station 1)
+- transwest2.pdf (Compressor station 2)
 
-Let's go to dinner on Wednesday. Could you take an earlier flight so we can meet?
-- I can leave work anytime on Wednesday.
-- Dinner doesn't have to be at the end of the week.
-- If you don't have my work number, use [PHONE_REDACTED].
+I have also sent a hard copy to Joann Thornton for AM delivery tomorrow.
 
-Let me know if this works. Thanks.
+Please review these drafts and send your comments.
 
-Kelsey
+Best regards,
+Crystal Prince
+Senior Project Director, Statistical Research
 
-*Notes:* Removed the emotional venting about the loss to keep the message focused on the ask. / Turned the scattered offers into clear bullet points. / Made the Wednesday deadline and the need for a reply explicit.
+- transwest2.pdf
+- transwest1_sitecard.pdf
+- transwest1.pdf
 
-BERTScore vs gold: 0.483
+*Notes:* Removed the question marks and extra spacing to fix the formatting. / Replaced 'look foward' with 'send your comments' for clarity. / Listed the files clearly so Isabella knows exactly what to review.
+
+BERTScore vs gold: 0.607
+
+## 20. enron_00005 (enron)
+
+- added ['[URL]']
+
+**Message:** You should now have edit access for the financial trading database. Please 
+only edit those entries relating relating to ECTRIC. Below is the icon which 
+I hope should get you entry into the database (it's a shortcut, and I'm not 
+sure it work in Mcdonald, let me know and I'll stop sending it to people there 
+if it doesn't!).
+
+Link -->
+
+**Rewrite:** You should now have edit access for the financial trading database. Please use the link below to edit only entries relating to ECTRIC.
+
+Link: [URL]
+
+Note: This shortcut might not work in McDonald. If it doesn't, let me know and I'll stop sending it to people there.
+
+*Notes:* Turned the broken link into a clear, copyable item. / Made the warning about McDonald explicit so the sender knows to add it if needed.
+
+BERTScore vs gold: 0.678

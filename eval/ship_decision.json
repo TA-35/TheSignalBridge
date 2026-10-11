@@ -1,5 +1,7 @@
 {
   "verdict": "PREVIEW: SHIP run2",
+  "ship": null,
+  "waiver": null,
   "baseline": "baseline",
   "finetuned": "run2",
   "rules": [
@@ -11,7 +13,7 @@
     {
       "rule": "entity_recall",
       "ok": true,
-      "detail": "0.958 vs baseline 0.877"
+      "detail": "0.983 vs baseline 0.913"
     },
     {
       "rule": "nli_entailment",
@@ -27,8 +29,8 @@
     },
     {
       "rule": "gold locked and unchanged",
-      "ok": false,
-      "detail": "not locked"
+      "ok": true,
+      "detail": "locked"
     }
   ]
 }

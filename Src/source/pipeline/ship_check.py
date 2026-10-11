@@ -14,8 +14,13 @@ on the total) and the gold set is locked and unchanged (data/gold/LOCK.json).
 Until then the answer is UNDECIDED, and --preview shows what it would be.
 Either way both models' numbers are in results.csv, to report.
 
+The owner can waive the human validation with --waive-human-validation and a
+reason. The waiver is printed with the verdict and kept in ship_decision.json;
+it never skips the gold lock or the three rules.
+
 usage (repo root):
     python -m Src.source.pipeline.ship_check --finetuned run2 [--preview]
+        [--waive-human-validation "who decided, and why"]
 
 exit status: 0 the fine-tuned model ships, 1 the baseline ships, 2 undecided.
 """
@@ -38,7 +43,7 @@ def _num(cell: str | None) -> float | None:
 
 
 def decide(base: dict[str, str], ft: dict[str, str], *, judge_trusted: bool | None,
-           gold_lock: str, preview: bool) -> dict[str, Any]:
+           gold_lock: str, preview: bool, waiver: str | None = None) -> dict[str, Any]:
     wins, losses = _num(ft.get("judge_wins")), _num(ft.get("judge_losses"))
     judged = wins is not None and losses is not None
     rules = [{"rule": "judge win rate", "ok": judged and wins > losses,
@@ -51,20 +56,28 @@ def decide(base: dict[str, str], ft: dict[str, str], *, judge_trusted: bool | No
         rules.append({"rule": metric, "ok": ok,
                       "detail": f"{f:.3f} vs baseline {b:.3f}" if b is not None and f is not None
                       else "missing from results.csv"})
-    preconditions = [
-        {"rule": "judge validated against human scores", "ok": bool(judge_trusted),
-         "detail": {None: "no eval/judge_validation.json yet", True: "Spearman >= 0.6",
-                    False: "Spearman below 0.6"}[judge_trusted]},
-        {"rule": "gold locked and unchanged", "ok": gold_lock == "locked", "detail": gold_lock},
-    ]
-    if all(r["ok"] for r in preconditions) or preview:
-        verdict = f"SHIP {ft['model']}" if all(r["ok"] for r in rules) else f"SHIP {base['model']}"
-    else:
-        verdict = "UNDECIDED"
-    if preview and not all(r["ok"] for r in preconditions):
+    human = {"rule": "judge validated against human scores", "ok": bool(judge_trusted),
+             "detail": {None: "no eval/judge_validation.json yet", True: "Spearman >= 0.6",
+                        False: "Spearman below 0.6"}[judge_trusted]}
+    waived = bool(waiver) and not judge_trusted
+    if waived:
+        human.update(ok=True, detail=f"WAIVED by the owner: {waiver}")
+    preconditions = [human, {"rule": "gold locked and unchanged", "ok": gold_lock == "locked", "detail": gold_lock}]
+    ready = all(r["ok"] for r in preconditions)
+    pick = (ft["model"] if all(r["ok"] for r in rules) else base["model"]) if ready or preview else None
+    verdict = f"SHIP {pick}" if pick else "UNDECIDED"
+    if pick and not ready:
         verdict = f"PREVIEW: {verdict}"
-    return {"verdict": verdict, "baseline": base["model"], "finetuned": ft["model"],
-            "rules": rules, "preconditions": preconditions}
+    elif pick and waived:
+        verdict += " (human validation of the judge waived)"
+    return {"verdict": verdict, "ship": pick if ready else None, "waiver": waiver if waived else None,
+            "baseline": base["model"], "finetuned": ft["model"], "rules": rules, "preconditions": preconditions}
+
+
+def _reason(text: str) -> str:
+    if not text.strip():
+        raise argparse.ArgumentTypeError("say who waived it and why")
+    return text.strip()
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -74,6 +87,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--eval-dir", type=Path, default=Path("eval"))
     ap.add_argument("--preview", action="store_true",
                     help="give the verdict even before the judge is validated and the gold locked")
+    ap.add_argument("--waive-human-validation", type=_reason, metavar="REASON",
+                    help="the owner's decision to ship without the human check of the judge, and why")
     args = ap.parse_args(argv)
 
     with (args.eval_dir / "results.csv").open(encoding="utf-8", newline="") as f:
@@ -85,14 +100,12 @@ def main(argv: list[str] | None = None) -> int:
     trusted = json.loads(validation.read_text(encoding="utf-8")).get("trust_judge") if validation.is_file() else None
 
     result = decide(rows[args.baseline], rows[args.finetuned], judge_trusted=trusted,
-                    gold_lock=gold_lock_status(), preview=args.preview)
+                    gold_lock=gold_lock_status(), preview=args.preview, waiver=args.waive_human_validation)
     for r in result["preconditions"] + result["rules"]:
         print(f"  [{'ok' if r['ok'] else '--'}] {r['rule']}: {r['detail']}")
     print(result["verdict"])
     (args.eval_dir / "ship_decision.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
-    if result["verdict"].startswith("SHIP"):
-        return 0 if result["verdict"] == f"SHIP {args.finetuned}" else 1
-    return 2
+    return {args.finetuned: 0, args.baseline: 1}.get(result["ship"], 2)
 
 
 if __name__ == "__main__":

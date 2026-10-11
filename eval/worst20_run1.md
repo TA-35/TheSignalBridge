@@ -2,77 +2,19 @@
 
 Ranked by: no usable answer, then failing the grounding check, then losing to the baseline in both judge orders, then the rubric score; ties go to the lower BERTScore.
 
-## 1. enron_00055 (enron)
+## 1. stanford_00028 (stanford)
 
-- dropped ['the end of week']
-- added ['the end of the week']
+- dropped ['2014']
 
-**Message:** Cheyenne,
+**Message:** Thanks for the username change. Now, one last thingu2014since the account 'Dalahxe4st' already exists on Swedish Wikipedia and doesn't appear to have been taken over automatically, where should I go to take care of that?
 
-Well, today things suck, but overall everything is great. I lost about $100,000 this morning because I'm an idiot, but it's not completely my fault. Anyway, you should definitely take an earlier flight so we could go to dinner or something. Too bad it's not at the end of week so you could stay over, even though if you wanted to, you could. I could leave work pretty much anytime on wednesday, so just let me know. If you don't have my work number, its [PHONE_REDACTED]. Thanks.
+**Rewrite:** Thanks for the username change. Now, one last thing: since the account 'Dalahxe4st' already exists on Swedish Wikipedia and doesn't appear to have been taken over automatically, where should I go to take care of that?
 
-Kelsey
+*Notes:* Fixed the typo 'one last thingu2014' to 'one last thing—'. / Kept the account name and the reason exactly as written.
 
-**Rewrite:** Cheyenne,
+BERTScore vs gold: 0.844
 
-Today things went badly, but overall everything is great. I lost about $100,000 this morning because I'm an idiot, but it's not completely my fault. Anyway, you should definitely take an earlier flight so we could go to dinner or something. Too bad it's not at the end of the week, so you could stay over. You could stay over if you wanted to.
-
-I could leave work pretty much anytime on Wednesday, so just let me know. If you don't have my work number, it's [PHONE_REDACTED]. Thanks.
-
-Kelsey
-
-*Notes:* Split the long sentences so each idea stands alone. / Kept the apology, the $100,000 figure and the flight as written. / You didn't say which flight. Add the flight name or route.
-
-BERTScore vs gold: 0.614
-
-## 2. enron_00015 (enron)
-
-- dropped ['6', '3', '5', '4', '2', '1']
-
-**Message:** Cassie: 
-
-1) Review updated critical systems list / flow diagram
-2) Review transaction scenario summary
-3) Review global data documentation
-4) Review first cut TAGG/ERMS, Enpower, TDS data capture scenario for financial trading
-5) Define USER/IT SWAT teams for Monday and Tuesday to complete test scenarios. (We will need full time commitments from key users to work with us)
-6) Discuss next steps and workplan goals
-
-Thanks.
-
-**Rewrite:** Cassie:
-
-Please do these:
-- Review the updated critical systems list and flow diagram.
-- Review the transaction scenario summary.
-- Review the global data documentation.
-- Review the first cut TAGG/ERMS, Enpower, TDS data capture scenario for financial trading.
-- Define the USER/IT SWAT teams for Monday and Tuesday to complete the test scenarios. We will need full-time commitments from key users to work with us.
-- Discuss next steps and workplan goals.
-
-Thanks.
-
-*Notes:* Put the five review items and the SWAT teams as a list so none is missed. / Kept the full-time commitment as a requirement, not optional. / No deadline is given for the first five items. Add one if there is one.
-
-BERTScore vs gold: 0.762
-
-## 3. enron_00026 (enron)
-
-- added ['tomorrow']
-
-**Message:** Sounds good. If you talk to Kaitlin Brittney or any one else mention Saturday night. I have to pick up some jeans at Underground so I will stop by and visit you tommorow. 
-
-Edgar
-
-**Rewrite:** Sounds good. If you talk to Kaitlin Brittney or anyone else, mention Saturday night. I have to pick up some jeans at Underground, so I will stop by and visit you tomorrow. 
-
-Edgar
-
-*Notes:* Fixed the typo "tomorrow" and split the long sentence. / Kept the stop-by and visit as a promise, not a question.
-
-BERTScore vs gold: 0.830
-
-## 4. enron_00048 (enron)
+## 2. enron_00048 (enron)
 
 - dropped ['Katelyn et al']
 
@@ -96,7 +38,7 @@ Dakota
 
 BERTScore vs gold: 0.848
 
-## 5. enron_00014 (enron)
+## 3. enron_00014 (enron)
 
 - added ['Makayla Snow\nColon & Thornton LLLP']
 
@@ -144,9 +86,9 @@ Fax: +44 20 7614 0012
 
 BERTScore vs gold: 0.867
 
-## 6. enron_00023 (enron)
+## 4. enron_00023 (enron)
 
-- dropped ['3', '2', 'Kaitlin']
+- dropped ['Kaitlin']
 
 **Message:** The meeting is at 1:00 p.m. today. Kaitlin, if you come to my office we will walk over to Crystal's office and have the meeting there.
 
@@ -177,7 +119,7 @@ Once we have this information, we should approach SDGE. Let's aim to have "first
 
 BERTScore vs gold: 0.881
 
-## 7. enron_00004 (enron)
+## 5. enron_00004 (enron)
 
 - dropped ['2']
 
@@ -195,7 +137,7 @@ Thanks
 
 BERTScore vs gold: 0.904
 
-## 8. stanford_00024 (stanford)
+## 6. stanford_00024 (stanford)
 
 - dropped ["woun't understand"]
 
@@ -205,41 +147,9 @@ BERTScore vs gold: 0.904
 
 *Notes:* Removed the filler 'Anyway' so the question stands on its own. / Kept the Lithuanian detail; it is the reason for the hesitation.
 
-## 9. stanford_00028 (stanford)
+BERTScore vs gold: 0.950
 
-- dropped ['2014']
-
-**Message:** Thanks for the username change. Now, one last thingu2014since the account 'Dalahxe4st' already exists on Swedish Wikipedia and doesn't appear to have been taken over automatically, where should I go to take care of that?
-
-**Rewrite:** Thanks for the username change. Now, one last thing: since the account 'Dalahxe4st' already exists on Swedish Wikipedia and doesn't appear to have been taken over automatically, where should I go to take care of that?
-
-*Notes:* Fixed the typo 'one last thingu2014' to 'one last thing—'. / Kept the account name and the reason exactly as written.
-
-## 10. enron_00049 (enron)
-
-- politeness fell medium -> low
-
-**Message:** My Tenn emails from way back.
-
-**Rewrite:** My old Tenn emails from way back.
-
-*Notes:* 'Way back' is vague. Add the year or date so the reader knows when. / 'Tenn' is unclear. Spell it out or name the person.
-
-BERTScore vs gold: 0.888
-
-## 11. enron_00047 (enron)
-
-- politeness fell medium -> low
-
-**Message:** i left a msg for cut rate today , have not heard back though
-
-**Rewrite:** I left a message for Cut Rate today. I haven't heard back yet.
-
-*Notes:* Split the run-on sentence so the message and the missing reply are separate. / Kept the name and the fact that it was today; no deadline was given.
-
-BERTScore vs gold: 0.921
-
-## 12. circa_01237 (circa)
+## 7. circa_01237 (circa)
 
 - Circa classifier still reads the reply as indirect
 
@@ -251,19 +161,23 @@ BERTScore vs gold: 0.921
 
 *Notes:* Already clear, kept as written.
 
-## 13. circa_02236 (circa)
+BERTScore vs gold: 0.560
 
-- politeness fell high -> medium
+## 8. circa_23019 (circa)
 
-**Question:** Do you love fast life?
+- Circa classifier still reads the reply as indirect
 
-**Message:** I prefer slower paced
+**Question:** Are you interested in going to the movies?
 
-**Rewrite:** I prefer a slower pace.
+**Message:** If there's something I haven't seen playing.
 
-*Notes:* Made the fragment a full sentence: slower paced became slower paced pace. / No reply was asked for, so none was added.
+**Rewrite:** If there's something I haven't seen playing.
 
-## 14. circa_07172 (circa)
+*Notes:* This reads as a fragment, not a full answer. Add what you're saying. / Say whether you're interested in going, and to what.
+
+BERTScore vs gold: 0.657
+
+## 9. circa_07172 (circa)
 
 - Circa classifier still reads the reply as indirect
 - politeness fell high -> medium
@@ -276,43 +190,39 @@ BERTScore vs gold: 0.921
 
 *Notes:* Already clear, kept as written.
 
-## 15. circa_07550 (circa)
+BERTScore vs gold: 0.707
 
-- Circa classifier still reads the reply as indirect
-
-**Question:** What would you like to visit first?
-
-**Message:** If you don't mind I'd appreciate that.
-
-**Rewrite:** If you don't mind, I'd appreciate that.
-
-*Notes:* The question asks what you'd like to visit first. Your reply doesn't say which one. / Add the visit you want, and say what you'd like from them.
-
-## 16. circa_19036 (circa)
-
-- Circa classifier still reads the reply as indirect
-
-**Question:** Are you a fantasy fan?
-
-**Message:** When it's about dragons.
-
-**Rewrite:** When it's about dragons.
-
-*Notes:* This doesn't answer the question. Add what you are saying about fantasy. / Say whether you are a fantasy fan, or what you are talking about.
-
-## 17. circa_22519 (circa)
+## 10. circa_02236 (circa)
 
 - politeness fell high -> medium
 
-**Question:** Are you going straight home after work?
+**Question:** Do you love fast life?
 
-**Message:** I need to pick up some food shopping first
+**Message:** I prefer slower paced
 
-**Rewrite:** I need to pick up some food shopping first.
+**Rewrite:** I prefer a slower pace.
 
-*Notes:* Already clear, kept as written.
+*Notes:* Made the fragment a full sentence: slower paced became slower paced pace. / No reply was asked for, so none was added.
 
-## 18. circa_22929 (circa)
+BERTScore vs gold: 0.714
+
+## 11. stanford_00047 (stanford)
+
+- politeness fell medium -> low
+
+**Message:** by "without a public facing server" do you mean the kml has to be on the local machine, or that you don't want to have to bother with installing/configuring/buying a public website? And, does the custom map you want to make need to be seen by others or just you?
+
+**Rewrite:** Two questions:
+- What do you mean by "without a public facing server"? Do you mean:
+  - the kml has to be on the local machine, or
+- that you don't want to have to bother with installing/configuring/buying a public website?
+- Does the custom map you want to make need to be seen by others, or just you?
+
+*Notes:* Split the two questions into bullets so both get answered. / Kept your quoted phrase and the kml detail exactly as written.
+
+BERTScore vs gold: 0.715
+
+## 12. circa_22929 (circa)
 
 - politeness fell medium -> low
 
@@ -324,19 +234,49 @@ BERTScore vs gold: 0.921
 
 *Notes:* Replaced 'pooped' with 'tired'. / No reply is needed to this.
 
-## 19. circa_23019 (circa)
+BERTScore vs gold: 0.730
+
+## 13. circa_22519 (circa)
+
+- politeness fell high -> medium
+
+**Question:** Are you going straight home after work?
+
+**Message:** I need to pick up some food shopping first
+
+**Rewrite:** I need to pick up some food shopping first.
+
+*Notes:* Already clear, kept as written.
+
+BERTScore vs gold: 0.743
+
+## 14. stanford_00034 (stanford)
+
+- politeness fell medium -> low
+
+**Message:** You are correct that the science is not copyright, but the purpose of the cite is [URL]. If I want to check your equation, where should I look?
+
+**Rewrite:** You are correct that the science is not copyright. But the purpose of the cite is [URL]. Where should I look to check your equation?
+
+*Notes:* Split the long sentence so the ask stands alone. / Kept [URL] exactly as written.
+
+BERTScore vs gold: 0.818
+
+## 15. circa_19036 (circa)
 
 - Circa classifier still reads the reply as indirect
 
-**Question:** Are you interested in going to the movies?
+**Question:** Are you a fantasy fan?
 
-**Message:** If there's something I haven't seen playing.
+**Message:** When it's about dragons.
 
-**Rewrite:** If there's something I haven't seen playing.
+**Rewrite:** When it's about dragons.
 
-*Notes:* This reads as a fragment, not a full answer. Add what you're saying. / Say whether you're interested in going, and to what.
+*Notes:* This doesn't answer the question. Add what you are saying about fantasy. / Say whether you are a fantasy fan, or what you are talking about.
 
-## 20. circa_33114 (circa)
+BERTScore vs gold: 0.838
+
+## 16. circa_33114 (circa)
 
 - politeness fell high -> medium
 
@@ -347,3 +287,43 @@ BERTScore vs gold: 0.921
 **Rewrite:** I like all music.
 
 *Notes:* Already clear, kept as written.
+
+BERTScore vs gold: 0.885
+
+## 17. enron_00049 (enron)
+
+- politeness fell medium -> low
+
+**Message:** My Tenn emails from way back.
+
+**Rewrite:** My old Tenn emails from way back.
+
+*Notes:* 'Way back' is vague. Add the year or date so the reader knows when. / 'Tenn' is unclear. Spell it out or name the person.
+
+BERTScore vs gold: 0.888
+
+## 18. enron_00047 (enron)
+
+- politeness fell medium -> low
+
+**Message:** i left a msg for cut rate today , have not heard back though
+
+**Rewrite:** I left a message for Cut Rate today. I haven't heard back yet.
+
+*Notes:* Split the run-on sentence so the message and the missing reply are separate. / Kept the name and the fact that it was today; no deadline was given.
+
+BERTScore vs gold: 0.921
+
+## 19. circa_07550 (circa)
+
+- Circa classifier still reads the reply as indirect
+
+**Question:** What would you like to visit first?
+
+**Message:** If you don't mind I'd appreciate that.
+
+**Rewrite:** If you don't mind, I'd appreciate that.
+
+*Notes:* The question asks what you'd like to visit first. Your reply doesn't say which one. / Add the visit you want, and say what you'd like from them.
+
+BERTScore vs gold: 1.000

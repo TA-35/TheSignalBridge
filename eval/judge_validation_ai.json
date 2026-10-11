@@ -1,0 +1,28 @@
+{
+  "n": 30,
+  "failed_scores": 0,
+  "trust_threshold": 0.6,
+  "per_criterion": {
+    "meaning_kept": {
+      "rho": 0.433,
+      "p": 0.017
+    },
+    "clarity": {
+      "rho": 0.079,
+      "p": 0.679
+    },
+    "warmth": {
+      "rho": 0.139,
+      "p": 0.465
+    },
+    "notes_accurate": {
+      "rho": 0.72,
+      "p": 0.0
+    }
+  },
+  "total": {
+    "rho": 0.466,
+    "p": 0.009
+  },
+  "trust_judge": false
+}
