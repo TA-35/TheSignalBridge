@@ -245,12 +245,6 @@ onBeforeUnmount(() => {
                 Account settings
               </RouterLink>
 
-              <!-- The progress dashboard is built now, so this is a real link -->
-              <RouterLink to="/progress" class="account__item" role="menuitem">
-                <LayoutDashboard :size="15" :stroke-width="1.8" aria-hidden="true" />
-                Dashboard
-              </RouterLink>
-
               <button
                 type="button"
                 class="account__item"
