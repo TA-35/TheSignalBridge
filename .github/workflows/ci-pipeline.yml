@@ -1,0 +1,66 @@
+name: CI - pipeline
+
+# Checks only, on every PR and push to main. Deploying stays a manual
+# workflow_dispatch (inference-deploy.yml) - nothing here reaches EC2, the
+# GPU box or any model API. The tests mock every model call.
+#
+# Covers the inference pipeline plus the training-side guards: data_prep's
+# gold-set guard and train_qwen35's checks run nowhere else.
+
+# Besides Src/ and models/, the tests read data/ (gold and gold drafts for the
+# gold lock, source and step1 files for the flag-rule targets), the extractor
+# the pipeline borrows, and the API route whose length limit must match the
+# pipeline's - so changes there run this too.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "Src/**"
+      - "models/**"
+      - "data/**"
+      - "backend/app/services/extraction.py"
+      - "backend/app/routes/decode.py"
+      - ".github/workflows/ci-pipeline.yml"
+  push:
+    branches: [main]
+    paths:
+      - "Src/**"
+      - "models/**"
+      - "data/**"
+      - "backend/app/services/extraction.py"
+      - "backend/app/routes/decode.py"
+      - ".github/workflows/ci-pipeline.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: Src/source/pipeline/requirements.txt
+      - run: pip install -r Src/source/pipeline/requirements.txt pytest ruff==0.16.10
+
+      - name: Lint (ruff, fatal errors only)
+        run: ruff check --select E9,F63,F7,F82 Src
+
+      # From the repo root on purpose: these tests use repo-relative paths,
+      # and the .env guard test passes vacuously from anywhere else.
+      - name: Test
+        run: >-
+          python -m pytest -q
+          Src/source/pipeline/tests
+          Src/source/data_prep/tests
+          Src/source/model/compose/tests
