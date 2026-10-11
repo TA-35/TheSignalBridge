@@ -136,6 +136,14 @@ export function mergeSnapshot(s: Saved, snap: ProgressSnapshot): void {
 let syncTimer: ReturnType<typeof setTimeout> | null = null
 let syncing = false
 let again = false
+// "Delete everything" has to win over a sync that is already on the wire.
+// clearAll() bumps the epoch, and a sync that started before it throws its
+// reply away (it holds the account's data from before the delete). The
+// DELETE waits for that PUT to finish, so the server can't apply the PUT
+// after it, and the next sync waits for the DELETE.
+let epoch = 0
+let inflight: Promise<unknown> | null = null
+let clearing: Promise<void> | null = null
 
 export const useActivityStore = defineStore('activity', {
   state: (): Saved => load(),
@@ -226,6 +234,8 @@ export const useActivityStore = defineStore('activity', {
       }
       syncing = true
       try {
+        while (clearing) await clearing
+        const started = epoch
         // Review keys for cards saved from a decode are local card ids, not
         // library patterns. They stay on this device, like the cards do.
         const localOnly = new Set(useCardsStore().cards.filter((c) => !c.patternId).map((c) => c.id))
@@ -234,8 +244,10 @@ export const useActivityStore = defineStore('activity', {
         // view isn't sent again with a new date tomorrow
         for (const id of this.viewed) if (!this.viewedOn[id]) this.viewedOn[id] = today
 
-        const snap = await pushProgress(buildUpload(this.snapshot(), today, localOnly))
-        if (!snap) return
+        const request = pushProgress(buildUpload(this.snapshot(), today, localOnly))
+        inflight = request
+        const snap = await request
+        if (!snap || started !== epoch) return
         const s = this.snapshot()
         mergeSnapshot(s, snap)
         this.$patch({ openDays: s.openDays, remoteEvents: s.remoteEvents, viewed: s.viewed, viewedOn: s.viewedOn, reviews: s.reviews })
@@ -246,6 +258,7 @@ export const useActivityStore = defineStore('activity', {
         }
       } finally {
         syncing = false
+        inflight = null
         if (again) {
           again = false
           void this.syncWithAccount()
@@ -256,6 +269,8 @@ export const useActivityStore = defineStore('activity', {
     // Settings' "delete": everything the dashboard keeps, here and (if signed
     // in) on the account, so it doesn't sync straight back down.
     clearAll() {
+      epoch++
+      again = false
       this.openDays = []
       this.events = []
       this.viewed = []
@@ -277,7 +292,13 @@ export const useActivityStore = defineStore('activity', {
       } catch {
         /* ignore */
       }
-      if (useAccountStore().signedIn) void clearProgress()
+      if (useAccountStore().signedIn) {
+        const done = (inflight ?? Promise.resolve()).then(() => clearProgress())
+        clearing = done
+        void done.finally(() => {
+          if (clearing === done) clearing = null
+        })
+      }
     },
   },
 })

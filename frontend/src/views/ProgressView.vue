@@ -6,15 +6,16 @@ import { RouterLink, useRouter } from 'vue-router'
 import FocusTimer from '@/components/progress/FocusTimer.vue'
 import { useProgressSources } from '@/composables/useProgressSources'
 import { useAccountStore } from '@/stores/account'
+import { categoryHue } from '@/utils/categories'
 import {
   BADGES, FEATURES, badgeStatus, dateKey, dueForReview, libraryProgress, nextStep,
   progressByCategory, reviewReminder, usageByDay, type Energy, type Feature,
 } from '@/utils/progress'
 
 const { activity, loading, libraryCards, allCards } = useProgressSources()
-// The dashboard is for signed-in accounts, which is what lets the days and
-// badges follow someone to another device. Activity is still counted on this
-// device while signed out, and joins the account on sign-in.
+// Works signed out like every other page: an account changes what the app
+// remembers, never what it can do. Signed out, the dashboard shows this
+// device's own data and a one-line note that signing in keeps it everywhere.
 const account = useAccountStore()
 
 const router = useRouter()
@@ -75,7 +76,6 @@ const todayMinutes = computed(() => activity.allEvents.filter((e) => e.date === 
 // ---------------------------------------------------------------- pattern library
 const lib = computed(() => libraryProgress(libraryCards.value))
 const byCat = computed(() => progressByCategory(libraryCards.value))
-const CAT_COLOURS = ['--pd-c1', '--pd-c2', '--pd-c3', '--pd-c4', '--pd-c5', '--pd-c6']
 const DONUT_C = 2 * Math.PI * 58
 const donut = computed(() => {
   const l = lib.value
@@ -116,34 +116,16 @@ onMounted(() => {
 </script>
 
 <template>
-  <!-- Until /me answers, "signed out" would be a guess, so show nothing yet -->
-  <div v-if="!account.ready" class="pd-page" aria-busy="true" />
-
-  <div v-else-if="!account.signedIn" class="pd-page">
-    <header class="pd-masthead">
-      <h1>Your progress</h1>
-      <p>How you're getting on, at your own pace. Nothing here is a score.</p>
-    </header>
-    <section class="pd-card pd-start pd-signedout" aria-labelledby="signin-title">
-      <h2 id="signin-title">Sign in to see your progress</h2>
-      <p>
-        Your progress is kept with your account, so your days and badges follow you to any device.
-        There's no email and no password, just a passkey on your device.
-      </p>
-      <p class="pd-muted pd-small">
-        The days you use Between Words are still counted on this device, and they join your account when you sign in.
-      </p>
-      <div class="pd-row">
-        <RouterLink to="/account" class="pd-link-button">Sign in or create an account</RouterLink>
-      </div>
-    </section>
-  </div>
-
-  <div v-else class="pd-page" :class="{ 'pd-large': largeText }">
+  <div class="pd-page" :class="{ 'pd-large': largeText }">
     <header class="pd-header">
       <div class="pd-masthead">
         <h1>Your progress</h1>
         <p>How you're getting on, at your own pace. Nothing here is a score.</p>
+        <!-- Waits for /me, so a signed-in reader never sees it flash up -->
+        <p v-if="account.ready && !account.signedIn" class="pd-note">
+          Kept on this device only. <RouterLink to="/account">Sign in</RouterLink> to keep your days and badges on any
+          device: no email or password, just a passkey.
+        </p>
       </div>
       <div class="pd-settings">
         <label class="pd-toggle"><input v-model="largeText" type="checkbox" /> Larger text</label>
@@ -239,9 +221,9 @@ onMounted(() => {
           <text x="75" y="100" text-anchor="middle" class="pd-svg-muted">explored</text>
         </svg>
         <div class="pd-cats">
-          <div v-for="(c, i) in byCat" :key="c.category" class="pd-cat">
+          <div v-for="c in byCat" :key="c.category" class="pd-cat">
             <div class="pd-head pd-small">
-              <span class="pd-mono"><i class="pd-dot" :style="{ background: `var(${CAT_COLOURS[i % 6]})` }" />{{ c.category }}</span>
+              <span class="pd-mono"><i class="pd-dot" :style="{ background: categoryHue(c.category) }" />{{ c.category }}</span>
               <span class="pd-muted pd-num">{{ c.opened }}/{{ c.total }} opened</span>
             </div>
             <div class="pd-stack">
@@ -309,13 +291,12 @@ onMounted(() => {
   /* calm section colours: no red, each section its own soft hue */
   /* soft fills are mixed from the theme's surface, so they turn dark in dark mode
      instead of staying pale behind light text */
-  --pd-teal: #3d8790; --pd-teal-soft: color-mix(in srgb, var(--pd-teal) 16%, var(--pd-surface));
+  --pd-teal: #337179; --pd-teal-soft: color-mix(in srgb, var(--pd-teal) 16%, var(--pd-surface));
   --pd-lavender: #7466a8; --pd-lavender-soft: color-mix(in srgb, var(--pd-lavender) 18%, var(--pd-surface));
   --pd-honey: #a88442; --pd-honey-soft: color-mix(in srgb, var(--pd-honey) 16%, var(--pd-surface));
   --pd-heather: #86698b; --pd-heather-soft: color-mix(in srgb, var(--pd-heather) 16%, var(--pd-surface));
   --pd-learned: #5e8a70; --pd-saved: #6f92c8; --pd-opened: #e9cf98;
   --pd-f-decoder: #3d8790; --pd-f-compose: #a88442; --pd-f-study: #6c8ebf; --pd-f-library: #9b7bb4;
-  --pd-c1: #3d8790; --pd-c2: #a88442; --pd-c3: #5e8a70; --pd-c4: #4a6fa5; --pd-c5: #7466a8; --pd-c6: #93708f;
   --pd-iron: #7a8288; --pd-bronze: #a8693a; --pd-silver: #9aa5ae; --pd-gold: #c9a227; --pd-diamond: #4fa3c7;
   --pd-accent: var(--pd-teal); --pd-accent-soft: var(--pd-teal-soft);
   --pd-base: 15px;
@@ -354,11 +335,6 @@ onMounted(() => {
   background: var(--pd-surface); color: var(--pd-ink); width: 100%; }
 
 .pd-start { --pd-accent: var(--pd-teal); --pd-accent-soft: var(--pd-teal-soft); border-left: 5px solid var(--pd-accent); }
-.pd-signedout p { max-width: 62ch; line-height: 1.6; }
-.pd-page .pd-link-button { display: inline-block; font-weight: 600; font-size: .92em; padding: 9px 16px; border-radius: var(--radius-sm, 10px);
-  background: var(--pd-accent); color: #fff; text-decoration: none; }
-.pd-page .pd-link-button:hover { color: #fff; filter: brightness(1.08); }
-.pd-page .pd-link-button:focus-visible { outline: 3px solid var(--pd-accent); outline-offset: 2px; }
 .pd-step { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; padding: 14px; border-radius: 12px; background: var(--pd-accent-soft); }
 .pd-step p { font-size: 1.05em; max-width: 60ch; }
 
@@ -402,14 +378,16 @@ onMounted(() => {
 
 .pd-badges { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
 .pd-badge { border: 1px solid var(--pd-line); border-radius: 12px; padding: 14px; display: grid; gap: 4px; justify-items: center; text-align: center; }
-.pd-badge.locked { opacity: .45; }
+/* Locked: only the drawing fades. Fading the whole card took its text to 1.9:1. */
+.pd-badge.locked svg { opacity: .45; }
+.pd-badge.locked strong { color: var(--pd-muted-c); }
 .pd-badge svg { width: 44px; height: 44px; }
 .pd-badge small { color: var(--pd-muted-c); }
 
 /* accent used as text: pulled towards the ink colour, so it darkens on a light theme
    and lightens on a dark one. Set on every card, not just the page, because each
    section swaps --pd-accent and a custom property is worked out where it's declared. */
-.pd-page, .pd-page .pd-card { --pd-accent-ink: color-mix(in srgb, var(--pd-accent) 70%, var(--pd-ink)); }
+.pd-page, .pd-page .pd-card { --pd-accent-ink: color-mix(in srgb, var(--pd-accent) 60%, var(--pd-ink)); }
 
 @media (max-width: 560px) {
   .pd-step, .pd-refresh { grid-template-columns: 1fr; }
