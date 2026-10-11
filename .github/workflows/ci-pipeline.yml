@@ -7,16 +7,17 @@ name: CI - pipeline
 # Covers the inference pipeline plus the training-side guards: data_prep's
 # gold-set guard and train_qwen35's checks run nowhere else.
 
-# Besides Src/ and models/, the tests read the gold files (compose refuses
-# gold messages), the extractor the pipeline borrows, and the API route whose
-# length limit must match the pipeline's - so changes there run this too.
+# Besides Src/ and models/, the tests read data/ (gold and gold drafts for the
+# gold lock, source and step1 files for the flag-rule targets), the extractor
+# the pipeline borrows, and the API route whose length limit must match the
+# pipeline's - so changes there run this too.
 on:
   pull_request:
     branches: [main]
     paths:
       - "Src/**"
       - "models/**"
-      - "data/gold/**"
+      - "data/**"
       - "backend/app/services/extraction.py"
       - "backend/app/routes/decode.py"
       - ".github/workflows/ci-pipeline.yml"
@@ -25,7 +26,7 @@ on:
     paths:
       - "Src/**"
       - "models/**"
-      - "data/gold/**"
+      - "data/**"
       - "backend/app/services/extraction.py"
       - "backend/app/routes/decode.py"
       - ".github/workflows/ci-pipeline.yml"
