@@ -1,0 +1,141 @@
+item,question,message,rewrite,notes,meaning,meaning_kept,clarity,warmth,notes_accurate,comment
+item_01,,"Brenda, I still don~t understand. Are you saying Antonio Rumeu de Armas is a primary source BUT Rachael Bright Hicks is not a primary source?","Brenda, I still don't understand. Are you saying Antonio Rumeu de Armas is a primary source but Rachael Bright Hicks is not? Please clarify this.",Turned the rhetorical question into a direct request for clarification. / Removed the tilde to fix the typo and ensure the text is clean.,"ask: Clarify the source status for Antonio Rumeu de Armas and Rachael Bright Hicks; deadline: ; urgency: high; tone: confused, direct; implied: The sender is frustrated by the contradiction and needs a clear answer.",,,,,
+item_17,Do you love fast life?,I prefer slower paced,"No, I don't love the fast life. I prefer a slower pace.",Turned the fragment into a clear answer to the question. / Made the preference explicit so it isn't left to guesswork.,"ask: ; deadline: ; urgency: low; tone: casual, direct; implied: The sender does not love the fast life; they prefer a slower pace.",,,,,
+item_03,,poor you. bye. have a good night.,Poor you. Bye. Have a good night.,"Already clear, kept as written.","ask: ; deadline: ; urgency: low; tone: casual, warm, brief; implied: The sender is sorry for the reader's situation and is ending the conversation.",,,,,
+item_10,Do you love fast life?,I prefer slower paced,"No, I prefer a slower pace.","Made the answer explicit: no, not fast. / Kept your wording about pace, not speed.","ask: ; deadline: ; urgency: low; tone: casual, brief; implied: The answer is no: the sender prefers a slower pace.",,,,,
+item_28,,"I haven't heard anything back from you guys on this. Any insight? I know 
+Devin Obrien is also working a deal with TGLO to convert bbls to mmbtus 
+which could mean incremental volumes that TGLO would be trying to get into 
+Midcon.","I haven't heard anything back from you guys on this. Could you share what you know?
+
+Devin Obrien is also working a deal with TGLO to convert bbls to mmbtus. That could mean incremental volumes that TGLO would be trying to get into Midcon.","Put the ask first: share what you know. / Kept the Devin Obrien detail as context, since it may be the reason for the silence.","ask: Share what you know about the situation; deadline: ; urgency: medium; tone: direct, slightly frustrated; implied: The sender is waiting on a reply and wants an answer.",,,,,
+item_18,Are you interested in going to the movies?,If there's something I haven't seen playing.,"Yes, if it's something I haven't seen playing.",Made the yes explicit; the condition was the only part given. / Kept your condition exactly as written.,"ask: ; deadline: ; urgency: low; tone: casual, brief; implied: Yes, but only if the movie hasn't been seen before.",,,,,
+item_22,,"PS, I would seriously like an answer to my question above. What is your native language and where do you come from?",PS. I would seriously like an answer to my question above. What is your native language and where do you come from?,"Already clear, kept as written.","ask: Answer the question about the sender's native language and where they come from; deadline: ; urgency: medium; tone: casual, direct, slightly impatient; implied: The sender is waiting on an answer and is a little annoyed.",,,,,
+item_27,,"I haven't heard anything back from you guys on this. Any insight? I know 
+Devin Obrien is also working a deal with TGLO to convert bbls to mmbtus 
+which could mean incremental volumes that TGLO would be trying to get into 
+Midcon.","I haven't heard back from you yet. Please provide insight on the status. Here is the context:
+- Devin Obrien is working a deal with TGLO to convert bbls to mmbtus.
+- This could mean incremental volumes that TGLO would be trying to get into Midcon.",Turned the question into a clear request for insight. / Listed the context as bullet points for clarity. / Removed filler words like 'you guys' and 'which could mean'.,"ask: Provide insight on the status of the deal; deadline: ; urgency: medium; tone: neutral, inquisitive; implied: The sender is frustrated by the lack of a response and is providing context to help the recipient understand the stakes.",,,,,
+item_19,Do you like top 40 music?,I like all music,"I like all music, not just top 40.",Made the preference explicit: you like all music. / Clarified the scope to avoid confusion: it is not limited to top 40.,"ask: ; deadline: ; urgency: low; tone: friendly, broad; implied: The sender likes all music, not just top 40.",,,,,
+item_20,,"In what way does the daemon act differently in those two scenarios? Form the perspective of your daemon, how is a shutdown + startup different than a reboot?","In what way does the daemon act differently in those two scenarios? From the perspective of the daemon, how is a shutdown + startup different than a reboot?","Already clear, kept as written.","ask: Explain how the daemon acts differently in those two scenarios, and how a shutdown + startup differs from a reboot from the daemon's perspective; deadline: ; urgency: low; tone: neutral, technical, direct; implied: ",,,,,
+item_24,,"Clarence,
+
+EGS are asking whether Noah is yours for PRC and bonus purposes? Presumably no doubt about Katelyn et al.
+
+What's your view. They seem happy either way. Just want clarity.
+
+Dakota","Clarence,
+
+EGS is asking whether Noah is yours for PRC and bonus purposes. I assume Katelyn and the others are the same.
+
+What's your view? They seem happy either way. I just want clarity.
+
+Dakota","Put the question first so the ask is easy to find. / Kept ""EGS"", ""PRC"", ""Katelyn"" and ""Noah"" exactly as written. / ""Presumably no doubt about Katelyn et al.""","ask: Say whether Noah is yours for PRC and bonus purposes; deadline: ; urgency: medium; tone: businesslike, direct, slightly rambling; implied: The sender wants a clear answer, not a guess.",,,,,
+item_13,,"I have set up POI 78269 for this fuel delivery. I need someone to provide the following information in order to complete setup of the POI.
+
+Is the West Texas Supply basin correct?
+Is the East of Thoreau Area correct?
+Should the point have GRI yes or no?
+What is the Lateral ID to be used?
+What is the Marketing Lateral ID to be used?
+
+Thanks
+
+Jasmine","I have set up POI 78269 for this fuel delivery. I need you to confirm the following details to complete the setup:
+- Is the West Texas Supply basin correct?
+- Is the East of Thoreau Area correct?
+- Should the point have GRI (yes or no)?
+- What is the Lateral ID to be used?
+- What is the Marketing Lateral ID to be used?",Turned the list of questions into a clear request for confirmation. / Removed filler words like 'in order to' and 'Thanks' to make it concise.,"ask: Confirm the POI setup details for POI 78269; deadline: ; urgency: medium; tone: professional, clear; implied: The sender needs specific answers to complete the setup.",,,,,
+item_14,,"Crystal:
+Here is the draft of the letter to be given to the participants of the 
+training sessions for ConfirmLogic. If you could review this for content to 
+make sure that I've covered the purpose that Jillian Welch asked for which was to 
+emphasize that what is done in CL will not have any legal consequence and 
+that the confirmation process will remain intact during the beta period.
+
+I've got our first user training tomorrow at 3pm
+
+Thanks,
+KC","Crystal:
+
+Here is the draft of the letter to be given to the participants of the training sessions for ConfirmLogic. Could you review it for content to make sure I've covered the purpose Jillian Welch asked for, which is to emphasize:
+- that what is done in CL will not have any legal consequence
+- that the confirmation process will remain intact during the beta period
+
+I've got our first user training tomorrow at 3pm.
+
+Thanks,
+KC",Split the two legal points into bullets so they are easy to check. / Kept the 3pm training time and the name Jillian Welch exactly as written.,"ask: Review the draft letter for content to make sure it covers the purpose Jillian Welch asked for; deadline: ; urgency: medium; tone: polite, businesslike; implied: The sender wants the review before the training session tomorrow at 3pm.",,,,,
+item_23,,"In what way does the daemon act differently in those two scenarios? Form the perspective of your daemon, how is a shutdown + startup different than a reboot?","How does the daemon behave differently in these two scenarios?
+- From the daemon's perspective, what is the difference between a shutdown + startup and a reboot?",Split the long question into two clear bullet points. / Kept the technical perspective explicit: 'from the daemon's perspective'.,"ask: Explain the difference between a shutdown + startup and a reboot from the daemon's perspective; deadline: ; urgency: medium; tone: neutral, technical; implied: ",,,,,
+item_21,Are you a fantasy fan?,When it's about dragons.,"I'm a fantasy fan, but only when it's about dragons.",Turned the fragment into a complete sentence. / Made the condition explicit so the reader knows exactly when the sender is a fan.,"ask: ; deadline: ; urgency: low; tone: casual, specific; implied: The sender is a fantasy fan only when dragons are involved.",,,,,
+item_04,,"I created this for you. However as a registered user, do you know you can create categories by yourself?","I created this for you. However, as a registered user, do you know you can create categories by yourself?","Kept the question as written; it asks whether the reader knows how to create categories. / If you want them to create one, say so directly instead of asking.","ask: Say whether you know you can create categories yourself; deadline: ; urgency: low; tone: neutral, helpful; implied: The sender is pointing out the reader can do this themselves.",,,,,
+item_06,Can you play football?,I used to before I hurt my knee.,"No, I can't play football anymore. I hurt my knee.","Turned the past tense into a clear current inability. / Added 'No' to make the answer immediate, as implied by the question.","ask: ; deadline: ; urgency: low; tone: casual, direct; implied: The sender can no longer play football due to a past injury.",,,,,
+item_05,,"I created this for you. However as a registered user, do you know you can create categories by yourself?","I created this for you. As a registered user, you can also create categories yourself.",Removed the question format to make the instruction a clear statement. / Kept the helpful tone while removing the unnecessary 'do you know' phrasing.,"ask: Create categories yourself; deadline: ; urgency: low; tone: helpful, informative; implied: The sender has already done the task but wants the recipient to do it too.",,,,,
+item_26,,poor you. bye. have a good night.,Sorry to hear that. Goodnight.,Removed the filler 'poor you' and 'bye' to make it direct. / Changed 'have a good night' to the standard 'Goodnight' for clarity.,"ask: ; deadline: ; urgency: low; tone: casual, dismissive; implied: The sender is ending the conversation and offering a generic well-wish.",,,,,
+item_15,,"Brenda, I still don~t understand. Are you saying Antonio Rumeu de Armas is a primary source BUT Rachael Bright Hicks is not a primary source?","Brenda, I still don't understand. Are you saying:
+- Antonio Rumeu de Armas is a primary source
+- Rachael Bright Hicks is not a primary source","Split the two names into bullets so each answer is easy to check. / Fixed the typo ""don't"".","ask: Confirm whether Antonio Rumeu de Armas is a primary source and Rachael Bright Hicks is not; deadline: ; urgency: medium; tone: confused, direct; implied: The sender is unsure and wants a clear yes or no.",,,,,
+item_12,Are you interested in going to the movies?,If there's something I haven't seen playing.,I'm only interested in going if there's something you haven't seen yet.,Turned the vague 'if' into a clear condition: only if you haven't seen it. / Removed the fragment to make it a complete sentence.,"ask: Tell the sender if they want to go to the movies; deadline: ; urgency: low; tone: casual, indirect; implied: The sender is only interested in movies they haven't seen yet.",,,,,
+item_11,Do you like top 40 music?,I like all music,"Yes, I like all music.","Made the yes explicit, since the question was a yes/no question. / Kept your wording otherwise unchanged.","ask: ; deadline: ; urgency: low; tone: casual, brief; implied: The answer is yes: the sender likes all music, so top 40 music counts.",,,,,
+item_30,,"PS, I would seriously like an answer to my question above. What is your native language and where do you come from?",Please tell me your native language and where you are from. I need an answer to my previous question.,Removed the 'PS' and softened 'I would like' to make the request direct. / Added 'I need' to carry the implied frustration and urgency of wanting an answer now.,"ask: Tell me your native language and where you are from; deadline: ; urgency: high; tone: direct, firm; implied: The sender is frustrated by the lack of a previous answer and wants one now.",,,,,
+item_02,,"Crystal:
+Here is the draft of the letter to be given to the participants of the 
+training sessions for ConfirmLogic. If you could review this for content to 
+make sure that I've covered the purpose that Jillian Welch asked for which was to 
+emphasize that what is done in CL will not have any legal consequence and 
+that the confirmation process will remain intact during the beta period.
+
+I've got our first user training tomorrow at 3pm
+
+Thanks,
+KC","Crystal:
+
+Here is the draft letter for the ConfirmLogic training sessions. Please review the content to ensure it covers Jillian Welch's requirements:
+- Emphasize that actions in CL have no legal consequences.
+- Confirm the confirmation process remains intact during the beta period.
+
+I have our first user training tomorrow at 3pm.
+
+Thanks,
+KC",Listed the two specific checks as bullet points so they are not missed. / Removed filler words like 'to be given to' and 'which was to' for clarity. / Kept the context about the training tomorrow as a reminder of the deadline.,"ask: Review the draft letter for content; deadline: ; urgency: medium; tone: professional, collaborative; implied: The review is specifically to check if the letter covers Jillian Welch's requirements regarding legal consequences and the confirmation process during beta.",,,,,
+item_25,,"Clarence,
+
+EGS are asking whether Noah is yours for PRC and bonus purposes? Presumably no doubt about Katelyn et al.
+
+What's your view. They seem happy either way. Just want clarity.
+
+Dakota","Clarence,
+
+EGS is asking if Noah is yours for PRC and bonus purposes.
+
+What is your view? They seem happy either way, but I need clarity.
+
+Thanks,
+Dakota",Turned the question into a clear bullet point ask. / Removed the vague 'no doubt about Katelyn et al' which adds no value to the specific question about Noah.,"ask: Confirm if Noah is yours for PRC and bonus purposes; deadline: ; urgency: medium; tone: professional, seeking clarity; implied: The sender needs a clear yes/no answer to avoid confusion.",,,,,
+item_29,,"Leah, thanks a lot for your help with the article. But I'm just curious - why was the link to the article for ""Advent of Divine Justice"" deleted?","Leah, thanks a lot for your help with the article. But I'm just curious - why was the link to the article for ""Advent of Divine Justice"" deleted?","Already clear, kept as written.","ask: Explain why the link to the article for ""Advent of Divine Justice"" was deleted; deadline: ; urgency: low; tone: polite, curious; implied: The sender is puzzled by the deletion and may want it explained.",,,,,
+item_07,Are you a fantasy fan?,When it's about dragons.,"Yes, when it's about dragons.","Made the yes explicit, since the question was a yes/no one. / Kept the condition exactly as you wrote it.","ask: ; deadline: ; urgency: low; tone: casual, brief; implied: Yes, but only about dragons.",,,,,
+item_09,,"I have set up POI 78269 for this fuel delivery. I need someone to provide the following information in order to complete setup of the POI.
+
+Is the West Texas Supply basin correct?
+Is the East of Thoreau Area correct?
+Should the point have GRI yes or no?
+What is the Lateral ID to be used?
+What is the Marketing Lateral ID to be used?
+
+Thanks
+
+Jasmine","I have set up POI 78269 for this fuel delivery. I need someone to provide the following information in order to complete setup of the POI.
+
+- Is the West Texas Supply basin correct?
+- Is the East of Thoreau Area correct?
+- Should the point have GRI yes or no?
+- What is the lateral ID to be used?
+- What is the marketing lateral ID to be used?
+
+Thanks,
+Jasmine","Listed the five questions as bullets so each one is easy to answer. / Kept every name, ID and detail exactly as written.","ask: Answer the five questions about the POI setup; deadline: ; urgency: medium; tone: neutral, businesslike; implied: The sender needs these answers before the setup can be completed.",,,,,
+item_16,Can you play football?,I used to before I hurt my knee.,"No, I can't play football now. I used to play before I hurt my knee.","Made the answer explicit: no, you can't play now. / Kept the reason as written: you used to play before your knee hurt.","ask: ; deadline: ; urgency: low; tone: casual, brief; implied: The answer is no now: the sender can't play football because of a past knee injury.",,,,,
+item_08,,"Leah, thanks a lot for your help with the article. But I'm just curious - why was the link to the article for ""Advent of Divine Justice"" deleted?","Leah, thanks for your help with the article. Could you please explain why the link to 'Advent of Divine Justice' was deleted?",Turned the question into a clear request for an explanation. / Kept the polite tone and the specific article title.,"ask: Explain why the link to 'Advent of Divine Justice' was deleted; deadline: ; urgency: low; tone: polite, inquisitive; implied: The sender is confused or concerned about the missing link.",,,,,

@@ -1,0 +1,11 @@
+# The eval harness, on a laptop (docs/EVAL_harness.md):
+#
+#     pip install -r requirements.txt -r requirements-compose.txt -r requirements-eval.txt
+#
+# requirements-compose.txt brings the NLI cross-encoder and torch, and
+# requirements.txt spaCy, the classifiers' scikit-learn/scipy and the openai
+# client the judge uses. CI needs none of this: the harness's tests fake every
+# model.
+
+# Tested with torch 2.14.1 and transformers 5.19.0 (Compose's versions).
+bert-score==0.3.13

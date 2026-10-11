@@ -1,5 +1,8 @@
 """Eval judge logic tests. _call is faked, so no API key or network is needed."""
 import json
+
+import pytest
+
 from Src.source.pipeline import judge as J
 from Src.source.pipeline import run_judge as RJ
 
@@ -66,3 +69,82 @@ def test_run_judge_summary(monkeypatch, tmp_path):
     assert summary["wins_baseline"] == 0
     assert summary["win_rate_run1_vs_baseline"] == 1.0
     assert summary["position_bias_rate"] == 0.0
+
+def test_neither_prompt_sees_the_signals(monkeypatch):
+    secret = "SENTINEL-signal-label"
+    signals = [{"model": "tone", "label": secret, "confidence": 0.9}]
+    out = {"rewrite": "r", "notes": ["n"], "meaning": {"ask": "a"}}
+    assert secret not in J.build_judge_prompt("Q: Coming?\nReply: Maybe.", signals, out, out)
+    seen = []
+    def fake(system, user, _retried=False):
+        seen.append(system + user)
+        return {"meaning_kept": 2, "clarity": 2, "warmth": 2, "notes_accurate": 2}
+    monkeypatch.setattr(J, "_call", fake)
+    J.score_output("Please send it.", signals, out)
+    assert seen and secret not in seen[0]
+
+
+def test_run_judge_never_hands_the_gold_rewrite_to_the_judge(monkeypatch, tmp_path):
+    (tmp_path / "s.jsonl").write_text(json.dumps({"id": "1", "source": "s", "rewrite": "GOLD-SENTINEL",
+                                                  "notes": ["GOLD-SENTINEL"]}), encoding="utf-8")
+    (tmp_path / "a.jsonl").write_text(json.dumps({"id": "1", "rewrite": "x"}), encoding="utf-8")
+    (tmp_path / "b.jsonl").write_text(json.dumps({"id": "1", "rewrite": "y"}), encoding="utf-8")
+    seen = []
+    v = J.Verdict("A", "r", "m")
+    def fake(source, signals, out_a, out_b):
+        seen.append(repr((source, signals, out_a, out_b)))
+        return J.PairResult("a", True, v, v)
+    monkeypatch.setattr(RJ, "judge_pair", fake)
+    RJ.run(str(tmp_path / "s.jsonl"), str(tmp_path / "a.jsonl"), str(tmp_path / "b.jsonl"),
+           str(tmp_path / "out"), "baseline", "run2")
+    assert seen and "GOLD-SENTINEL" not in seen[0]
+
+
+class _FakeClient:
+    """Just enough of the OpenAI client: each create() answers the next content."""
+    def __init__(self, contents):
+        self.contents, self.calls = list(contents), 0
+        self.chat = self.completions = self
+
+    def create(self, **kwargs):
+        from types import SimpleNamespace as NS
+        self.calls += 1
+        return NS(choices=[NS(message=NS(content=self.contents.pop(0)), finish_reason="length")])
+
+
+def test_call_retries_once_on_empty_content_then_gives_up(monkeypatch):
+    client = _FakeClient(["", '{"winner": "A", "reason": "x"}'])
+    monkeypatch.setattr(J, "_client", lambda: client)
+    assert J._call("s", "u") == {"winner": "A", "reason": "x"} and client.calls == 2
+    client = _FakeClient(["", None, '{"winner": "B"}'])
+    monkeypatch.setattr(J, "_client", lambda: client)
+    with pytest.raises(J.JudgeError, match="no content after retry"):
+        J._call("s", "u")
+    assert client.calls == 2
+
+
+def test_both_prompts_expect_a_reply_to_state_the_answer_it_implies():
+    for prompt in (J.JUDGE_SYSTEM, J.SCORE_SYSTEM):
+        assert "clearly implies" in prompt and "not settle" in prompt
+
+
+def test_rubric_id_follows_the_judge_model_and_prompts():
+    import hashlib
+    expected = hashlib.sha256(f"{J.JUDGE_MODEL}\n{J.JUDGE_SYSTEM}\n{J.SCORE_SYSTEM}".encode()).hexdigest()[:12]
+    assert J.RUBRIC_ID == expected
+
+
+def test_run_judge_records_the_rubric_and_refuses_to_mix_rubrics(monkeypatch, tmp_path):
+    for name, text in (("s", "s"), ("a", "x"), ("b", "y")):
+        (tmp_path / f"{name}.jsonl").write_text(json.dumps({"id": "1", "source": text, "rewrite": text}), encoding="utf-8")
+    v = J.Verdict("A", "r", "m")
+    monkeypatch.setattr(RJ, "judge_pair", lambda s, sig, oa, ob: J.PairResult("a", True, v, v))
+    args = (str(tmp_path / "s.jsonl"), str(tmp_path / "a.jsonl"), str(tmp_path / "b.jsonl"), str(tmp_path / "out"),
+            "baseline", "run2")
+    RJ.run(*args)
+    pairs = [json.loads(l) for l in (tmp_path / "out/judge_pairs.jsonl").read_text().splitlines()]
+    summary = json.loads((tmp_path / "out/judge_summary.json").read_text())
+    assert pairs[0]["rubric"] == summary["rubric"] == J.RUBRIC_ID
+    (tmp_path / "out/judge_pairs.jsonl").write_text(json.dumps({**pairs[0], "rubric": "oldrubric000"}) + "\n")
+    with pytest.raises(SystemExit, match="another judge rubric"):
+        RJ.run(*args)

@@ -1,0 +1,35 @@
+{
+  "created": "2026-10-11 03:49:59",
+  "prompt_fingerprint": "675475a8cd29",
+  "prompt_version": "compose-v2",
+  "judge_model": "nvidia/nemotron-3-super-120b-a12b",
+  "judge_rubric": "69ba823c272e",
+  "baseline": "baseline",
+  "models": [
+    "baseline",
+    "run1",
+    "run2"
+  ],
+  "gold": {
+    "data/gold/enron_gold.jsonl": "868e9560955f756425d2d1f24efd0d911a3cdd244cdd58e83696b3f26607c68f",
+    "data/gold/stanford_gold.jsonl": "53d0bfa0afa688b51375556cc47d1dee1f295dc7968edcca75122a9d795956f1",
+    "data/gold/circa_gold.jsonl": "6f3cfe1fa15a3bb1c41e9f0b8ce3f44987349e37214c4d3387dc68f8c8d6b9d6"
+  },
+  "predictions": {
+    "eval/enron/baseline.jsonl": "2890f13d6acb52314932394ec5ef3e94966b4020b9cab3a48dae962e03759287",
+    "eval/enron/run1.jsonl": "3d05089550787b073f0c5310b97ffa364df0f97734566b55a6d04ed9868877fc",
+    "eval/enron/run2.jsonl": "282a40d9129d3629e4d7c3645873da433279020395132361f045994b366df7fa",
+    "eval/stanford/baseline.jsonl": "a5c0eb4dec32ce1d101bf85e6b23841dafdff569019865c9618918072c2ee30f",
+    "eval/stanford/run1.jsonl": "a06660f7d17dd89d142ea242d68cf16f17b9216b0f1b0dfc0ec971dab5d37665",
+    "eval/stanford/run2.jsonl": "96371626c58264f610b1414f46de657b0d5429518843228138b2541c4ddc3501",
+    "eval/circa/baseline.jsonl": "1921b959830cfee1163183ecdddc86aedfcf91b664cad4fe3098e29e946714b2",
+    "eval/circa/run1.jsonl": "bd3f934d27b415e4e43db3f81a148aa9de4ae7e3afd0bc73f4012e1e64f39d5e",
+    "eval/circa/run2.jsonl": "7620db65428ef7a146e9f9104f2b3f0554a4b5e8a2e470916614d41da2763f6c"
+  },
+  "bertscore": {
+    "enron": "60 ids every model answered",
+    "stanford": "skipped: gold rewrites not all human-checked",
+    "circa": "skipped: gold rewrites not all human-checked"
+  },
+  "gold_lock": "not locked"
+}
