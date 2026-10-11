@@ -13,9 +13,9 @@ import {
 } from '@/utils/progress'
 
 const { activity, loading, libraryCards, allCards } = useProgressSources()
-// Works signed out like every other page: an account changes what the app
-// remembers, never what it can do. Signed out, the dashboard shows this
-// device's own data and a one-line note that signing in keeps it everywhere.
+// The dashboard is for signed-in accounts, which is what lets the days and
+// badges follow someone to another device. Activity is still counted on this
+// device while signed out, and joins the account on sign-in.
 const account = useAccountStore()
 
 const router = useRouter()
@@ -116,16 +116,34 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="pd-page" :class="{ 'pd-large': largeText }">
+  <!-- Until /me answers, "signed out" would be a guess, so show nothing yet -->
+  <div v-if="!account.ready" class="pd-page" aria-busy="true" />
+
+  <div v-else-if="!account.signedIn" class="pd-page">
+    <header class="pd-masthead">
+      <h1>Your progress</h1>
+      <p>How you're getting on, at your own pace. Nothing here is a score.</p>
+    </header>
+    <section class="pd-card pd-start pd-signedout" aria-labelledby="signin-title">
+      <h2 id="signin-title">Sign in to see your progress</h2>
+      <p>
+        Your progress is kept with your account, so your days and badges follow you to any device.
+        There's no email and no password, just a passkey on your device.
+      </p>
+      <p class="pd-muted pd-small">
+        The days you use Between Words are still counted on this device, and they join your account when you sign in.
+      </p>
+      <div class="pd-row">
+        <RouterLink to="/account" class="pd-link-button">Sign in or create an account</RouterLink>
+      </div>
+    </section>
+  </div>
+
+  <div v-else class="pd-page" :class="{ 'pd-large': largeText }">
     <header class="pd-header">
       <div class="pd-masthead">
         <h1>Your progress</h1>
         <p>How you're getting on, at your own pace. Nothing here is a score.</p>
-        <!-- Waits for /me, so a signed-in reader never sees it flash up -->
-        <p v-if="account.ready && !account.signedIn" class="pd-note">
-          Kept on this device only. <RouterLink to="/account">Sign in</RouterLink> to keep your days and badges on any
-          device: no email or password, just a passkey.
-        </p>
       </div>
       <div class="pd-settings">
         <label class="pd-toggle"><input v-model="largeText" type="checkbox" /> Larger text</label>
@@ -335,6 +353,11 @@ onMounted(() => {
   background: var(--pd-surface); color: var(--pd-ink); width: 100%; }
 
 .pd-start { --pd-accent: var(--pd-teal); --pd-accent-soft: var(--pd-teal-soft); border-left: 5px solid var(--pd-accent); }
+.pd-signedout p { max-width: 62ch; line-height: 1.6; }
+.pd-page .pd-link-button { display: inline-block; font-weight: 600; font-size: .92em; padding: 9px 16px; border-radius: var(--radius-sm, 10px);
+  background: var(--pd-accent); color: #fff; text-decoration: none; }
+.pd-page .pd-link-button:hover { color: #fff; filter: brightness(1.08); }
+.pd-page .pd-link-button:focus-visible { outline: 3px solid var(--pd-accent); outline-offset: 2px; }
 .pd-step { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; padding: 14px; border-radius: 12px; background: var(--pd-accent-soft); }
 .pd-step p { font-size: 1.05em; max-width: 60ch; }
 
