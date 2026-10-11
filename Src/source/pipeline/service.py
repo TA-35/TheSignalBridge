@@ -25,6 +25,11 @@ Two endpoints, because the frontend renders in two stages:
 
     GET  /health    liveness plus which model is configured.
 
+If PIPELINE_SERVICE_TOKEN is set, every endpoint except /health needs
+"Authorization: Bearer <token>" (401 otherwise). Set it on a copy of this
+service that is reachable from outside its own network, such as the uni GPU
+server; the AWS copy, which only the API can reach, leaves it unset.
+
 Run it:
     python -m Src.source.pipeline.service                 # dev
     gunicorn --workers 1 --bind 127.0.0.1:8100 \\
@@ -36,6 +41,7 @@ and it is I/O, not CPU.
 """
 from __future__ import annotations
 
+import hmac
 import os
 import sys
 from pathlib import Path
@@ -88,6 +94,15 @@ def create_service(warm: bool = True) -> Flask:
     app = Flask(__name__)
     if warm:
         _warm_up()
+    token = os.environ.get("PIPELINE_SERVICE_TOKEN", "").strip()
+
+    @app.before_request
+    def require_token():
+        if token and request.path != "/health":
+            sent = request.headers.get("Authorization", "")
+            if not hmac.compare_digest(sent.encode(), f"Bearer {token}".encode()):
+                return jsonify({"error": "unauthorized"}), 401
+        return None
 
     @app.get("/health")
     def health():
@@ -104,6 +119,7 @@ def create_service(warm: bool = True) -> Flask:
             "model": config.llm.model,
             "has_credentials": bool(config.llm.api_key),
             "max_message_chars": config.max_message_chars,
+            "token_required": bool(token),
             "compose": {
                 "enabled": bool(compose["url"] or compose["remote"]),
                 "remote": bool(compose["remote"]),

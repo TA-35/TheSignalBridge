@@ -20,13 +20,17 @@ Settings come from the environment (or the .env files config.py loads):
     COMPOSE_LLM_TIMEOUT  seconds per model call (default 45).
 
 Or, on a host too small for the models, hand Compose to another copy of this
-service that has them - in our deployment the uni GPU server, reached through
-an SSH tunnel (infra/compose-tunnel/):
+service that has them - in our deployment the uni GPU server:
 
     COMPOSE_REMOTE_URL     that service. /compose and /compose/quick are
                            forwarded there unchanged and nothing loads here.
-    COMPOSE_REMOTE_TIMEOUT seconds to wait for it (default 95, under the
-                           backend's 100 so this side gives up first).
+    COMPOSE_REMOTE_TIMEOUT seconds to wait for it (default 25). Under the API's
+                           gunicorn worker timeout (30s, three sync workers), so
+                           a hung remote answers "degraded" here instead of
+                           tying up the API's workers until they are killed.
+    COMPOSE_REMOTE_TOKEN   sent as "Authorization: Bearer <token>"; the remote
+                           service requires it when its PIPELINE_SERVICE_TOKEN
+                           is set (service.py).
 
 A rewrite is returned only if it passes the grounding check. If it fails, or
 the reply isn't usable, the model is asked once more at a lower temperature;
@@ -74,15 +78,18 @@ def settings() -> dict[str, Any]:
                   or ("qwen3.5-4b-baseline" if few_shot else "qwen3.5-4b-ft")),
         "timeout": float(os.environ.get("COMPOSE_LLM_TIMEOUT", "45")),
         "remote": os.environ.get("COMPOSE_REMOTE_URL", "").strip(),
-        "remote_timeout": float(os.environ.get("COMPOSE_REMOTE_TIMEOUT", "95")),
+        "remote_timeout": float(os.environ.get("COMPOSE_REMOTE_TIMEOUT", "25")),
+        "remote_token": os.environ.get("COMPOSE_REMOTE_TOKEN", "").strip(),
     }
 
 
-def _remote(base: str, path: str, message: str, timeout: float) -> dict[str, Any]:
+def _remote(base: str, path: str, message: str, timeout: float, token: str = "") -> dict[str, Any]:
     """POST the message to the remote Compose service. Raises on any failure."""
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
     request = urllib.request.Request(
-        base.rstrip("/") + path, data=json.dumps({"message": message}).encode("utf-8"),
-        headers={"Content-Type": "application/json"})
+        base.rstrip("/") + path, data=json.dumps({"message": message}).encode("utf-8"), headers=headers)
     with urllib.request.urlopen(request, timeout=timeout) as response:
         return json.loads(response.read().decode("utf-8"))
 
@@ -90,10 +97,10 @@ def _remote(base: str, path: str, message: str, timeout: float) -> dict[str, Any
 def signals(message: str) -> list[dict[str, Any]]:
     """The three classifiers in the contract shape. The adapters never raise:
     a failed one comes back as label "unknown", confidence 0.0."""
-    remote = settings()["remote"]
-    if remote:
+    conf = settings()
+    if conf["remote"]:
         try:
-            return _remote(remote, "/compose/quick", message, 5.0)["signals"]
+            return _remote(conf["remote"], "/compose/quick", message, 5.0, conf["remote_token"])["signals"]
         except Exception:  # noqa: BLE001 - stage one is only an early paint
             return []
     return cp.clean_signals([tone.predict(message), politeness.predict(message),
@@ -116,7 +123,7 @@ def compose(message: str) -> dict[str, Any]:
     conf = settings()
     if conf["remote"]:
         try:
-            out = _remote(conf["remote"], "/compose", message, conf["remote_timeout"])
+            out = _remote(conf["remote"], "/compose", message, conf["remote_timeout"], conf["remote_token"])
         except Exception:  # noqa: BLE001 - unreachable, timed out or erroring
             return degraded([MODEL_UNAVAILABLE], model=conf["model"])
         if out.get("degraded"):
