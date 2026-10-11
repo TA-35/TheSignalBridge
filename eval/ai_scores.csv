@@ -1,0 +1,31 @@
+id,dataset,model,rater,meaning_kept,clarity,warmth,notes_accurate,comment
+stanford_00009,stanford,baseline,claude-ai,2,2,2,1,"note calls the question rhetorical; it wasn't, and the rewrite kept it"
+enron_00018,enron,baseline,claude-ai,1,2,2,2,'emphasize ... remains intact' became 'Confirm the confirmation process remains intact'
+enron_00008,enron,finetuned,claude-ai,2,2,2,2,
+stanford_00016,stanford,finetuned,claude-ai,2,1,2,2,implied suggestion left as 'do you know you can...'; note asks the sender to say it
+stanford_00016,stanford,baseline,claude-ai,2,2,2,2,
+circa_24911,circa,baseline,claude-ai,2,2,2,2,
+circa_19036,circa,finetuned,claude-ai,2,2,2,2,
+stanford_00015,stanford,baseline,claude-ai,2,2,2,2,
+enron_00002,enron,finetuned,claude-ai,2,2,2,1,"note says every ID kept exactly, but 'Lateral ID' was lower-cased"
+circa_02236,circa,finetuned,claude-ai,2,2,2,2,
+circa_33114,circa,finetuned,claude-ai,2,2,2,2,
+circa_23019,circa,baseline,claude-ai,0,2,2,1,'something I haven't seen' became 'something you haven't seen'
+enron_00002,enron,baseline,claude-ai,1,2,1,2,'Thanks' and the sign-off dropped; 'someone provide' became 'you confirm'
+enron_00018,enron,finetuned,claude-ai,2,2,2,2,
+stanford_00009,stanford,finetuned,claude-ai,2,2,2,2,
+circa_24911,circa,finetuned,claude-ai,2,2,2,2,
+circa_02236,circa,baseline,claude-ai,2,2,2,2,
+circa_23019,circa,finetuned,claude-ai,2,2,2,2,
+circa_33114,circa,baseline,claude-ai,2,1,2,1,no explicit yes; first note describes a change that wasn't needed
+stanford_00048,stanford,finetuned,claude-ai,2,2,2,1,"notes say kept as written, but the typo and 'your' were changed"
+circa_19036,circa,baseline,claude-ai,2,2,2,2,
+stanford_00007,stanford,finetuned,claude-ai,2,2,2,2,
+stanford_00048,stanford,baseline,claude-ai,2,1,2,1,a single bullet; note says two bullet points
+enron_00048,enron,finetuned,claude-ai,2,2,2,0,nothing was moved first; third note is a bare quote
+enron_00048,enron,baseline,claude-ai,1,2,2,0,"'Katelyn et al.' sentence dropped, 'Thanks' added; notes mention bullets that aren't there"
+enron_00008,enron,baseline,claude-ai,1,0,1,1,"a clear, warm message needlessly rewritten; 'poor you' called filler"
+enron_00041,enron,baseline,claude-ai,1,2,1,2,"'on the status' added, 'also' dropped; 'you guys' warmth lost"
+enron_00041,enron,finetuned,claude-ai,2,2,2,1,note says the ask was moved first; it wasn't; second note speculates
+stanford_00015,stanford,finetuned,claude-ai,2,2,2,2,
+stanford_00007,stanford,baseline,claude-ai,1,2,1,0,'would seriously like' became 'need'; note says it softened it
