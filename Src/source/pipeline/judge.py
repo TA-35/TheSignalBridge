@@ -16,6 +16,7 @@ student (Qwen).
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -48,6 +49,11 @@ An output is faulty when any of these is true:
 the original.
 - Something was added that the sender did not say or clearly mean, including a \
 guess at missing information instead of a note asking for it.
+- The original is a reply to a question that only implies its answer, and the \
+output still leaves that answer for the reader to work out. Stating an answer the \
+reply clearly implies ("I've got a dentist appointment that afternoon" -> "No, I \
+can't come") is what the tool should do, not an addition; stating an answer the \
+reply does not settle is a guess.
 - The real ask is still buried, several asks are run together in one sentence, \
 or a message that was already clear was needlessly rewritten.
 - An idiom or figure of speech was left in where a literal reader could \
@@ -72,12 +78,15 @@ extracted meaning). Score it against the original only; you are shown no \
 reference answer.
 
 Score each criterion 0, 1 or 2:
-- meaning_kept: 2 = same meaning, nothing added or dropped; 1 = a small detail \
+- meaning_kept: 2 = same meaning, nothing added or dropped (stating the answer a \
+reply to a question clearly implies is not an addition); 1 = a small detail \
 changed or added; 0 = a fact, commitment, deadline or urgency changed, or \
-information was invented.
+information was invented (including an answer the reply does not settle).
 - clarity: 2 = main ask first, literal language, several asks each on their own \
-line; 1 = mostly clear but one ask buried or an idiom left in; 0 = ask buried, \
-asks run together, or a clear message needlessly rewritten.
+line, and for a reply to a question the answer it implies stated; 1 = mostly \
+clear but one ask buried, an idiom left in, or a reply's implied answer left \
+for the reader to work out; 0 = ask buried, asks run together, or a clear \
+message needlessly rewritten.
 - warmth: 2 = keeps greetings, thanks and courtesy, reads friendly; 1 = a \
 little flat; 0 = cold, curt or robotic where the original was friendly.
 - notes_accurate: 2 = notes correctly describe the changes made; 1 = a note is \
@@ -85,6 +94,11 @@ vague; 0 = a note is wrong or describes a change that was not made.
 
 Reply with ONE JSON object and nothing else: {"meaning_kept": 0, "clarity": 0, \
 "warmth": 0, "notes_accurate": 0} with each value 0, 1 or 2."""  # Tell the judge how to score one output from 0 to 2 on each criterion
+
+# Which rubric a verdict or score was made with: the judge model and both
+# prompts. Results from different rubrics must not be mixed, so run_judge and
+# eval_report refuse them.
+RUBRIC_ID = hashlib.sha256(f"{JUDGE_MODEL}\n{JUDGE_SYSTEM}\n{SCORE_SYSTEM}".encode()).hexdigest()[:12]
 
 
 def _render_output(out):

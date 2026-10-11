@@ -1,0 +1,156 @@
+{
+  "baseline": "baseline",
+  "finetuned": "run2",
+  "items": {
+    "item_01": {
+      "id": "stanford_00009",
+      "dataset": "stanford",
+      "model": "baseline"
+    },
+    "item_02": {
+      "id": "enron_00018",
+      "dataset": "enron",
+      "model": "baseline"
+    },
+    "item_03": {
+      "id": "enron_00008",
+      "dataset": "enron",
+      "model": "finetuned"
+    },
+    "item_04": {
+      "id": "stanford_00016",
+      "dataset": "stanford",
+      "model": "finetuned"
+    },
+    "item_05": {
+      "id": "stanford_00016",
+      "dataset": "stanford",
+      "model": "baseline"
+    },
+    "item_06": {
+      "id": "circa_24911",
+      "dataset": "circa",
+      "model": "baseline"
+    },
+    "item_07": {
+      "id": "circa_19036",
+      "dataset": "circa",
+      "model": "finetuned"
+    },
+    "item_08": {
+      "id": "stanford_00015",
+      "dataset": "stanford",
+      "model": "baseline"
+    },
+    "item_09": {
+      "id": "enron_00002",
+      "dataset": "enron",
+      "model": "finetuned"
+    },
+    "item_10": {
+      "id": "circa_02236",
+      "dataset": "circa",
+      "model": "finetuned"
+    },
+    "item_11": {
+      "id": "circa_33114",
+      "dataset": "circa",
+      "model": "finetuned"
+    },
+    "item_12": {
+      "id": "circa_23019",
+      "dataset": "circa",
+      "model": "baseline"
+    },
+    "item_13": {
+      "id": "enron_00002",
+      "dataset": "enron",
+      "model": "baseline"
+    },
+    "item_14": {
+      "id": "enron_00018",
+      "dataset": "enron",
+      "model": "finetuned"
+    },
+    "item_15": {
+      "id": "stanford_00009",
+      "dataset": "stanford",
+      "model": "finetuned"
+    },
+    "item_16": {
+      "id": "circa_24911",
+      "dataset": "circa",
+      "model": "finetuned"
+    },
+    "item_17": {
+      "id": "circa_02236",
+      "dataset": "circa",
+      "model": "baseline"
+    },
+    "item_18": {
+      "id": "circa_23019",
+      "dataset": "circa",
+      "model": "finetuned"
+    },
+    "item_19": {
+      "id": "circa_33114",
+      "dataset": "circa",
+      "model": "baseline"
+    },
+    "item_20": {
+      "id": "stanford_00048",
+      "dataset": "stanford",
+      "model": "finetuned"
+    },
+    "item_21": {
+      "id": "circa_19036",
+      "dataset": "circa",
+      "model": "baseline"
+    },
+    "item_22": {
+      "id": "stanford_00007",
+      "dataset": "stanford",
+      "model": "finetuned"
+    },
+    "item_23": {
+      "id": "stanford_00048",
+      "dataset": "stanford",
+      "model": "baseline"
+    },
+    "item_24": {
+      "id": "enron_00048",
+      "dataset": "enron",
+      "model": "finetuned"
+    },
+    "item_25": {
+      "id": "enron_00048",
+      "dataset": "enron",
+      "model": "baseline"
+    },
+    "item_26": {
+      "id": "enron_00008",
+      "dataset": "enron",
+      "model": "baseline"
+    },
+    "item_27": {
+      "id": "enron_00041",
+      "dataset": "enron",
+      "model": "baseline"
+    },
+    "item_28": {
+      "id": "enron_00041",
+      "dataset": "enron",
+      "model": "finetuned"
+    },
+    "item_29": {
+      "id": "stanford_00015",
+      "dataset": "stanford",
+      "model": "finetuned"
+    },
+    "item_30": {
+      "id": "stanford_00007",
+      "dataset": "stanford",
+      "model": "baseline"
+    }
+  }
+}

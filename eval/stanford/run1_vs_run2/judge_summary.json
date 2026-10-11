@@ -1,0 +1,14 @@
+{
+  "source": "data/gold/stanford_gold.jsonl",
+  "rubric": "69ba823c272e",
+  "a_name": "run1",
+  "b_name": "run2",
+  "pairs_judged": 60,
+  "errors_this_run": 0,
+  "wins_run1": 19,
+  "wins_run2": 19,
+  "ties": 11,
+  "no_decision": 11,
+  "win_rate_run2_vs_run1": 0.5,
+  "position_bias_rate": 0.183
+}

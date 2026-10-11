@@ -21,7 +21,7 @@ import json
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from .judge import judge_pair
+from .judge import RUBRIC_ID, judge_pair
 
 WORKERS = 5  # Run up to five judging tasks at the same time
 def _read_jsonl(path):
@@ -77,6 +77,14 @@ def run(source_path, a_path, b_path, out_dir, a_name="a", b_name="b"):
     pairs_path = out_dir / "judge_pairs.jsonl"  # File to store the result for each judged pair
     summary_path = out_dir / "judge_summary.json"  # File to store the final evaluation summary
 
+    stale = {r.get("rubric") for r in _read_jsonl(pairs_path)} - {RUBRIC_ID} if pairs_path.exists() else set()  # Rubrics of earlier verdicts that differ from this judge's
+
+    if stale:
+        raise SystemExit(
+            f"{pairs_path} has verdicts from another judge rubric ({', '.join(map(str, stale))}); "
+            f"this judge is {RUBRIC_ID}. Move the folder aside to judge again."
+        )  # Never mix verdicts made with different judge prompts or models
+
     done = _done_ids(pairs_path)  # Find IDs that have already been evaluated
 
     todo = [
@@ -126,6 +134,7 @@ def run(source_path, a_path, b_path, out_dir, a_name="a", b_name="b"):
 
             f.write(json.dumps({
                 "id": rid,  # Save the ID of the judged record
+                "rubric": RUBRIC_ID,  # Save which judge model and prompts made this verdict
                 "winner": label.get(res.winner, res.winner),  # Save the winning model name or other verdict
                 "agree": res.agree,  # Save whether both judging orders agreed
                 "order_ab": {
@@ -155,6 +164,7 @@ def run(source_path, a_path, b_path, out_dir, a_name="a", b_name="b"):
 
     summary = {
         "source": str(source_path),  # Store the source file used for evaluation
+        "rubric": RUBRIC_ID,  # Store which judge model and prompts made these verdicts
         "a_name": a_name,  # Store model A's name
         "b_name": b_name,  # Store model B's name
         "pairs_judged": n,  # Store the total number of judged pairs

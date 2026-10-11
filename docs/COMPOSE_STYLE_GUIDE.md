@@ -120,6 +120,9 @@ Mark a pair **fail** if any of these is true:
 - The meaning changed: a fact, commitment, deadline or urgency is different.
 - Something was added that the sender didn't say or clearly mean, including a guess at missing
   information instead of a note asking for it.
+- A reply to a question only implies its answer, and the rewrite still leaves it to be worked out.
+  Stating an answer the reply clearly implies ("No, I can't come…", as in the Circa example) is the job,
+  not an addition; stating one the reply doesn't settle is a guess.
 - The real ask is still buried, several asks are run together in one sentence, or a clear message was
   needlessly rewritten.
 - An idiom or figure of speech was left in where a literal reader could misread it.

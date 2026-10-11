@@ -8,12 +8,16 @@ human_scores.csv columns:
   id, dataset, model (baseline|finetuned), rater,
   meaning_kept, clarity, warmth, notes_accurate (each 0-2), comment
 
+--source, --baseline and --finetuned each take one file per dataset, so the
+rated outputs of every dataset are correlated together.
+
 Usage (from repo root):
   python -m Src.source.pipeline.validate_judge \
       --human eval/human_scores.csv \
-      --source data/gold_drafts/enron_gold_draft.jsonl \
-      --baseline eval/baseline.jsonl --finetuned eval/run1.jsonl \
-      --out eval/enron/judge_validation.json
+      --source data/gold/{enron,stanford,circa}_gold.jsonl \
+      --baseline eval/{enron,stanford,circa}/baseline.jsonl \
+      --finetuned eval/{enron,stanford,circa}/run2.jsonl \
+      --out eval/judge_validation.json
 """
 
 from __future__ import annotations
@@ -50,16 +54,20 @@ def _outputs(path):
     return out  # Return all valid model outputs
 
 
+def _paths(p):
+    return [p] if isinstance(p, (str, Path)) else list(p)  # One file, or one per dataset
+
+
 def run(human_csv, source_path, baseline_path, finetuned_path, out_path):
     from scipy.stats import spearmanr  # Import the function used to calculate Spearman correlation
 
     source = {
-        r["id"]: r for r in _read_jsonl(source_path)
-    }  # Load original messages and store them by ID
+        r["id"]: r for path in _paths(source_path) for r in _read_jsonl(path)
+    }  # Load original messages from every source file and store them by ID
 
     outputs = {
-        "baseline": _outputs(baseline_path),  # Load outputs from the baseline model
-        "finetuned": _outputs(finetuned_path)  # Load outputs from the fine-tuned model
+        "baseline": {k: v for path in _paths(baseline_path) for k, v in _outputs(path).items()},  # Load outputs from the baseline model
+        "finetuned": {k: v for path in _paths(finetuned_path) for k, v in _outputs(path).items()}  # Load outputs from the fine-tuned model
     }
 
     human = defaultdict(list)  # Store human ratings for each record and model
@@ -193,9 +201,9 @@ def main():
     )  # Create the command-line argument parser
 
     p.add_argument("--human", required=True)  # Get the CSV file containing human ratings
-    p.add_argument("--source", required=True)  # Get the original source messages
-    p.add_argument("--baseline", required=True)  # Get the baseline model outputs
-    p.add_argument("--finetuned", required=True)  # Get the fine-tuned model outputs
+    p.add_argument("--source", required=True, nargs="+")  # Get the original source messages, one file per dataset
+    p.add_argument("--baseline", required=True, nargs="+")  # Get the baseline model outputs, one file per dataset
+    p.add_argument("--finetuned", required=True, nargs="+")  # Get the fine-tuned model outputs, one file per dataset
     p.add_argument("--out", required=True)  # Get the file path for saving validation results
 
     a = p.parse_args()  # Read the arguments given in the command line
