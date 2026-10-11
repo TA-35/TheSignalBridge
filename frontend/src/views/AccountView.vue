@@ -5,7 +5,7 @@
 //
 // The account is genuinely optional, and the page says so rather than
 // implying the site is gated. Everything works signed out.
-import { onMounted, ref, watch } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 import { KeyRound, Library, Smartphone } from '@lucide/vue'
 import { useAccountStore } from '@/stores/account'
 
@@ -30,6 +30,47 @@ const showDelete = ref(false)
 async function confirmDelete() {
   await accountStore.remove()
   showDelete.value = false
+}
+
+// The delete confirmation behaves like the one in Settings: focus moves into
+// it on open, Tab stays inside it, and focus returns to the trigger on close.
+// Before this, Tab from the open dialog wandered through the page behind it.
+const deleteModal = ref<HTMLElement | null>(null)
+let lastFocused: HTMLElement | null = null
+
+watch(showDelete, async (open) => {
+  if (open) {
+    lastFocused = document.activeElement as HTMLElement | null
+    await nextTick()
+    // The dialog itself, not "Delete account": landing on the destructive
+    // button is how a confirmation becomes a trapdoor.
+    deleteModal.value?.focus()
+    return
+  }
+  if (lastFocused && document.contains(lastFocused)) lastFocused.focus()
+  lastFocused = null
+})
+
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input, textarea, select, [tabindex]:not([tabindex="-1"])'
+
+function trapTab(event: KeyboardEvent) {
+  const root = deleteModal.value
+  if (!root) return
+  const items = [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+    (el) => el.offsetParent !== null,
+  )
+  if (!items.length) return
+  const first = items[0]!
+  const last = items[items.length - 1]!
+  const active = document.activeElement
+  if (event.shiftKey && (active === first || active === root)) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && active === last) {
+    event.preventDefault()
+    first.focus()
+  }
 }
 
 onMounted(() => {
@@ -224,8 +265,9 @@ async function pair() {
         </form>
       </div>
 
-      <ul class="points">
+      <div class="points">
         <h2>Why create an account?</h2>
+        <ul class="points__list">
         <li>
           <span class="points__mark" aria-hidden="true"><KeyRound :size="16" :stroke-width="1.8" /></span>
           <span>
@@ -250,11 +292,13 @@ async function pair() {
             own. Signing in offers "use another device" if your phone holds one.
           </span>
         </li>
-      </ul>
+        </ul>
+      </div>
     </section>
 
     <div v-if="showDelete" class="modal-backdrop" @click="showDelete = false">
       <div
+        ref="deleteModal"
         class="modal"
         role="alertdialog"
         aria-modal="true"
@@ -263,6 +307,7 @@ async function pair() {
         tabindex="-1"
         @click.stop
         @keydown.esc="showDelete = false"
+        @keydown.tab="trapTab"
       >
         <strong id="delete-title">Delete account {{ accountStore.account?.handle }}?</strong>
         <p id="delete-body">
@@ -391,10 +436,20 @@ async function pair() {
 }
 
 .points {
-  list-style: none;
   margin: 4px 0 0;
   padding: 16px 0 0;
   border-top: 1px solid var(--color-border-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* The heading sits outside the list: a <ul> may only hold <li>, and a heading
+   inside one made screen readers count it as a list item. */
+.points__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 14px;

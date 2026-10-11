@@ -300,8 +300,11 @@ code {
   margin-top: 16px;
 }
 
+/* Underlined: links inside sentences must not rely on colour alone (WCAG 1.4.1). */
 a {
   color: var(--color-primary-strong-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 @media (max-width: 640px) {

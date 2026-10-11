@@ -16,7 +16,9 @@
 
   --color-text: #33302b;
   --color-text-muted: #6b6259;
-  --color-text-faint: #8f8778;
+  /* Faint is still used as text, so every theme's value keeps 4.5:1 on bg,
+     frame, surface and surface-soft (WCAG AA). Check before lightening it. */
+  --color-text-faint: #6e685c;
 
   --color-primary: #4f7a69;
   --color-primary-border: #45705f;
@@ -29,7 +31,7 @@
   --color-warn-border: #e6ddd0;
   --color-warn-dot: #9c8874;
   --color-warn-text: #6b5c4d;
-  --color-warn-text-soft: #8a7c6c;
+  --color-warn-text-soft: #75695c;
 
   /* Destructive actions. Warm brick rather than signal red - see buttons.css. */
   --color-danger-text: #9c3f2f;
@@ -93,7 +95,7 @@ html {
 
   --color-text: #ede8df;
   --color-text-muted: #b8b0a1;
-  --color-text-faint: #8f8778;
+  --color-text-faint: #958e80;
 
   --color-primary: #7fae9a;
   --color-primary-border: #6f9c88;
@@ -111,7 +113,8 @@ html {
   --color-danger-text: #eaa695;
   --color-danger-border: #5e3a32;
   --color-danger-bg: #33231f;
-  --color-danger-solid: #b0543f;
+  /* Light enough for the dark --color-frame text on .btn--danger-solid (4.6:1). */
+  --color-danger-solid: #c6725e;
 }
 
 /* Accent color themes. Sage (above) is the neutral, unwashed default - the
@@ -143,7 +146,7 @@ html {
 
   --color-text: #263238;
   --color-text-muted: #56666f;
-  --color-text-faint: #7c8a92;
+  --color-text-faint: #636f76;
 
   --color-primary: #3d6fa0;
   --color-primary-border: #35608c;
@@ -174,7 +177,7 @@ html {
 
   --color-text: #322b3a;
   --color-text-muted: #695f72;
-  --color-text-faint: #8d8395;
+  --color-text-faint: #72697a;
 
   --color-primary: #7d6a9e;
   --color-primary-border: #6c5a8c;
@@ -205,7 +208,7 @@ html {
 
   --color-text: #2b2f33;
   --color-text-muted: #5f656a;
-  --color-text-faint: #82898e;
+  --color-text-faint: #666c71;
 
   --color-primary: #5c6570;
   --color-primary-border: #4c545e;
