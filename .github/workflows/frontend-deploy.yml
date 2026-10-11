@@ -2,6 +2,18 @@ name: Frontend deploy
 
 on:
   workflow_dispatch:
+  # Deploys by itself after a merge to main, once "CI - frontend" has passed
+  # on that commit. CI only runs when frontend/ changed, so nothing else
+  # triggers a deploy.
+  workflow_run:
+    workflows: ["CI - frontend"]
+    types: [completed]
+    branches: [main]
+
+# Two merges close together deploy one after the other, never at once.
+concurrency:
+  group: frontend-deploy
+  cancel-in-progress: false
 
 env:
   # Not a secret - this is the URL the browser calls, visible in any
@@ -10,12 +22,20 @@ env:
 
 jobs:
   deploy:
+    # Manual runs always go. Automatic ones only for a green CI run from a push
+    # to main - never a pull request's run, which carries unmerged code.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The exact commit CI passed (a manual run uses the branch picked).
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 20
