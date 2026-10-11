@@ -311,7 +311,9 @@ function explore(pattern: Pattern) {
    Each pill and card sets --cat (its category's hue) inline. The soft fill
    and the text colour are mixed from it against the theme's own surface and
    text colours, so they darken in dark mode on their own and keep their
-   contrast: text is pulled towards --color-text, fills towards the surface. */
+   contrast: text is pulled towards --color-text, fills towards the surface.
+   60% hue in the text keeps every category at 4.5:1 or more on its soft fill
+   in all four accents, light and dark (72% let six of them slip under). */
 .filters {
   display: flex;
   flex-wrap: wrap;
@@ -320,7 +322,7 @@ function explore(pattern: Pattern) {
 
 .pill {
   --cat: var(--color-primary);
-  --cat-ink: color-mix(in srgb, var(--cat) 72%, var(--color-text));
+  --cat-ink: color-mix(in srgb, var(--cat) 60%, var(--color-text));
   --cat-soft: color-mix(in srgb, var(--cat) 16%, var(--color-surface));
   display: inline-flex;
   align-items: center;
@@ -370,7 +372,7 @@ function explore(pattern: Pattern) {
 }
 
 .category-intro {
-  --cat-ink: color-mix(in srgb, var(--cat) 72%, var(--color-text));
+  --cat-ink: color-mix(in srgb, var(--cat) 60%, var(--color-text));
   --cat-soft: color-mix(in srgb, var(--cat) 16%, var(--color-surface));
   display: flex;
   align-items: center;
@@ -432,7 +434,7 @@ function explore(pattern: Pattern) {
 /* Cards --------------------------------------------------------------------- */
 .item {
   --cat: var(--color-text-muted);
-  --cat-ink: color-mix(in srgb, var(--cat) 72%, var(--color-text));
+  --cat-ink: color-mix(in srgb, var(--cat) 60%, var(--color-text));
   --cat-soft: color-mix(in srgb, var(--cat) 16%, var(--color-surface));
   border: 1px solid var(--color-border-soft);
   border-radius: var(--radius-md);
