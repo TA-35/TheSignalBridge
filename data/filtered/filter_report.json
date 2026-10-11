@@ -1,0 +1,42 @@
+{
+  "total": 3470,
+  "passed": 3286,
+  "rejected": 184,
+  "per_dataset_in": {
+    "circa": 1000,
+    "enron": 1000,
+    "hedges": 212,
+    "notes": 258,
+    "stanford": 1000
+  },
+  "per_dataset_passed": {
+    "circa": 969,
+    "enron": 936,
+    "hedges": 189,
+    "notes": 237,
+    "stanford": 955
+  },
+  "rejected_by_check": {
+    "gold_overlap": 2,
+    "prompt_version": 0,
+    "json_valid": 5,
+    "notes_ok": 7,
+    "dropped_entity": 81,
+    "added_entity": 29,
+    "length": 13,
+    "hedge_kept": 11,
+    "contradiction": 36
+  },
+  "reject_rate_of_pairs_reaching_check": {
+    "gold_overlap": 0.001,
+    "prompt_version": 0.0,
+    "json_valid": 0.001,
+    "notes_ok": 0.002,
+    "dropped_entity": 0.023,
+    "added_entity": 0.009,
+    "length": 0.004,
+    "hedge_kept": 0.003,
+    "contradiction": 0.011
+  },
+  "nli_skipped": false
+}

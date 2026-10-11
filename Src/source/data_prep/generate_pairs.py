@@ -57,7 +57,7 @@ MAX_TOKENS = 4000           # it reasons before answering; the answer itself is 
 TIMEOUT = 300               # per request; the slowest bake-off answer took 51s
 RETRY_CODES = {429, 500, 502, 503, 504}
 BACKOFF = (10, 30, 60)      # seconds before each retry
-DATASETS = ("enron", "stanford", "circa")
+DATASETS = ("enron", "stanford", "circa", "hedges", "notes")    # the last two: make_variants.py
 ENV_FILES = (ROOT / ".env", ROOT / "backend" / ".env", ROOT / "Src" / "source" / "pipeline" / ".env")
 
 
@@ -86,12 +86,18 @@ def api_key() -> str:
 
 
 def ask_teacher(record: dict[str, Any], key: str, model: str = MODEL) -> str:
-    """The teacher's reply text for one record. Retries rate limits, server
-    errors and dropped connections with a back-off."""
+    """The teacher's reply text for one record."""
+    return chat(cp.build_messages(record["source"], record["signals"], few_shot=True), key, model)
+
+
+def chat(messages: list[dict[str, str]], key: str, model: str = MODEL,
+         temperature: float = TEMPERATURE) -> str:
+    """One chat completion from the teacher. Retries rate limits, server errors
+    and dropped connections with a back-off."""
     body = json.dumps({
         "model": model,
-        "messages": cp.build_messages(record["source"], record["signals"], few_shot=True),
-        "temperature": TEMPERATURE,
+        "messages": messages,
+        "temperature": temperature,
         "max_tokens": MAX_TOKENS,
     }).encode("utf-8")
     problem = ""

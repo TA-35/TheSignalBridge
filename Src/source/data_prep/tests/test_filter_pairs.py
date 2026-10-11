@@ -108,3 +108,48 @@ def test_length_limits_still_hold():
     forty = " ".join(["word"] * 40)
     assert fp.check_length({"source": forty, "rewrite": " ".join(["word"] * 101)})     # 2.5 x 40 = 100 max
     assert fp.check_length({"source": forty, "rewrite": " ".join(["word"] * 19)})      # under 0.5x
+
+
+# Run 1's filter still rejected some good pairs for their form, not their
+# meaning: a numbered list turned into bullets, a typo fixed, an article
+# added, "FYI" dropped. The live grounding check shares these rules.
+
+def test_numbered_list_turned_into_bullets_keeps_its_entities():
+    r = {"source": "Attached are drafts for:\n(1) Short cover letter\n2) Draft proposal\n3. Draft confirmation form",
+         "rewrite": "Attached are drafts for:\n- Short cover letter\n- Draft proposal\n- Draft confirmation form"}
+    assert fp.check_dropped(r) is None and fp.check_added(r) is None
+
+
+def test_numbers_in_the_text_are_still_checked():
+    r = {"source": "Please send the 3 drafts by Friday.", "rewrite": "Please send the drafts by Friday."}
+    assert fp.check_dropped(r) is not None
+
+
+def test_a_spelling_fix_is_not_an_added_date():
+    r = {"source": "I will stop by and visit you tommorow.", "rewrite": "I will stop by and visit you tomorrow."}
+    assert fp.check_added(r) is None
+
+
+def test_articles_do_not_make_a_date_look_dropped():
+    rw = "Please finish it by the end of the week."
+    assert fp.present("the end of week", rw, fp.norm(rw), fp.tokens(rw))
+    other = "Please finish it soon."
+    assert not fp.present("the end of week", other, fp.norm(other), fp.tokens(other))
+
+
+def test_fyi_is_not_an_entity():
+    r = {"source": "FYI the meeting moved to Room 4.", "rewrite": "The meeting moved to Room 4."}
+    assert fp.check_dropped(r) is None
+
+
+def test_hedge_next_to_a_deadline_is_rejected():
+    r = {"rewrite": "No rush, but could you send the deck before Thursday's meeting?",
+         "meaning": {"deadline": "before Thursday's meeting"}}
+    assert fp.check_hedge_kept(r) is not None
+    r["rewrite"] = "Could you send the deck before Thursday's meeting?"
+    assert fp.check_hedge_kept(r) is None
+
+
+def test_no_rush_without_a_deadline_is_real_urgency_and_stays():
+    r = {"rewrite": "No rush. Could you send me the deck when it's ready?", "meaning": {"deadline": ""}}
+    assert fp.check_hedge_kept(r) is None

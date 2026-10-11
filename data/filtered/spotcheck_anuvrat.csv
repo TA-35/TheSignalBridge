@@ -1,0 +1,486 @@
+id,dataset,source,rewrite,notes,pass_fail,reason_if_fail,judge_meaning_kept,judge_clarity,judge_warmth,judge_notes_accurate,judge_total,look_first
+circa_05592,circa,"Q: Are you glad the week is over?
+Reply: It was so tiring!",It was so tiring!,"This doesn't say yes or no. Add ""Yes"" or ""No"" if you want a clear answer.",,,2,1,1,0,4,yes: notes_accurate
+circa_07175,circa,"Q: Do you want to go sightseeing?
+Reply: That's on my itinerary.","Yes, sightseeing is on my itinerary.",Made the yes explicit; 'on my itinerary' only implied it. | You didn't say whether you want company. Add that if it matters.,,,2,2,1,0,5,yes: notes_accurate
+circa_08921,circa,"Q: Do you like exercising?
+Reply: I go to the gym three times a week.",I go to the gym three times a week.,This doesn't answer the question. Add whether you like exercising.,,,2,1,1,0,4,yes: notes_accurate
+circa_10832,circa,"Q: Are you interested in fishing this weekend?
+Reply: It's supposed to rain.",About fishing this weekend — it's supposed to rain.,Tied the reply to the question so it reads as an answer. | You didn't say yes or no. Add whether you want to go.,,,1,1,1,1,4,yes: total
+circa_11966,circa,"Q: Do you like jazz music?
+Reply: They play it at work, and I hate it.","No, I don't like jazz. They play it at work, and I hate it.","Answered the question directly: no, you don't like jazz. | 'They' is vague. Name who plays it if that matters to the reader.",,,2,2,1,0,5,yes: notes_accurate
+circa_12544,circa,"Q: Want to go to a concert with me?
+Reply: Which concert are you thinking off",Which concert are you thinking of?,Fixed the typo 'off' to 'of'. | The reply doesn't say yes or no. Add your answer if you have one.,,,2,2,1,0,5,yes: notes_accurate
+circa_12695,circa,"Q: Will you be able to work from home?
+Reply: I hope so",I hope so.,"Kept as written: it does not confirm yes or no. | Add when you will know, so the reader is not left waiting.",,,2,2,2,0,6,yes: notes_accurate
+circa_15071,circa,"Q: Will you read an historical book?
+Reply: Only if they are historical fiction.","Yes, but only if it's historical fiction.","Made the answer explicit: yes, with one condition. | Kept the condition exactly as you wrote it.",,,1,2,1,0,4,yes: notes_accurate
+circa_17984,circa,"Q: What time do you like to eat breakfast?
+Reply: On weekends I usually skip breakfast.",On weekends I usually skip breakfast.,"Your reply doesn't give a time, which is what was asked. | Add the time you eat breakfast on other days.",,,2,2,1,0,5,yes: notes_accurate
+circa_25398,circa,"Q: Do you like to read romances?
+Reply: I'm not the romantic type.","No, I don't like to read romances.","Made the answer explicit; the original pun didn't answer the question directly. | If you meant something else by 'not the romantic type', say it plainly instead.",,,2,2,1,0,5,yes: notes_accurate
+circa_33411,circa,"Q: Is your job stressful?
+Reply: Not really, but it's action-packed.","Not really, but there's a lot going on.","Replaced 'action-packed' with plain words: a lot going on. | If you mean something specific, like long hours, say it instead.",,,2,2,2,0,6,yes: notes_accurate
+circa_33424,circa,"Q: Have any pets?
+Reply: Three or four, depending on the day.","Yes, I have three or four pets, depending on the day.","Added ""Yes"" and ""pets"" so the answer stands on its own. | ""Depending on the day"" is vague. Give the exact number if you want to be precise.",,,2,2,1,0,5,yes: notes_accurate
+circa_33915,circa,"Q: Have you been to an orchestra concert?
+Reply: I was never really interested in orchestra concerts.",I was never really interested in orchestra concerts.,This doesn't answer the question. Add a yes or no about whether you've been.,,,2,1,1,0,4,yes: notes_accurate
+enron_01017,enron,I think it would be a good idea if you would print these out when you get them and bring them in at some point so we can go over them.,"When you get these, please print them out and bring them in so we can go over them together.",Made the request direct instead of a suggestion. | 'These' is vague. Name the documents so the reader knows what to print. | 'At some point' gives no date. Add one if you have it.,,,1,1,2,0,4,yes: notes_accurate
+enron_01046,enron,Try to click on this today. Kendra's worked today.,Please click on this today. Kendra has worked today.,"Say what ""this"" is. The reader can't tell what to click. | Check ""Kendra has worked today"" — it's unclear how it relates to the click.",,,1,2,1,0,4,yes: notes_accurate
+enron_01118,enron,Please let him know I'll try to call her on Candice. PM. thanks. df,Please let him know I'll try to call her on Candice. PM. Thanks. df,"""Candice. PM"" is unclear. Say whether it is a name, a day or a time. | ""him"" and ""her"" have no names. Add them so the reader knows who to tell. | ""df"" kept as written; unclear whether it is your initials.",,,2,1,1,0,4,yes: notes_accurate
+enron_01122,enron,"Insurance
+
+4/25/02 2:57 PM
+Jasmine
+
+need to contact them within 45 days of birth, qualifies as a life event and its effective the date of birth
+
+my flex dollars received will increase from $164.29 to $182.67
+
+My current flex dollar expense will go from $103.62 to $165.22 with Jermaine's kid.","I need to contact the insurance company within 45 days of birth. The birth qualifies as a life event, and coverage is effective the date of birth.
+
+- My flex dollars received will increase from $164.29 to $182.67.
+- My current flex dollar expense will go from $103.62 to $165.22 with Jermaine's kid.
+
+I spoke with Jasmine on 4/25/02 at 2:57 PM.","You didn't say who this goes to. Add the recipient before sending. | Made ""them"" explicit: the insurance company. | Kept Jasmine and the 4/25/02 2:57 PM call details at the end.",,,0,2,1,0,3,"yes: meaning_kept, notes_accurate"
+enron_01125,enron,"either of these cartoons might work well with the news about the energy
+czars.",Either of these cartoons might work well with the news about the energy czars.,"The message doesn't say which cartoons. Attach or name them. | No ask or deadline was stated, so none was added.",,,2,2,1,0,5,yes: notes_accurate
+enron_01189,enron,"We need to send today BUT we need an immediate cover letter (itemizing every 
+step to be taken) and sample resolution format to email to the counterparty 
+and lawyer. I'll review the letter. I have an 11 am meeting but should be 
+back in an hour.
+
+Let me know if you have questions. Crystal","Hi,
+
+We need to send today. Please prepare these two things right away:
+- a cover letter that itemizes every step to be taken
+- a sample resolution format
+
+Email both to the counterparty and the lawyer. I'll review the letter.
+
+I have an 11 am meeting but should be back in an hour.
+
+Let me know if you have questions.
+Crystal",Put the deadline first: we need to send today. | Split the two documents into bullets so neither is missed. | You didn't say what needs sending today. Name it so the reader knows.,,,2,2,2,0,6,yes: notes_accurate
+enron_01350,enron,"i thought i heard something but i wasn't sure. i just didn't buy it. how is 
+everything going?","I thought I heard something, but I wasn't sure. I just didn't believe it. How is everything going?","""Something"" and ""it"" are unclear. Say what you heard and didn't believe. | Replaced ""didn't buy it"" with ""didn't believe it"".",,,2,1,2,0,5,yes: notes_accurate
+enron_01389,enron,"Thank You! Now I need somebody to sponsor me....................Any takers? ................ Unclear as to the repercussions to your own CFA for venturing down this path.
+
+Cheers","Thank you! I now need someone to sponsor me. Is anyone willing to do this? I don't know what the effects would be on your own CFA if you do this.
+
+Cheers","Replaced ""Any takers?"" with a direct question. | Replaced ""repercussions"" and ""venturing down this path"" with plain words. | Say what the sponsorship is for if the reader may not know.",,,2,2,2,0,6,yes: notes_accurate
+enron_01522,enron,"Kiara, Brittney and Dakota:
+
+We have been requested in connection with an SEC subpoena to produce documents related to the referenced counterparties (including their parents, successors, subsidiaries, related corporations, partnerships or professional associations, affiliates, principals, officers, directors, general or limited partners, associates, employees, agents, and independent contractors). We have checked our Lotus Notes database and don't have a record for either of these entities.
+
+Will you let me know if your groups have had any dealings with these two entities or know of a business person who has done business with either of these entities? We MUST respond to Enron Corp. Legal by noon Thursday (10/4).
+
+Thanks!
+
+Alexandria","Kiara, Brittney and Dakota:
+
+Please let me know by noon Thursday (10/4):
+- whether your groups have had any dealings with these two entities
+- whether you know of a business person who has done business with either of these entities
+
+We MUST respond to Enron Corp. Legal by noon Thursday (10/4).
+
+Background: we have been requested, in connection with an SEC subpoena, to produce documents related to the referenced counterparties (including their parents, successors, subsidiaries, related corporations, partnerships or professional associations, affiliates, principals, officers, directors, general or limited partners, associates, employees, agents, and independent contractors). We have checked our Lotus Notes database and don't have a record for either of these entities.
+
+Thanks!
+
+Alexandria",Moved the ask and the deadline to the top. | The two entities are never named. Add their names so the ask is clear. | Kept the long legal list and all names unchanged.,,,2,2,2,0,6,yes: notes_accurate
+enron_01537,enron,"I would like to be able to select days, months, years, etc. for historical liquidation. Somehow, we need to make the cubes or Metastock more user friendly so the traders will actually use them.
+
+I have tried to use the cubes and, although the data is extremely powerful, scrolling through all the years and months is quite cumbersome and drilling down is a pain.
+
+Can we somehow improve the user friendliness of these tools.
+
+Thanks.","Can we somehow improve the user friendliness of the cubes and Metastock? Here is what I am asking for:
+- Let me select days, months, years, etc. for historical liquidation.
+- Make the cubes or Metastock more user friendly so the traders will actually use them.
+
+I have tried to use the cubes. The data is extremely powerful, but scrolling through all the years and months is cumbersome, and drilling down is difficult.
+
+Thanks.","Put the ask first and listed the two changes as bullets. | Replaced ""drilling down is a pain"" with plain words. | No deadline was given. Add one if you need this by a certain time.",,,2,2,2,0,6,yes: notes_accurate
+enron_01556,enron,yes. it came to the office. i sent it to the yesterday.,Yes. It came to the office. I sent it yesterday.,"You wrote ""sent it to the"" with no name. Add who you sent it to. | Say what ""it"" is, so the reader knows what arrived and was sent.",,,2,2,1,0,5,yes: notes_accurate
+enron_01571,enron,Is this OK with you for yur financial agreement?,Please let me know if this is OK with you for your financial agreement.,Fixed the typo 'yur' to 'your'. | 'This' is vague. Say what it refers to so they can answer. | Made clear that a reply is needed.,,,2,2,2,0,6,yes: notes_accurate
+enron_01623,enron,"Thanks. Sounds good. Did you say that you're living out in west Marin now (one of my favorite places and old stomping grounds)? 
+ 
+I'm one of the many, the shameful, that's not finishing (though I'll only have one class in the Spring. Take care.
+ 
+Best,
+Kendra","Thanks. Sounds good.
+
+Did you say you're living out in west Marin now? That's one of my favorite places — I used to spend a lot of time there.
+
+I'm one of the many people who isn't finishing (I'm not proud of that). I'll only have one class in the Spring, though.
+
+Take care.
+
+Best,
+Kendra","You don't say what you aren't finishing. Add it so the reader isn't guessing. | 'Old stomping grounds' replaced with what it means: a place you used to spend time. | Kept your warm, self-deprecating tone and the question about west Marin.",,,2,2,2,0,6,yes: notes_accurate
+enron_01717,enron,"Kaitlin,
+
+When you get in let's take a look and see if you can get into the Master Swap 
+Agreement Database.","Kaitlin,
+
+When you get in, let's check whether you can get into the Master Swap Agreement Database.",Replaced 'take a look and see' with 'check' so the task is clear. | 'When you get in' has no set time. Add one if you need it.,,,2,2,2,0,6,yes: notes_accurate
+enron_01769,enron,Had a bit of an encounter with Jade last night. Turns out it wasn't as bad as I thought it was based upon the email below. Start from the bottom and work your way up. FYI he's kidding about the MD (managing director) and God comments.,"Had a bit of an encounter with Jade last night. Based on the email below, it turns out it wasn't as bad as I thought.
+
+Read the email below starting from the bottom and working your way up.
+
+FYI, he's kidding about the MD (managing director) and God comments.",Made the reading order a clear instruction about the email below. | You don't name who 'he' is. Add his name so the last line is clear.,,,2,1,2,0,5,yes: notes_accurate
+enron_01872,enron,"Hey,
+
+I'm not going to be able to get this in on time.","Hey,
+
+I'm not going to be able to get this in on time.","Name what ""this"" is, so the reader knows what will be late. | Add when it was due and any new date you can offer.",,,2,2,2,0,6,yes: notes_accurate
+enron_01910,enron,Not sure that this reached you the first time. My address was flawed.,I'm not sure this reached you the first time. My address was wrong.,"You didn't say which address. Name it, email or postal, so it's clear. | No ask is stated. Add whether you want a reply confirming this arrived.",,,2,2,2,0,6,yes: notes_accurate
+enron_01931,enron,Did I miss this? Or did Mia Welch never make an appearance?,Did I miss this? Or did Mia Welch never show up?,Replaced 'make an appearance' with the literal 'show up'. | Say what 'this' refers to so the reader knows what you missed.,,,2,1,2,0,5,yes: notes_accurate
+enron_01936,enron,"thsx for the note Cheyenne.
+
+regards
+delainey","Thanks for the note, Cheyenne.
+
+Regards,
+Delainey","Fixed the typo ""thsx"" to ""Thanks"". | Kept your greeting and sign-off as written.",,,2,2,2,0,6,yes: notes_accurate
+hedges_00041,hedges,"No rush, but I thought I maybe heard something and wasn't sure—I just didn't quite buy it. If you get a chance, how's everything going?","No rush. I think I heard something, and I wasn't sure what to make of it — I didn't quite believe it. If you get a chance, how's everything going?","You didn't say what you heard or doubted. Add it so the reader can answer. | Kept ""no rush"" and the question as written; no ask was invented.",,,1,1,2,0,4,yes: notes_accurate
+hedges_00101,hedges,"Good Morning,
+
+I’m going into a meeting at nine, and I’m not sure how long it’ll be, so if you get a chance, maybe just leave a message if you have a problem or a question. No rush, but the loss schedule is per Barr.
+
+Diamond","Good Morning,
+
+I'm going into a meeting at nine, and I'm not sure how long it will be. If you have a problem or a question, please leave a message.
+
+No rush, but the loss schedule is per Barr.
+
+Diamond",Made the ask direct: leave a message if you have a problem or a question. | 'The loss schedule is per Barr' is unclear. Say what it means or who Barr is.,,,1,1,2,0,4,yes: notes_accurate
+notes_00090,notes,"ask Brooke to confirm retention amount for the ""old"" turbines i've got $705,200 per - Misty","Hi Brooke, could you please confirm the retention amount for the ""old"" turbines? I have $705,200 per. Thanks, Misty","Your note stops at ""per"". Add what it is per, so Brooke can check the figure. | Added a greeting and sign-off; the ask and the amount are unchanged.",,,2,2,2,0,6,yes: notes_accurate
+notes_00118,notes,so basically i am going to stay in Calgary tonight um i am getting a massage tommorow and need to go tanning and i also have some errands to run and Brianna and i might come back saturday afternoon so what are you guys up to w/b Edgar,"What are you guys up to w/b Edgar?
+
+- I'm staying in Calgary tonight.
+- I'm getting a massage tomorrow.
+- I need to go tanning.
+- I also have some errands to run.
+- Brianna and I might come back Saturday afternoon.",Kept 'w/b Edgar' as written; spell it out so the reader knows what you mean. | Put your question first and listed your plans as bullets. | Removed filler like 'so basically' and 'um'.,,,2,2,2,0,6,yes: notes_accurate
+notes_00132,notes,great job. done by next week?,Great job. Will it be done by next week?,"""It"" is vague. Name what should be done so the question is clear. | Kept the praise and the deadline exactly as written.",,,2,1,2,0,5,yes: notes_accurate
+notes_00133,notes,"removed reference, if attached can put back. can we remove these comments?","I removed the reference. If it's attached, I can put it back. Can we remove these comments?",Say what 'it' means in 'if it's attached' — the reference or something else. | Ask is now its own sentence: remove these comments.,,,2,1,1,1,5,yes: total
+stanford_01164,stanford,What do you mean? exact practical view?,What do you mean? Could you give me the exact practical view?,"Made the request explicit: explain what you mean. | ""Practical view"" is vague. Say what you want explained, or the reader has to guess.",,,2,1,2,0,5,yes: notes_accurate
+stanford_01242,stanford,What is the declaration for then? Does it have a member?,What is the declaration for then? Does it have a member?,"Name which declaration you mean so the reader knows what to answer. | Say what 'a member' is here: a person, or a field on the form?",,,2,0,1,0,3,"yes: clarity, notes_accurate"
+stanford_01288,stanford,"so it isn't solid, just a border line? and the inside is also white/transparent?","So, two things to confirm:
+- It isn't solid, just a border line?
+- Is the inside also white/transparent?","You didn't say what ""it"" is. Name the item so the reader knows what you mean. | Split the two questions into bullets so neither gets missed.",,,2,2,2,0,6,yes: notes_accurate
+stanford_01394,stanford,"Counter offer, work in a sandpit and if we can't agree, review in a week. What do you say?","Here's my counter offer:
+- Let's work in the sandpit.
+- If we can't agree, we'll review this in a week.
+
+What do you say?",Split the two steps into bullets so both are easy to see. | 'Sandpit' may not be clear. Say what it means if the reader might not know. | You didn't say what gets reviewed in a week. Name it.,,,2,1,2,0,5,yes: notes_accurate
+stanford_01452,stanford,"Very true. Out of interest, what do you make of the new kits(s)?",Very true. What do you think of the new kits(s)?,Swapped 'what do you make of' for the plain 'what do you think of'. | 'kits(s)' is unclear. Say whether it is one kit or more than one.,,,2,2,2,0,6,yes: notes_accurate
+stanford_01553,stanford,Thank you! Could you protect the picture that's live too?,Thank you! Could you protect the picture that's live too?,"Kept as written. Say how to protect it (password, permissions) if that isn't obvious.",,,2,2,2,0,6,yes: notes_accurate
+stanford_01577,stanford,"... then you have to at least meet me half-way. For instance, ""[URL] described the episode as displaying ""an exhilarating flair for rapid change of comic gear"" and made commented positively on the scene."" Can you see the problem here?","Can you see the problem here? For example, ""[URL] described the episode as displaying ""an exhilarating flair for rapid change of comic gear"" and made commented positively on the scene.""
+
+You have to at least meet me half-way.",Put the question first so the ask is clear. | Kept the quoted sentence and [URL] exactly as written. | Say what the problem is if the reader may not spot it.,,,2,1,2,0,5,yes: notes_accurate
+stanford_01658,stanford,Why is it an HTML file? Also can you please show the JSON?,"Two things:
+- Could you explain why it's an HTML file?
+- Could you please show the JSON?",Listed both asks so neither gets missed. | 'It' is unclear. Name the file so the reader knows what you mean.,,,2,2,2,0,6,yes: notes_accurate
+stanford_01694,stanford,"So, Gabrielle, you're not interested? Have you ever read [URL] article?","Gabrielle, are you not interested? Have you read the article at [URL]?",Split the two questions so each is easy to answer. | 'You're not interested?' assumes her answer. Ask plainly if you want her view.,,,1,1,2,0,4,yes: notes_accurate
+stanford_01721,stanford,"Indeed, I have the mean [URL]. And what do you have?","Yes, I have the mean [URL]. What do you have?",Kept [URL] exactly as written. | Unclear what 'the mean' refers to. Name it so the reader knows.,,,2,1,1,0,4,yes: notes_accurate
+stanford_01735,stanford,"You are so right, [URL] looks to be blatant advertising. Why don't you put it up for [URL]?","You're right, [URL] looks like blatant advertising. You could put it up for [URL].","'Why don't you' is a suggestion, so it now reads as one. | 'It' is unclear. Say what should be put up for [URL].",,,1,1,2,0,4,yes: notes_accurate
+stanford_01847,stanford,"""Which other interesting things are there to count.."" isn't that the actual question? Maybe adjust the title?","I think the actual question is ""Which other interesting things are there to count.."". Maybe adjust the title to match it?","Turned the rhetorical question into a plain suggestion. | Say which title or document you mean, so the reader knows what to change.",,,2,2,2,0,6,yes: notes_accurate
+stanford_01857,stanford,I will take out Catherine in deference to you. OK?,"I will take Catherine out, because that's what you want. Is that OK?","Say what Catherine is being taken out of; the message doesn't say. | ""In deference to you"" now reads plainly as ""because that's what you want"". | ""OK?"" asks for a reply, so it stays a question.",,,1,1,2,0,4,yes: notes_accurate
+circa_00831,circa,"Q: Do you reread favorite books?
+Reply: It depends on the book.",It depends on the book.,"Already clear, kept as written.",,,2,2,1,2,7,
+circa_01465,circa,"Q: Are you heading out on the town?
+Reply: I'm planning on staying home.",I'm planning on staying home.,"Already clear, kept as written.",,,2,1,1,2,6,
+circa_02991,circa,"Q: Do you like to watch football?
+Reply: Only the playoffs.",I only like to watch the playoffs.,"Made the short answer a full sentence so it stands alone. | Meaning kept as is: a partial yes, playoffs only.",,,2,2,1,2,7,
+circa_03659,circa,"Q: Is there anything special you wanted to see while you're here?
+Reply: Show me your favorite things.","Yes, show me your favorite things.","Made it a clear answer to the question, then kept your ask as written.",,,2,2,2,2,8,
+circa_04895,circa,"Q: Did you have a hard time getting here?
+Reply: It was a breeze.","No, it was easy.",Replaced the idiom 'a breeze' with what it means: easy. | Made the answer to the question explicit: no.,,,2,2,2,2,8,
+circa_05477,circa,"Q: Are you into cycling?
+Reply: I haven't got a bike.","No, I haven't got a bike.",Made the answer to the question explicit: no. | Kept your reason as written.,,,2,2,1,2,7,
+circa_08228,circa,"Q: Is a full-time role what you think you'd like?
+Reply: I would rather be part time.",I would rather be part time.,"Already clear, kept as written.",,,2,2,1,2,7,
+circa_09270,circa,"Q: Are you going to the gym today?
+Reply: I worked out this morning.",I worked out this morning.,This doesn't answer yes or no. Add whether you're going to the gym. | Kept your words as written; only the missing answer is flagged.,,,2,1,1,2,6,
+circa_15662,circa,"Q: Will you have to do any renovations?
+Reply: It definitely needs a new kitchen.","Yes, I'll have to do renovations. It definitely needs a new kitchen.","Said the yes answer directly, since the question asked for one. | 'It' is never named. Say what needs the new kitchen.",,,2,2,1,2,7,
+circa_16209,circa,"Q: Will you have to do physical tasks?
+Reply: Nothing too strenuous.","No, I won't have to do anything too strenuous.",Made the answer explicit: no heavy physical tasks. | Kept your wording about how strenuous the tasks are.,,,2,2,1,2,7,
+circa_16901,circa,"Q: What are you up to these days?
+Reply: Lots of things",Lots of things,"Already clear, kept as written.",,,2,2,1,2,7,
+circa_19871,circa,"Q: Will this be your first time in New York?
+Reply: I've visited before, but never lived there.","No, I've visited before, but never lived there.","Added ""No"" so the answer to the yes/no question comes first.",,,2,2,2,2,8,
+circa_20264,circa,"Q: Are you a fan of mystery novels?
+Reply: When they are well written.","Yes, when they are well written.",Made the implied yes explicit so the answer isn't left to guesswork. | Kept the condition exactly as you wrote it.,,,2,2,2,2,8,
+circa_22248,circa,"Q: Should the new company be located near home?
+Reply: I'd like the new company to be closer to home.",I'd like the new company to be closer to home.,"Already clear, kept as written.",,,2,1,2,2,7,
+circa_24605,circa,"Q: Is your job too far?
+Reply: It is further than I'd like","Yes, it's further than I'd like.",Added 'Yes' so the reply answers the question directly. | Kept the wording of the reason unchanged.,,,2,2,1,2,7,
+circa_24927,circa,"Q: Want to try my favorite restaurant ever?
+Reply: If you like then I want to give it a shot.","Yes, I'd like to try it if you want to.","Made the yes clear instead of leaving it implied. | Kept the conditional, since you left the choice to them.",,,2,2,2,2,8,
+circa_26177,circa,"Q: Do you work around here?
+Reply: I do work close by at the store.",I do work close by at the store.,"Already clear, kept as written.",,,2,1,1,2,6,
+circa_29225,circa,"Q: Do you enjoy foreign cuisine?
+Reply: If it's vegetarian.","Yes, if it's vegetarian.",Made the yes explicit; the condition stays as written.,,,2,2,1,2,7,
+circa_32310,circa,"Q: Do you go fishing for the weekends?
+Reply: Fishing is too boring.","No, I don't go fishing on weekends. Fishing is too boring.","Made the answer explicit: no, you don't go fishing. | Kept your reason as written.",,,2,2,1,2,7,
+circa_34225,circa,"Q: Are you interested in trap music?
+Reply: I prefer hip-hop.",I prefer hip-hop.,Your reply doesn't say yes or no. Add that if you want it clear. | Kept as written because I can't guess which answer you mean.,,,2,1,1,2,6,
+enron_01006,enron,"Market Participants:
+
+Please find attached the advisory statement mapping for the December 1999
+Settlement Adjustment Invoicing.
+
+(See attached file: December_1999_SA2_Version_Mapping.xls)
+
+If you have any questions please contact your market
+representative at [PHONE_REDACTED].
+ - December_1999_SA2_Version_Mapping.xls","Market Participants:
+
+Please find attached the advisory statement mapping for the December 1999 Settlement Adjustment Invoicing.
+
+(See attached file: December_1999_SA2_Version_Mapping.xls)
+
+If you have any questions please contact your market representative at [PHONE_REDACTED].
+ - December_1999_SA2_Version_Mapping.xls","Already clear, kept as written.",,,2,1,1,2,6,
+enron_01041,enron,"hey girl -- havent talked to you in a while. just wanted to catch up and see 
+whats new.","Hey girl, it's been a while since we talked. I wanted to catch up and hear what's new with you.","Kept your warm, casual voice. | Made the reason for writing clear: catch up and hear what's new.",,,2,2,2,2,8,
+enron_01134,enron,"Please see the attached redline version of the Master Firm Purchase Sale 
+Agreement . This version incorporates changes to Section 4.5 as discussed. 
+Please do not hesitate to give me a call with any questions you may have 
+regarding the enclosed.
+
+Jasmin Acosta
+Enron North America Corp.
+Legal Department
+1400 Crystal Ho, EB 3885
+Houston, Texas 77002
+[EMAIL_REDACTED]
+Phone [PHONE_REDACTED]
+Fax [PHONE_REDACTED]","Please see the attached redline version of the Master Firm Purchase Sale Agreement. This version incorporates changes to Section 4.5 as discussed. Please do not hesitate to give me a call with any questions you may have regarding the enclosed.
+
+Jasmin Acosta
+Enron North America Corp.
+Legal Department
+1400 Crystal Ho, EB 3885
+Houston, Texas 77002
+[EMAIL_REDACTED]
+Phone [PHONE_REDACTED]
+Fax [PHONE_REDACTED]","Already clear, kept as written.",,,2,2,2,2,8,
+enron_01234,enron,Look'n sharp Mr. Angel....SAVANNAH. Banks eat your heart out!!!!,Look'n sharp Mr. Angel....SAVANNAH. Banks eat your heart out!!!!,"Already clear, kept as written.",,,2,2,2,2,8,
+enron_01256,enron,"my 2001 budget proposal, as cleaned up by accounting. As it does contain 
+salary info, I have not copied Daisy. I have no problem with her seeing 
+it, but did not know what your preference was. If you want salary data 
+eliminated, I believe a single aggregate figure can be shown. Will be 
+sending you separately the allocations across business units. let me know if 
+you have questions or want to discuss. mcs","My 2001 budget proposal, as cleaned up by accounting.
+
+It contains salary info, so I have not copied Daisy. I have no problem with her seeing it. I did not know your preference.
+
+Please let me know:
+- whether Daisy can see it
+- whether you want the salary data eliminated. If you do, I believe a single aggregate figure can be shown.
+- if you have questions or want to discuss
+
+I will send you the allocations across business units separately.
+
+mcs","Listed the two decisions you need so neither gets missed. | Kept ""I believe"" — it is your view, not a promise. | No deadline was given, so none was added.",,,2,2,2,2,8,
+enron_01334,enron,"Hi Isabella
+
+I haven't talked to Crystal, but everyone else is OK with letter. I thought I would go ahead and prepare execution copies using today's date for everything, get Crystal to sign and then fax to you. Assuming everything is OK with your folks, you could then sign and fax back. If this is OK, let me know and include the fax number where I should send the letter agreement. Thanks
+
+[PHONE_REDACTED]","Hi Isabella,
+
+I haven't talked to Crystal, but everyone else is OK with the letter. Here is my plan:
+- I prepare execution copies using today's date for everything.
+- I get Crystal to sign.
+- I fax the copies to you.
+- If everything is OK with your folks, you sign and fax back.
+
+Please let me know if this is OK. Please also include the fax number where I should send the letter agreement.
+
+Thanks
+[PHONE_REDACTED]","Split the plan into steps so each one is easy to check. | Put the two asks last: confirm the plan, and send the fax number. | You wrote ""OK with letter""; I read it as ""the letter"".",,,2,1,2,2,7,
+enron_01603,enron,"I wish I could be there to see her face too. Take pictures!! Sorry I will 
+be unable to see you this weekend. Talk with you tonight.
+
+Daddy","I wish I could be there to see her face too. Take pictures!! Sorry I will be unable to see you this weekend. Talk with you tonight.
+
+Daddy","Already clear, kept as written.",,,2,1,2,2,7,
+enron_01629,enron,"Edgar wants to know if you are still willing to have the kids for a week in July. If so, we need to make plans. Let us know.
+
+DG","Edgar wants to know if you are still willing to have the kids for a week in July. If so, we need to make plans. Let us know.
+
+DG","Already clear, kept as written.",,,2,2,2,2,8,
+enron_01652,enron,"Mariah,
+
+Per your request, I've attached a summary of credit exposure with PG&E as of 
+close of business on February 28th. We are investigating an increase in our 
+overall position as a result of basis movement in the west over the past few 
+days.
+
+Please feel free to give me a call at 35856 if I can provide futher 
+information.","Mariah,
+
+Per your request, I've attached a summary of credit exposure with PG&E as of close of business on February 28th. We are investigating an increase in our overall position as a result of basis movement in the west over the past few days.
+
+If you need further information, you can call me at 35856.","Fixed the typo: 'futher' is now 'further'. | Made the call clearly optional, so no reply is expected.",,,2,2,1,2,7,
+enron_01723,enron,"Today's Pre-Bid Meeting will be held in 05075 from 3:00 PM to 5:00 PM
+
+Brittney: Please pass on to the schedulers.","Today's Pre-Bid Meeting will be held in 05075 from 3:00 PM to 5:00 PM.
+
+Brittney, please pass this on to the schedulers.","Kept every detail: today, room 05075, 3:00 PM to 5:00 PM. | Made the ask to Brittney a clear request on its own line.",,,2,1,2,2,7,
+enron_01725,enron,"As discussed in the California conference call this morning, I have prepared 
+a bullet-point summary of the CERA Special Report titled Beyond the 
+California Power Crisis: Impact, Solutions, and Lessons.If you have any 
+questions, my phone number is [PHONE_REDACTED].
+
+Crystal","As discussed in the California conference call this morning, I have prepared a bullet-point summary of the CERA Special Report titled Beyond the California Power Crisis: Impact, Solutions, and Lessons. If you have any questions, my phone number is [PHONE_REDACTED].
+
+Crystal","Fixed the missing space between ""Lessons."" and ""If"". | Everything else was already clear, so it is unchanged.",,,2,2,2,2,8,
+enron_01817,enron,"I'm thinking that I have probably missed you, but anyway, it was so nice to 
+hear from you. We're haviing Sydney's birthday party tonight. So thwat's 
+what we'll be doing this weekend! Talk to you soon!
+
+Love Jasmine","I think I've probably missed you, but it was so nice to hear from you. We're having Sydney's birthday party tonight, so that's what we'll be doing this weekend! Talk to you soon!
+
+Love,
+Jasmine","Fixed the typos (""haviing"", ""thwat's"") and kept your warm tone. | No ask in your message, so none was added.",,,2,2,2,2,8,
+enron_01857,enron,"Isabella,
+
+Thanks for registering for the Jaguar X-TYPE site.
+
+Your username is Marktaylor2 and your password is fastpath.
+
+Regards,
+Jaguar X-Type team","Isabella,
+
+Thanks for registering for the Jaguar X-TYPE site.
+
+Your username is Marktaylor2 and your password is fastpath.
+
+Regards,
+Jaguar X-Type team","Already clear, kept as written.",,,2,2,2,2,8,
+enron_01939,enron,"I will ask Brittney to set up a meeting for us this week. Your name has been on 
+my list to call - a trip to the Thornton Bowl last week cut my week short, so I 
+will look forward to getting with you this week. --Alyssa",I will ask Brittney to set up a meeting for us this week. Your name has been on my list to call. A trip to the Thornton Bowl last week cut my week short. I look forward to getting with you this week. --Alyssa,"Put the meeting plan first so the point is clear. | Split the long sentence about the Thornton Bowl trip into short ones. | No ask here, so nothing was added for the reader to do.",,,2,2,2,2,8,
+enron_01951,enron,"Crystal,
+
+Please review the revised confirmation and let me know if it is ok to send.
+
+Thanks,
+
+ML","Crystal,
+
+Please review the revised confirmation and let me know if it is ok to send.
+
+Thanks,
+
+ML","Already clear, kept as written.",,,2,2,2,2,8,
+enron_01972,enron,"Here you go, Chase - let me know what you think.
+
+Alyssa
+[PHONE_REDACTED] or [PHONE_REDACTED]","Here you go, Chase - let me know what you think.
+
+Alyssa
+[PHONE_REDACTED] or [PHONE_REDACTED]","Already clear, kept as written.",,,2,2,2,2,8,
+enron_01979,enron,"Crystal:
+
+Here is the master netting agreement.
+
+Alexandria","Crystal:
+
+Here is the master netting agreement.
+
+Alexandria","Already clear, kept as written.",,,2,2,2,2,8,
+enron_01989,enron,"Hi Kendra, hope the weekend was great.
+
+With all the management and business changes in the organization the last few months, it might not be a bad idea to get everyone (say OOC at business units and higher, or like the old EI/ENA MD meeting in Cabo) to an offsite to do business reviews, and do some strategy work. I certainly wouldn't mind getting away and talking to everyone for a couple of days.
+
+Kendra","Hi Kendra, hope the weekend was great.
+
+I'd like to suggest an offsite for everyone. The organization has had a lot of management and business changes in the last few months, so it seems like a good time. At the offsite we could:
+- do business reviews
+- do some strategy work
+
+For who to invite, I'm thinking everyone at OOC at business units and higher, or the group from the old EI/ENA MD meeting in Cabo.
+
+I would like to get away and talk to everyone for a couple of days.
+
+Kendra",Greeting and signature both say Kendra. Check who this is going to. | Put the suggestion first and listed the two goals as bullets. | No date or deadline given. Add one if you have it.,,,2,2,2,2,8,
+enron_01993,enron,"The attached gas books have been set up. Please contact me if you have any questions/comments.
+
+Thank you,
+Jerome Walker
+x3-1462","The attached gas books have been set up. Please contact me if you have any questions/comments.
+
+Thank you,
+Jerome Walker
+x3-1462","Already clear, kept as written.",,,2,2,2,2,8,
+hedges_00013,hedges,"Hey, no rush, but if you get a chance, maybe try [PHONE_REDACTED] for a fax number? Let me know if this one does not work. The phone number for my contact is [PHONE_REDACTED].
+
+Thank You,
+Chase","Hi, no rush. Could you do these two things:
+- Try [PHONE_REDACTED] for a fax number.
+- Let me know if this one does not work.
+
+The phone number for my contact is [PHONE_REDACTED].
+
+Thank you,
+Chase",Split the two asks into bullets so neither is missed. | Kept both numbers and 'no rush' exactly as written.,,,2,2,2,2,8,
+hedges_00040,hedges,"Isabella,
+
+No rush, but since Terrence has already booked EB4180, I was just wondering if we should just plan on meeting there at 8:30, if you get a chance, since the meeting may already be in progress.
+
+Thanks,
+Bethany.","Hi Isabella,
+
+Should we plan on meeting at EB4180 at 8:30? Terrence has already booked EB4180, and the meeting may already be in progress. No rush.
+
+Thanks,
+Bethany","Put the question first so Isabella knows a reply is needed. | Kept all names, EB4180 and 8:30 unchanged. | Dropped ""if you get a chance""; ""No rush"" already softens it.",,,2,2,2,2,8,
+hedges_00103,hedges,"Mikayla,
+No rush, but might be worth keeping an eye on EOL deals. I got a call on Friday evening about this deal being changed but you had already left.
+It is a deal with Brianna and the volume was changed. If you get a chance, check on this and communicate all changes to Devin.
+
+Thanks,
+Savannah","Hi Mikayla,
+
+No rush, but it may be worth keeping an eye on EOL deals. I got a call on Friday evening about a deal being changed, but you had already left.
+
+The deal is with Brianna, and the volume was changed. If you get a chance, could you:
+- check on this deal
+- communicate all changes to Devin
+
+Thanks,
+Savannah","Listed the two asks so both are easy to act on. | Named ""this deal"" as the deal with Brianna so it isn't vague. | No deadline was given. Add one if this needs to be done by a set time.",,,2,2,2,2,8,
+hedges_00164,hedges,"Hey, no rush, but just wondering if you have a web service for multiplying numbers? And maybe what for?","Hi, no rush. Do you have a web service for multiplying numbers? If so, what is it for?",Split the two questions so each one is easy to answer. | 'What for' is vague. Say whether you mean its purpose or your use for it.,,,2,2,2,2,8,
+notes_00155,notes,what make of frames were these? how much do u weigh?,"Two questions:
+- What make of frames were these?
+- How much do you weigh?",Listed both questions so neither gets missed. | Spelled out 'u' as 'you'.,,,2,2,2,2,8,
+notes_00190,notes,try get terminology right - no such thing as POST and GET variables esp not client side (assume thats what u mean). what exactly do u mean?,"There's no such thing as POST and GET variables, especially not on the client side. Please use the correct terminology. I assume you mean client side. What exactly do you mean?",Split the correction and the question so each is easy to answer. | Kept your blunt tone; no greeting added. | Your assumption about client side is kept as you wrote it.,,,2,1,1,2,6,
+stanford_01068,stanford,"When you say ""cover the chicken"", specifically how and with what do you do that?","When you say ""cover the chicken"", specifically how and with what do you do that?","Already clear, kept as written.",,,2,2,1,2,7,
+stanford_01094,stanford,I was under the impression that higher temperatures caused even more carcinogens. Do you think that there's no point in trying to keep the temperature down?,Do you think there's no point in trying to keep the temperature down? I was under the impression that higher temperatures caused even more carcinogens.,"Moved your question to the top so the ask is easy to find. | Kept your wording; no deadline was given, so none was added.",,,2,2,2,2,8,
+stanford_01175,stanford,Are you trying to simulate how it would look if someone pointed an ordinary movie projector at this surface? Or are you trying to adjust what you're projecting to try to cancel out the deformations in the surface?,"Which of these are you trying to do?
+- Simulate how it would look if someone pointed an ordinary movie projector at this surface.
+- Adjust what you're projecting to cancel out the deformations in the surface.",Split the two options into bullets so each can be answered on its own. | Kept your wording for both options unchanged.,,,2,2,1,2,7,
+stanford_01308,stanford,I saw your motorcycle map for Daytona. Could you do one for Indianapolis?,I saw your motorcycle map for Daytona. Could you do one for Indianapolis?,"Already clear, kept as written.",,,2,1,2,2,7,
+stanford_01346,stanford,"You can't create a geodatabase in ArcMap, unless you are referring to the ArcCatalog window inside of ArcMap. Did you mean a 9.3 version of an .MXD file?","You can't create a geodatabase in ArcMap, unless you are referring to the ArcCatalog window inside of ArcMap. Did you mean a 9.3 version of an .MXD file? Please let me know.","Kept the correction first, then the question, so the point lands first. | Added that a reply is needed, since the question asks for one.",,,2,2,2,2,8,
+stanford_01401,stanford,So the dimensions of the rectangle you're allowed to use is fixed and it's axis-aligned? And I suppose you want to minimize the number of points which are left out .. correct?,"I want to confirm two things:
+- The dimensions of the rectangle you're allowed to use are fixed, and it's axis-aligned. Is that correct?
+- You want to minimize the number of points that are left out. Is that correct?",Split the two questions into a list so each gets a clear answer. | Made the confirmation request explicit instead of implied.,,,2,2,2,2,8,
+stanford_01519,stanford,Does it not take just a bit more than someone saying they own it to remove a copyvio? As can be seen I post from Canada and what's to stop me claiming to be [URL] and anything published in the [URL] can be put on Wikipedia (or something a little more sensible)?,"I don't think someone saying they own it should be enough to remove a copyright violation. It should take more than that. I post from Canada, so nothing stops me from claiming to be [URL] and putting anything published in [URL] on Wikipedia (or something a little more sensible).","Turned the rhetorical questions into statements so the point reads directly. | Expanded ""copyvio"" to ""copyright violation"". | No ask is stated. Add what you want the reader to do.",,,2,2,1,2,7,
+stanford_01554,stanford,"Are you only using T-SQL to access the data? In other words, will another language (such as VB or C#) be used at any point during the process?","Are you only using T-SQL to access the data? In other words, will another language (such as VB or C#) be used at any point during the process?","Already clear, kept as written.",,,2,2,1,2,7,
+stanford_01637,stanford,"I'm suspecting a bad charger; most home screen I've used turns itself on when you just plugged the device in or plugged the device out, if a bad charger somehow causes the device to think that it had just been plugged off and/or plugged on, it could cause the symptoms you're having. Have you tried with a different charger and different wall socket?","I suspect a bad charger. Could you try a different charger and a different wall socket, and tell me if the symptoms change?
+
+Here is why I suspect the charger. On most home screens I have used, the screen turns itself on when you plug the device in or unplug it. If a bad charger makes the device think it was just unplugged or plugged in, that could cause the symptoms you are having.","Moved the question to the top so the ask is easy to find. | Split the long run-on sentence into shorter ones, keeping the same reasoning.",,,1,1,2,2,6,
+stanford_01669,stanford,What filters are you hooking to? Can you post one of your functions that fails to modify the_content?,"Could you tell me:
+- what filters you are hooking to
+- one of your functions that fails to modify the_content",Split the two questions into a list so both get answered. | Kept the technical terms exactly as written.,,,2,2,1,2,7,
+stanford_01689,stanford,"I think you mean ""remote"" debugging. That being said, have you tried to turn off remote debugging for the SWF you don't want to allow debugging on?","I think you mean ""remote"" debugging. Have you tried turning off remote debugging for the SWF you don't want to allow debugging on?","Cut ""That being said"" so the question follows the correction directly. | Kept your wording and the SWF detail exactly as written.",,,2,2,2,1,7,
+stanford_01831,stanford,"Why did you rollback [URL]? It appears by a quick scan that the user was correct re [URL] - but regardless seemed a good faith edit, one certainly not worthy of a vandalism rollback I would think?","Could you explain why you rolled back [URL]? From a quick scan, the user was correct about [URL]. Either way, it seemed like a good faith edit, and I would think it did not warrant a vandalism rollback.","Put the question first so the ask is easy to find. | Expanded 're' to 'about' for plain reading. | No deadline was given, so none was added.",,,2,2,2,1,7,
+stanford_01859,stanford,Great work you've been doing on this. Would you agree with me that International Political Economy should be capitalised?,Great work you've been doing on this. I think International Political Economy should be capitalised. Do you agree?,"Split the question into your view plus a direct question, so the ask is clear. | Kept the praise at the start.",,,2,1,2,2,7,

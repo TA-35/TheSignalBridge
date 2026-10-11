@@ -1,0 +1,425 @@
+id,dataset,source,rewrite,notes,pass_fail,reason_if_fail,judge_meaning_kept,judge_clarity,judge_warmth,judge_notes_accurate,judge_total,look_first
+circa_08270,circa,"Q: Are you interested in keeping fit?
+Reply: I do clogging.","Yes, I do clogging.","Made the yes explicit, since the question was a yes/no one. | If the reader may not know clogging, add a few words to explain it.",,,2,2,1,0,5,yes: notes_accurate
+circa_12776,circa,"Q: Do you drink?
+Reply: I like a Moscow Mule.","Yes, I drink. I like a Moscow Mule.","Made the implied yes explicit, since the question asked directly. | If you'd rather not answer plainly, tell me and I'll soften it.",,,2,2,2,0,6,yes: notes_accurate
+circa_15275,circa,"Q: Did you ever get to learn to play the banjo like you wanted to when you were young ?
+Reply: I forgot about that!",I forgot about that!,This doesn't answer whether you learned the banjo. Add yes or no. | Kept your words as written; nothing else needed changing.,,,2,1,1,0,4,yes: notes_accurate
+circa_18575,circa,"Q: Do you read any fiction authors?
+Reply: Jeremy is my favorite writer.",Yes — Jeremy is my favorite writer.,"Made the yes explicit, since the question asked whether you read fiction. | Only a first name is given; add a surname if the reader may not know who Jeremy is.",,,2,2,2,0,6,yes: notes_accurate
+circa_19049,circa,"Q: Would you like to go for happy hour?
+Reply: I'm in a rush.",I'm in a rush.,"This doesn't answer the question. Add whether you're coming or not. | Kept your words as written, since I can't tell which answer you mean.",,,2,1,1,0,4,yes: notes_accurate
+circa_19500,circa,"Q: Interested in hitting the outlet mall?
+Reply: I hear there are good deals there.",I hear there are good deals there.,This doesn't answer yes or no. Add whether you're interested in going. | Kept your words as written; nothing else needed changing.,,,2,1,2,0,5,yes: notes_accurate
+circa_23100,circa,"Q: Would you prefer hardback books?
+Reply: Jason are easier to carry around.","No, I wouldn't prefer hardback books. Jason are easier to carry around.",'Jason' looks like a typo or a misheard word. Replace it with what you meant. | Made the answer explicit: no to hardbacks.,,,2,2,1,0,5,yes: notes_accurate
+circa_23378,circa,"Q: Do you want to go see a movie tonight?
+Reply: How about a card game instead?",Could we play a card game instead of seeing a movie tonight?,"Made it clear this answers the movie question with another option. | If you mean a flat no to the movie, say that directly.",,,2,1,2,0,5,yes: notes_accurate
+circa_25049,circa,"Q: Do you go by your first name?
+Reply: With my friends.",I go by my first name with my friends.,Made the fragment a full answer to the question. | You didn't say what other people call you. Add that if it matters.,,,2,2,2,0,6,yes: notes_accurate
+circa_30763,circa,"Q: Are you into Chinese cuisine?
+Reply: I do eat Chinese food but only certain things.","Yes, I eat Chinese food, but only certain dishes.",Made the partial yes clear from the first word. | You didn't say which dishes. Naming them would help the reader plan.,,,1,2,2,0,5,yes: notes_accurate
+circa_33241,circa,"Q: Have you worked in your field for long?
+Reply: It's hard to say how long is too long.",I'm not going to answer that directly. It's hard to say how long is too long.,"Made the non-answer explicit so it doesn't read as a reply to the question. | If you do want to answer, add how long you've worked in your field.",,,1,2,1,0,4,yes: notes_accurate
+circa_34114,circa,"Q: Is your family good and well?
+Reply: For the most part.",Mostly yes.,"Kept your answer as it is: mostly, not entirely. | 'Mostly' leaves it unclear what isn't fine. Add detail if you want them to know.",,,2,2,1,0,5,yes: notes_accurate
+enron_01030,enron,Please note name of venue.,Please note the name of the venue.,"The venue name is missing. Add it so the reader knows what to note. | Add who should note it, if it isn't everyone.",,,2,2,2,0,6,yes: notes_accurate
+enron_01050,enron,"Sorry bout the first comment, did not totally understand... We will handle this via the OA process, where I'm working with the OA group that will allow us a bucket of income or loss and we will run this through Jillian's P&L... This will be a pass through for Jillian's book... O","Sorry about my first comment. I didn't fully understand it.
+
+We will handle this through the OA process. I'm working with the OA group. That process gives us a bucket of income or loss, and we will run this through Jillian's P&L. This will be a pass-through for Jillian's book.","Your message ends with a stray ""O"". Check it and remove it. | You didn't say what you didn't understand. Add it if it matters. | Kept your terms ""OA process"", ""bucket"" and ""pass-through"" as written.",,,2,2,2,0,6,yes: notes_accurate
+enron_01114,enron,No. Just wanted your thoughts. Thanks.,No. I just wanted your thoughts. Thanks.,"'No' answers something not in this message. Say what you're saying no to if it stands alone. | Made the ask clear: you want their thoughts, not an action.",,,2,2,2,0,6,yes: notes_accurate
+enron_01188,enron,"POCCC Owners:
+
+There will be a Board of Directors meeting on Tuesday, October 30, 2001
+at 12:00 noon at the offices of Tri-C Resources, 909 Wirt Road. The
+meeting agenda is attached. Everyone is invited to attend. It's brown
+bag. We can cover any issues not on the agenda as well. Again, I would
+like to keep the meeting to one hour, if possible.
+
+Thanks,
+Clarence Mcbride
+
+Meeting Agenda 10 30 01
+
+ - Meeting Agenda 10 30 01.doc","POCCC Owners:
+
+There will be a Board of Directors meeting on Tuesday, October 30, 2001 at 12:00 noon at the offices of Tri-C Resources, 909 Wirt Road.
+
+- The meeting agenda is attached.
+- Everyone is invited to attend.
+- Bring your own lunch.
+- We can cover any issues not on the agenda as well.
+
+Again, I would like to keep the meeting to one hour, if possible.
+
+Thanks,
+Clarence Mcbride
+
+Meeting Agenda 10 30 01
+
+- Meeting Agenda 10 30 01.doc","Replaced ""brown bag"" with ""bring your own lunch""; change it back if you meant something else. | Put the meeting details in a list so they are easy to scan.",,,2,2,2,0,6,yes: notes_accurate
+enron_01415,enron,"Do we want to say we will exhaust all available possibilities? That seems like a huge promise, as there may be some approach that is not reasonable, but would be an available possibility. I would rather give us our own discretion to do what we deem appropriate to assist in this regard. What does Mikayla Wilcox think?","Should we say we will exhaust all available possibilities? That seems like a huge promise. Some approach may not be reasonable, but it would still be an available possibility. I would rather we have discretion to do what we decide is appropriate to help with this.
+
+What does Mikayla Wilcox think?","Split the long sentences; kept your meaning and your question. | Kept the ask to Mikayla on its own line so it stands out. | ""In this regard"" is vague; name what we are assisting with.",,,2,2,2,0,6,yes: notes_accurate
+enron_01441,enron,FYI- since you didn't take care of business,For your information: you didn't do what needed to be done.,The sentence stops after 'since'. Add what happened as a result. | Say what wasn't done and what you want now. | 'Take care of business' is now plain words; the frustration is kept.,,,1,2,1,0,4,yes: notes_accurate
+enron_01456,enron,"I saw the memo. It is true about the startup charges. It is listed in the Alexandria and Sale Agreement.
+Is there more that we need to discuss on this deal?
+
+Thanks,
+JMF","I saw the memo. The memo is correct about the startup charges. It is listed in the Alexandria and Sale Agreement.
+
+Is there anything else we need to discuss on this deal?
+
+Thanks,
+JMF","""It is true"" is now ""The memo is correct"", so the point is clear. | ""It is listed"" is vague. Say what ""it"" refers to so the reader isn't guessing. | Kept the question as a question: a reply is needed.",,,2,1,2,0,5,yes: notes_accurate
+enron_01474,enron,"Please provide credit language per this worksheet to Meghan Key.
+
+Thanks
+brant","Please provide the credit language per this worksheet to Meghan Key.
+
+Thanks,
+Brant",The worksheet isn't attached or linked. Add it so the reader can follow it. | Wording kept as written; only the sign-off was tidied.,,,2,2,2,0,6,yes: notes_accurate
+enron_01555,enron,"If you have access to LEAP there is now a class available to learn to enter 
+your time via the eHRonline. See details below.","A class is now available to learn how to enter your time via eHRonline, if you have access to LEAP. See details below.","Moved the main point first: the class is now available. | You wrote ""see details below"" but no details are here. Add the date, time and link.",,,2,2,1,0,5,yes: notes_accurate
+enron_01561,enron,"we are playing liars poker right now if you want in. give me a call later if 
+not.","We're playing Liar's Poker right now if you want to join. If not, give me a call later.","""If not"" is unclear: say whether it means you don't want in, or can't join now. | Kept the casual tone and the open invitation.",,,2,2,2,0,6,yes: notes_accurate
+enron_01604,enron,Isabella: Please handle. Should Foster work on this? Isabella,"Please handle this. Should Foster work on this?
+
+Isabella","You didn't say what ""this"" is. Name it so the reader knows what to handle. | Kept your Foster question; it needs a yes or no answer. | Removed the repeated name, kept one signature.",,,2,1,1,0,4,yes: notes_accurate
+enron_01633,enron,"Dear all
+
+Apologies for the ""non-opening"" attachments. I hope these work.
+
+Terrence","Dear all,
+
+Apologies for the attachments that wouldn't open. I hope these work.
+
+Terrence","Replaced ""non-opening"" with plain words: attachments that wouldn't open. | ""These"" is vague. Name the files if readers may not know which ones.",,,2,2,2,0,6,yes: notes_accurate
+enron_01805,enron,"We purchased 24MW of Spin from LADW&P at LA4 for August 9 
+Capacity payment 16.50 - energy strike 79.51 
+
+We want to continue to offer the energy to the ISO at the price cap and to check the contingency flag (yes) so that we will only get called on in a contingency or emergency situation. 
+
+NFB","We purchased 24MW of Spin from LADW&P at LA4 for August 9.
+
+- Capacity payment: 16.50
+- Energy strike: 79.51
+
+We want to continue to offer the energy to the ISO at the price cap. We also want to check the contingency flag (yes), so we will only get called on in a contingency or emergency situation.
+
+NFB","Split the two figures into bullets so they are easy to scan. | No ask is stated. Say what you want the reader to do with this. | Kept ""NFB"" as written; I don't know what it means.",,,2,2,1,0,5,yes: notes_accurate
+enron_01842,enron,More Coral stuff I haven't read.,There's more Coral material I haven't read yet.,No ask is stated. Add what you want the reader to do. | 'Coral stuff' is vague. Name the document or project.,,,2,2,2,0,6,yes: notes_accurate
+enron_01890,enron,"good. thanks for that. I talked to him the other day.
+Am going to liberty noodle for lunch and have to run right now so get me on the cell if you need me.
+
+love you.","Good. Thanks for that. I talked to him the other day.
+
+I'm going to Liberty Noodle for lunch and have to run right now. Call my cell if you need me.
+
+Love you.",You wrote 'him' with no name. Add who it is if the reader might not know. | Split into short sentences and changed 'get me on the cell' to 'call my cell'.,,,1,2,2,0,5,yes: notes_accurate
+hedges_00043,hedges,"I hope your blackberry is working better than mine has been over the last few days. No rush, but I understand that Caitlyn and Bethany have spoken and that Briana, Ariana, and Mia will be coming over at 3:00 and no one is expected to be there at 1:00. Just wondering if that's correct, if you get a chance?","Hi, is this correct?
+- Caitlyn and Bethany have spoken.
+- Briana, Ariana, and Mia will be coming over at 3:00.
+- No one is expected to be there at 1:00.
+
+No rush — just let me know if that's right, when you get a chance. I hope your blackberry is working better than mine has been over the last few days.","Put the question first and listed the three schedule details as bullets. | Kept ""no rush"" and ""if you get a chance"" — no deadline was given. | The blackberry line is a joke; drop it if the reader may take it literally.",,,2,2,2,0,6,yes: notes_accurate
+hedges_00078,hedges,"No rush, but I can make the call, and if you get a chance, just wondering if you could let me know call in #. Thanks.","No rush. I can make the call. If you get a chance, could you let me know the call-in number? Thanks.","Your note said 'call in #'. Add the number or where to find it. | Split into short sentences and kept 'no rush', so it stays low-pressure.",,,2,2,2,0,6,yes: notes_accurate
+notes_00084,notes,attachment = fixed prices for EPMI Short Term California sales to EES for 1/24. qs? call me [PHONE_REDACTED] or Edgar Livingston [PHONE_REDACTED]. from Alyssa,"Attachment: fixed prices for EPMI Short Term California sales to EES for 1/24.
+
+Questions? Call me at [PHONE_REDACTED] or Edgar Livingston at [PHONE_REDACTED].
+
+From Alyssa","Expanded ""qs?"" to ""Questions?"" so the ask is clear. | Kept 1/24 and both phone numbers exactly as written. | If 1/24 is a deadline, say so explicitly.",,,2,2,1,0,5,yes: notes_accurate
+notes_00119,notes,as u can see stepped up coordination w/ PGE legal on California. lmk if u here anything else from Ariana Arroyo.,"As you can see, coordination with PGE legal on California has stepped up. Let me know if you hear anything else from Ariana Arroyo.","Fixed the typo ""here"" to ""hear"" and made the ask its own sentence. | ""Stepped up coordination"" doesn't say who did it. Name who, if it matters.",,,2,1,2,0,5,yes: notes_accurate
+notes_00134,notes,what mean by 'variable'? incl fields + properties or just method-local variables?,"What do you mean by 'variable'? Does it include fields and properties, or only method-local variables?",Fixed the wording so the question reads clearly. | Kept both options exactly as you wrote them.,,,2,2,1,0,5,yes: notes_accurate
+notes_00178,notes,ask Dominic: these generally not something open-source WordPress community focuses on. does he need them for his own use or because someone he's developing a system for has stated having them is a requirement?,"Hi Dominic, these generally aren't something the open-source WordPress community focuses on. Do you need them for your own use, or because someone you're developing a system for has said having them is a requirement?","You didn't say what ""them"" refers to. Name the items so Dominic knows what you mean. | Kept both options in one question so Dominic can answer directly.",,,2,2,2,0,6,yes: notes_accurate
+notes_00255,notes,olbermann thing being discussed on [URL] talk page - anything to add?,The Olbermann thing is being discussed on the [URL] talk page. Do you have anything to add?,"Made it clear a reply is wanted, even if it's 'nothing to add'. | 'Olbermann thing' is vague. Name the topic so the reader knows what to look at.",,,2,2,2,0,6,yes: notes_accurate
+stanford_01035,stanford,I'm sure also. Would you show me a better way to do this?,I'm sure also. Would you show me a better way to do this?,"Say what 'this' refers to, so the reader knows what to look at. | 'I'm sure also' is unclear. Add what you are agreeing with.",,,2,1,1,0,4,yes: notes_accurate
+stanford_01090,stanford,A question is do you know of an intent that refers to image-hosting apps on a device? And also do you have a fall back if none are installed?,"Two questions:
+- Do you know of an intent that refers to image-hosting apps on a device?
+- Do you have a fallback if none are installed?",Split the two questions into a list so each one gets an answer. | The first question doesn't say which platform. Name it if that matters.,,,2,2,2,0,6,yes: notes_accurate
+stanford_01347,stanford,I still can't remember how I got into this. I remember there was an argument on the GameCube page but then there was nothing for a week or two....It hasn't been that long has it?,"I still can't remember how I got into this. I remember there was an argument on the GameCube page, and then nothing for a week or two. It hasn't been that long, has it?",'This' is vague. Say what it refers to so the reader can follow. | The last question is the only part that needs a reply.,,,1,1,2,0,4,yes: notes_accurate
+stanford_01663,stanford,do the restaurant ones have sauce on the top? Or do they just put some cheese on and whack it under the grill?,Do the restaurant ones have sauce on the top? Or do they just put cheese on and put it under the grill?,Replaced 'whack it under the grill' with plain words. | Name the dish you mean by 'the restaurant ones' if the reader might not know.,,,2,1,2,0,5,yes: notes_accurate
+stanford_01687,stanford,COBOL homework? Where do they even do that?!,COBOL homework? Where do they even do that?!,"Kept as written: it reads as surprise, not a task. | You didn't say what 'that' refers to. Name it if you want an answer.",,,2,2,2,0,6,yes: notes_accurate
+stanford_01798,stanford,"""There's this funny gap I tried to write a paper once upon a time when I studied linguistics…"" — I think there's an ""on"" or ""upon"" missing. :-) You probably meant ""…I tried to write a paper on once upon a time""?","In the sentence ""There's this funny gap I tried to write a paper once upon a time when I studied linguistics…"", I think ""on"" or ""upon"" is missing. :-) You probably meant ""…I tried to write a paper on once upon a time""?",Set the quoted sentence apart so the missing word is easy to spot. | You don't say whether you want it fixed. Add that if you do.,,,2,2,2,0,6,yes: notes_accurate
+stanford_01801,stanford,"I couldn't understand what you were really asking until I read the answers; I take it that is not the part that actually ""re-checks the ports"", despite the name. I'm also confused when you describe as a ""class object""; you do understand that classes define data types, and there is a separate for each instance of , right?","I want to check two things with you:
+- I couldn't understand what you were really asking until I read the answers. I understand that the part named 're-checks the ports' does not actually re-check the ports. Is that right?
+- I'm also confused by your description of a 'class object'. You do understand that classes define data types, and that there is a separate one for each instance, right?","Two words are missing: what you call a 'class object', and what is separate for each instance. | Split the two points into bullets so each can be answered on its own. | Replaced 'take it' with 'I understand' and named the 're-checks the ports' part.",,,2,2,2,0,6,yes: notes_accurate
+stanford_01816,stanford,"Ricky Good. Can someone verify for Debian (repositories don't have 5.12.x), Mac OS X (MacPorts has 5.12.2), and Windows (ActiveState Perl 5.12.3)?","Ricky Good, can someone verify these?
+- Debian (repositories don't have 5.12.x)
+- Mac OS X (MacPorts has 5.12.2)
+- Windows (ActiveState Perl 5.12.3)","You didn't say what to verify. Add it, for example the Perl version. | Listed the three platforms as bullets so none gets missed. | Kept every version number exactly as written.",,,2,2,2,0,6,yes: notes_accurate
+stanford_01925,stanford,What is container? What is the number you get with ?,"- What is container?
+- What is the number you get with [missing word]?",Your second question is missing a word after 'with'. Add what the number goes with. | Kept both questions as written; nothing was guessed or filled in.,,,2,2,2,0,6,yes: notes_accurate
+stanford_01962,stanford,Can you put here the links to do it? Please? :D,Could you put the links here? Please? :D,"""It"" was unclear, so I left it out rather than guess. Say what the links are for. | Kept the ask first and the friendly tone with :D.",,,1,2,2,0,5,yes: notes_accurate
+circa_00152,circa,"Q: Do you have any pets?
+Reply: My cat just turned one year old.","Yes, I have a cat. My cat just turned one year old.",Made the yes explicit so the answer is clear. | Kept the detail about the cat's age as written.,,,2,2,2,2,8,
+circa_01526,circa,"Q: Are you into pop?
+Reply: When it has a good melody.","Yes, when it has a good melody.","Made the yes explicit, since the question was a yes-or-no one. | Kept the condition exactly: only when it has a good melody.",,,2,2,2,2,8,
+circa_01964,circa,"Q: Have you seen my new place before?
+Reply: This is my first time here.",This is my first time here.,"Already clear, kept as written.",,,2,2,1,2,7,
+circa_04229,circa,"Q: Want to get a pedicure?
+Reply: My feet need tender love and care.","Yes, I'd like to get a pedicure. My feet need some care.",Said the yes that was only implied. | Replaced 'tender love and care' with plain words.,,,1,2,1,2,6,
+circa_06930,circa,"Q: Do you like travelling?
+Reply: I already have 3 trips planned for this year -- can't wait!","Yes, I like travelling. I already have 3 trips planned for this year -- can't wait!","Made the yes explicit, since the question was a yes/no one. | Kept your 3 trips and the enthusiasm as written.",,,2,2,2,2,8,
+circa_09520,circa,"Q: Do you read science type books?
+Reply: Only science fiction.",Only science fiction.,"Already clear, kept as written.",,,2,2,2,2,8,
+circa_09585,circa,"Q: Do you ever work from home?
+Reply: I'd love to try it sometime.","No, I don't work from home, but I'd love to try it sometime.","Made the implied 'no' explicit so the question is answered. | Kept the interest in trying it, which is the friendly part.",,,2,2,2,2,8,
+circa_09932,circa,"Q: Are you going to the supermarket ?
+Reply: on my home I will","Yes, I will, on my way home.","Made the yes explicit, since the question was a yes/no question. | Fixed 'on my home' to 'on my way home'.",,,2,2,1,2,7,
+circa_12449,circa,"Q: Do you like to dine-in or take-out?
+Reply: I enjoy sit down meals over takeaways",I prefer dine-in. I enjoy sit-down meals more than takeaway.,"Made the choice explicit: dine-in, not take-out. | Kept your reason, so the tone stays friendly.",,,2,2,2,2,8,
+circa_12459,circa,"Q: Would you like alcohol or a cocktail with your meal?
+Reply: I have a martini at supper time.","Yes, I'd like a martini at supper time.","Made the answer explicit: yes, a martini. | Kept the timing exactly as written: at supper time.",,,2,2,1,2,7,
+circa_14637,circa,"Q: Have you ever been to the opera?
+Reply: I saw The Magic Flute once.",I saw The Magic Flute once.,"Already clear, kept as written.",,,2,1,1,2,6,
+circa_15718,circa,"Q: Did you have a good day?
+Reply: It wasn't too bad","Yes, it was fine.",Replaced the understatement with a direct answer to the question.,,,1,2,2,2,7,
+circa_16873,circa,"Q: Are you lactose intolerant?
+Reply: I can eat dairy.",I can eat dairy.,"Already clear, kept as written.",,,2,2,1,2,7,
+circa_17693,circa,"Q: Is there a neighborhood watch program?
+Reply: I started one when I moved in.","Yes, there is. I started one when I moved in.",Made the yes explicit so the question is answered directly. | Kept your detail: you started it when you moved in.,,,2,2,2,2,8,
+circa_18578,circa,"Q: Have you tried different ethnic foods?
+Reply: I'm not very adventurous eater.","No, I'm not a very adventurous eater.",Made the answer to the question explicit: no. | Fixed the grammar: 'a very adventurous eater'.,,,2,2,1,2,7,
+circa_19395,circa,"Q: Are you new to this area?
+Reply: I just moved to the neighborhood.","Yes, I'm new to this area. I just moved to the neighborhood.","Made the yes explicit, since the question was a yes-or-no one. | Kept your own words for the reason.",,,2,2,2,2,8,
+circa_21255,circa,"Q: Do you like art galleries and museums?
+Reply: When they have modern art.","Yes, when they have modern art.","Made the answer explicit: yes, with a condition. | Kept the condition exactly as you wrote it.",,,2,2,1,2,7,
+circa_21712,circa,"Q: Do you have a car?
+Reply: I'm selling my car before I move.","Yes, I have a car, but I'm selling it before I move.","Answered the question directly: yes, you have a car. | Kept your point that you're selling it before you move.",,,2,2,1,2,7,
+circa_24799,circa,"Q: Will you be able to manage the payments?
+Reply: It's expensive, but I have money saved up and my salary is high.","Yes, I'll be able to manage the payments. It's expensive, but I have money saved up and my salary is high.","Led with the answer to the question: yes. | Kept your reason, so it still reads as reassuring.",,,2,2,1,2,7,
+circa_32074,circa,"Q: Have you got any children?
+Reply: none at the moment","No, I don't have any children at the moment.",Made the answer explicit: no children. | Kept 'at the moment' so the door stays open for the future.,,,2,2,1,2,7,
+circa_32096,circa,"Q: Do you work nearby?
+Reply: I work from home.","No, I work from home.",Added 'No' so the answer to the question is explicit. | Kept the reply as short as you wrote it.,,,2,2,1,2,7,
+circa_33047,circa,"Q: Do you like the neighborhood?
+Reply: The neighbourhood seems to be quiet and so pretty!","Yes, I like it. The neighbourhood seems quiet and pretty!",Added the direct answer to your yes/no question. | Kept your own words about the neighbourhood.,,,2,2,2,2,8,
+circa_33163,circa,"Q: Are you tired from your journey?
+Reply: I am always very awake when I am traveling.","No, I'm not tired. I'm always very awake when I'm traveling.",Made the answer to the question explicit: not tired. | Kept your reason in your own words.,,,2,2,1,2,7,
+enron_01039,enron,Do you know th contract # for Gross?,Do you know the contract number for Gross?,"Fixed the typo ""th"" to ""the"". | No deadline was given, so none was added.",,,2,2,2,1,7,
+enron_01059,enron,"Friday, October 19, 2001
+
+Dear Mackenzie,
+
+Travelocity Brooke Velasquez, your personal airfare tracking
+service, has found fare changes in 1 of your markets.
+
+Note: Fares change quickly and sell out fast. Visit Travelocity
+now to take advantage of this great opportunity! Click on this
+link or paste the URL into your browser:
+http://dps1.travelocity.com:80/fwemindiv.ctl?fw","Friday, October 19, 2001
+
+Dear Mackenzie,
+
+Travelocity Brooke Velasquez, your personal airfare tracking
+service, has found fare changes in 1 of your markets.
+
+Note: Fares change quickly and sell out fast. Visit Travelocity
+now to take advantage of this great opportunity! Click on this
+link or paste the URL into your browser:
+http://dps1.travelocity.com:80/fwemindiv.ctl?fw","Already clear, kept as written.",,,2,2,2,2,8,
+enron_01126,enron,"Rain or shine, we will be having our picture taken for this year's West Power Trading customer mailing tomorrow. Please join us at the Welch Ho fountain steps at 1 pm. If it is raining, our photo will be taken on the bridge level, in the southeast corner by the number Two World Trade Center building.
+
+Let me know if you have any questions!
+Thanks,
+
+Isabella
+x3834","We will be having our picture taken for this year's West Power Trading customer mailing tomorrow, whether or not it rains. Please join us at the Welch Ho fountain steps at 1 pm. If it is raining, our photo will be taken on the bridge level, in the southeast corner by the number Two World Trade Center building.
+
+Let me know if you have any questions!
+Thanks,
+
+Isabella
+x3834","Replaced the idiom ""Rain or shine"" with its plain meaning. | All names, times and locations kept exactly as written.",,,2,1,2,2,7,
+enron_01138,enron,"This message is only relevant for those going to UBS.
+
+When exporting your EMAIL messages listed in the instructions or via the Outlook Export utility, attachments WILL NOT BE SAVED!
+There will be a better solution to exporting your Email messages and all your attachments emailed later today.
+
+Thank you,
+Clarence Hardin","This message is only relevant for those going to UBS.
+
+If you export your email messages, either as listed in the instructions or using the Outlook Export utility, attachments will not be saved.
+
+A better way to export your email messages with all attachments will be sent later today.
+
+Thank you,
+Clarence Hardin",Split the warning into shorter sentences; no facts changed. | Kept 'later today' exactly as written; no time added.,,,2,2,2,2,8,
+enron_01222,enron,"Dakota,
+
+Give me a call if you have any questions. Looking forward to working with 
+you.
+
+Kaitlyn","Dakota,
+
+Give me a call if you have any questions. Looking forward to working with you.
+
+Kaitlyn","Already clear, kept as written.",,,2,2,2,2,8,
+enron_01280,enron,"Love and Peace to you Cassidy.
+
+Alyssa","Love and Peace to you Cassidy.
+
+Alyssa","Already clear, kept as written.",,,2,2,2,2,8,
+enron_01518,enron,"Dear Power Outage Database Customer,
+
+Attached you will find an excel document. The outage contained within is
+a forced outage. Your daily delivery will still contain this outage. Any
+questions please let me know. Thanks.
+
+Briana Cross
+WALKER, Caitlyn.
+[PHONE_REDACTED] x 3481
+[EMAIL_REDACTED]
+
+THE INFORMATION CONTAINED IN THIS E-MAIL IS LEGALLY PRIVILEGED AND
+CONFIDENTIAL
+INFORMATION INTENDED ONLY FOR THE USE OF THE INDIVIDUAL OR ENTITY NAMED
+ABOVE. YOU ARE HEREBY NOTIFIED THAT ANY DISSEMINATION, DISTRIBUTION, OR
+COPY OF THIS E-MAIL TO UNAUTHORIZED ENTITIES IS STRICTLY PROHIBITED. IF
+YOU HAVE RECEIVED THIS
+E-MAIL IN ERROR, PLEASE DELETE IT.
+
+ - 102501.xls 
+ - OUTAGE.dbf","Dear Power Outage Database Customer,
+
+Attached you will find an excel document. The outage contained within is a forced outage. Your daily delivery will still contain this outage. Any questions please let me know. Thanks.
+
+Briana Cross
+WALKER, Caitlyn.
+[PHONE_REDACTED] x 3481
+[EMAIL_REDACTED]
+
+THE INFORMATION CONTAINED IN THIS E-MAIL IS LEGALLY PRIVILEGED AND CONFIDENTIAL
+INFORMATION INTENDED ONLY FOR THE USE OF THE INDIVIDUAL OR ENTITY NAMED ABOVE. YOU ARE HEREBY NOTIFIED THAT ANY DISSEMINATION, DISTRIBUTION, OR COPY OF THIS E-MAIL TO UNAUTHORIZED ENTITIES IS STRICTLY PROHIBITED. IF YOU HAVE RECEIVED THIS
+E-MAIL IN ERROR, PLEASE DELETE IT.
+
+ - 102501.xls 
+ - OUTAGE.dbf","Already clear, kept as written.",,,2,1,2,2,7,
+enron_01632,enron,"Who is the exact corporate parent of Mavrix? I think I saw an email that 
+said ETS, but I don't think ETS is a corporate entity. Is it Enron Pipeline 
+Company? Please let Mikayla and me know. Thanks. df","Please let Mikayla and me know the exact corporate parent of Mavrix. I think I saw an email that said ETS, but I don't think ETS is a corporate entity. Is it Enron Pipeline Company? Thanks. df","Moved the ask to the top so it is easy to answer. | Kept your doubt about ETS and your guess, since they shape the reply.",,,2,2,2,2,8,
+enron_01640,enron,"Jillian,
+
+Everyone in risk management needs to get access to EOL bridge monitor and reports. What do we need to do to get this and how soon can it be granted? We need this by Thursday to be prepared for testing.
+
+Thanks
+
+Cheyenne","Jillian,
+
+Everyone in risk management needs to get access to EOL bridge monitor and reports. What do we need to do to get this and how soon can it be granted? We need this by Thursday to be prepared for testing.
+
+Thanks
+
+Cheyenne","Already clear, kept as written.",,,2,2,2,2,8,
+enron_01702,enron,"Chelsey, here is the cleaned up list, let me know if you want to get together and discuss - Mikayla","Hi Chelsey, here is the cleaned up list. Let me know if you want to get together and discuss it. - Mikayla","Split the run-on sentence so the list and the ask are separate. | Kept the discussion optional, as your wording made it.",,,2,2,2,2,8,
+enron_01711,enron,"Let's go to the flowchart for this... 
+DON'T YOU DARE TELL ME WHAT I CAN AND CANNOT DO WITH MY PANTS!!!! 
+I could play this afternoon. I could be there around 6:30 with or without pants on...I'll surprise you.","Let's go to the flowchart for this...
+
+I'm joking here: DON'T YOU DARE TELL ME WHAT I CAN AND CANNOT DO WITH MY PANTS!!!!
+
+I could play this afternoon. I could be there around 6:30, with or without pants on. I'll surprise you.",Marked the pants line as a joke so it isn't read as real anger. | Kept the 6:30 time and the offer to play exactly as written. | Left the flowchart reference alone; only you two know what it means.,,,1,1,2,2,6,
+enron_01750,enron,"Ariana and Olivia, here is a recap of activities in Gas Logistics this last week including Gas Control
+ activity. I will send you an update again on Wednesday (Crystal. 2). Have a great weekend.
+
+ 
+
+ Please give me call if you have any questions. (Ext. 7637) Thanks. Crystal","Hi Ariana and Olivia,
+
+Here is a recap of activities in Gas Logistics this last week, including Gas Control activity.
+
+I will send you an update again on Wednesday (Crystal. 2).
+
+Please call me if you have any questions. My extension is 7637.
+
+Thanks,
+Crystal
+
+Have a great weekend.","Split the recap, the Wednesday update and the call offer onto separate lines. | Kept 'Crystal. 2' exactly as written; add what it means if readers need it.",,,2,1,2,2,7,
+enron_01814,enron,"The best I could do was the Cypress course at 10:00 am Monday, January 21. The Diamond course was booked unitl later. Didn't want to tee off too late. Unless they lied to me, the fee plus cart is $36.
+
+Ce ya there.
+
+Crystal Foster","The best I could do was the Cypress course at 10:00 am Monday, January 21. The Diamond course was booked until later. I didn't want to start too late. The fee plus cart is $36, if the information I was given is correct.
+
+See you there.
+
+Crystal Foster","Fixed the typo 'unitl' to 'until'. | Replaced 'tee off' and 'unless they lied to me' with plain wording. | No ask in this message, so none was added.",,,2,2,2,2,8,
+enron_01815,enron,Did he say what happened? I thought he wasn't taking her until next week.,Did he say what happened? I thought he wasn't taking her until next week.,"Already clear, kept as written.",,,2,2,2,2,8,
+enron_01820,enron,"Regarding the Legal Entity field in Enpower, please ignore the previous email and use the following criteria.
+
+Enter ENA for Financial Deals.
+Enter EPMI for Physical Deals.
+
+Jasmine BOOKER. Velasquez
+Enron North America
+(O) [PHONE_REDACTED]
+(C) [PHONE_REDACTED]","Regarding the Legal Entity field in Enpower, please ignore the previous email and use these criteria instead:
+- Enter ENA for Financial Deals.
+- Enter EPMI for Physical Deals.
+
+Jasmine BOOKER. Velasquez
+Enron North America
+(O) [PHONE_REDACTED]
+(C) [PHONE_REDACTED]","Put the two criteria on separate bullet lines so neither is missed. | Kept the signature, phone placeholders and wording unchanged.",,,2,2,2,2,8,
+enron_01955,enron,"Attached please find the weekly money market rate list.
+
+If you have any questions or we can be of any service, please do not hesitate to contact me.
+
+Thanks, Brooke","Attached please find the weekly money market rate list.
+
+If you have any questions or we can be of any service, please do not hesitate to contact me.
+
+Thanks, Brooke","Already clear, kept as written.",,,2,2,2,2,8,
+hedges_00004,hedges,"no rush, but the website is houstonoaksgolfclub.com. it doesn't look that great online. if you get a chance, just wondering if you could check it out or ask anyone if they have played there.",No rush. Could you check out this website: houstonoaksgolfclub.com? It doesn't look that great online. Or you could ask anyone you know if they have played there.,"Put the ask first and kept ""no rush"", so the low urgency stays. | Made ""check it out"" explicit: check out the website.",,,2,2,2,2,8,
+hedges_00117,hedges,"Hi Stefanie,
+No rush, but if you get a chance, just wondering if you could pass along the wire transfer information which Centana will need, i.e. routing and account nos?
+Thanks,
+Desiree","Hi Stefanie,
+
+No rush, but could you please send the wire transfer information Centana will need — the routing and account numbers?
+
+Thanks,
+Desiree","Made the ask direct instead of ""just wondering if you could"". | Kept ""no rush"" so the low urgency stays the same. | Spelled out ""nos"" as ""numbers"".",,,2,2,2,2,8,
+hedges_00169,hedges,"I was thinking maybe Devin has a point here. No rush, but might be worth making us a place to find hints about getting through some of the levels?","Devin might have a point here. No rush, but could you make us a place to find hints about getting through some of the levels?",Turned the indirect suggestion into a clear question. | Kept 'no rush' so the low urgency stays as you set it.,,,1,1,2,2,6,
+hedges_00189,hedges,"Hey, no rush, but now that the names and details of all the recipients in the article [URL] (both the chronological list and the alphabetical list) have been completed, I was thinking maybe, if you get a chance, what steps should now be taken to reassess the article's rating on the Wikipedia Israel Project quality scale, and also to ensure that the article is correctly referenced within the project?","Hi, no rush. Now that the names and details of all the recipients in the article [URL] (both the chronological list and the alphabetical list) are complete, could you tell me:
+- what steps to take to reassess the article's rating on the Wikipedia Israel Project quality scale
+- what steps to take to ensure the article is correctly referenced within the project
+
+Thanks!","Split the two questions into a list so both get answered. | Kept ""no rush"" and [URL] exactly as written. | Dropped ""if you get a chance""; ""no rush"" already carries the low urgency.",,,2,2,2,2,8,
+hedges_00198,hedges,"Hey, no rush, but I was just wondering what you meant by ""the compiler thinks it's an integer""? Maybe I'm missing something—how can the compiler think a 30-digit number is an ?","Hey, no rush. What did you mean by ""the compiler thinks it's an integer""? Maybe I'm missing something — how can the compiler think a 30-digit number is [word missing]?","Your last sentence is cut off after ""is an"". Add the missing word before sending. | Put the question first so it's easy to answer. | Kept ""no rush"" and the quote exactly as you wrote them.",,,2,1,2,2,7,
+hedges_00206,hedges,"No rush, but I was thinking maybe—just wondering if you'd suggest posting the citation in the ""USNA"" section or the ""Hispanic alumni section""?","No rush. Could you suggest which section to post the citation in?
+- the ""USNA"" section
+- the ""Hispanic alumni section""","Cut the hedging so the question is easy to answer. | Listed the two sections so neither option gets lost. | Kept ""no rush"" as written; it carries the low urgency.",,,2,2,2,2,8,
+notes_00159,notes,u mean sample data? like for testing? or fuzzing?,"Do you mean sample data? Is that for testing, or for fuzzing?","Spelled out ""u"" and split the two options into a clear choice. | Kept it as a question, since you're asking, not telling.",,,2,2,2,2,8,
+notes_00223,notes,not enough useful info. what type of keyboard? brand? layout? language?,"This doesn't have enough useful information. I need to know:
+- what type of keyboard it is
+- the brand
+- the layout
+- the language","Listed the four questions as bullets so each one gets answered. | Made ""not enough useful info"" literal: what is missing is now named.",,,2,2,1,2,7,
+stanford_01007,stanford,"Exactly! If I am to implement another interpreter using R, do parsing tools exist?",Exactly! Do parsing tools exist if I am to implement another interpreter using R?,Moved the question to the front so the ask is easy to find. | Kept 'Exactly!' and your wording otherwise unchanged.,,,2,2,2,2,8,
+stanford_01078,stanford,"I don't understand. So then you decide by yourself, and the people who stated their support for the original are ignored?","I don't understand. Did you decide this on your own, and are the people who said they supported the original being ignored?","Kept it as a question, so it still asks for an explanation. | Your frustration shows in ""I don't understand""; nothing was added.",,,2,1,2,2,7,
+stanford_01079,stanford,"Your bot runs awfully fast. How come there isn't ""using AWB"" in the edit summary?","Your bot runs awfully fast. Why isn't ""using AWB"" in the edit summary?","""How come"" changed to ""Why"" so the question reads literally. | Kept your question as the ask; a reply is expected, and no deadline was given.",,,2,1,2,2,7,
+stanford_01120,stanford,"Looking at Kotorkid's contributions on [URL], three hours seems too short for a block. Considering that their three and only edits were all vandalism, would you support an indef-block for vandalism-only account for them?","Looking at Kotorkid's contributions on [URL], three hours seems too short for a block. Their three edits were all vandalism, and those are their only edits. Would you support an indefinite block for them as a vandalism-only account?","Expanded ""indef-block"" to ""indefinite block"" so it reads plainly. | Split the long sentence so the reason and the question are separate.",,,2,2,1,2,7,
+stanford_01259,stanford,"Please, don't delete another person's work without such deletion passing through regular Wikipedian deletion-process. And which templates did you delete, if I may ask?","Two things:
+- Please don't delete another person's work unless the deletion goes through the regular Wikipedia deletion process.
+- Which templates did you delete, if I may ask?",Split the two asks into bullets so neither gets missed. | Rewrote the awkward deletion-process phrase in plain words.,,,2,2,2,2,8,
+stanford_01305,stanford,I really hate it when the camera shop staff think they know what you want more than you do. It wasn't Jessops was it?,I really hate it when the camera shop staff think they know what you want more than you do. It wasn't Jessops was it?,"Already clear, kept as written.",,,2,1,1,2,6,
+stanford_01318,stanford,"i think you should just use what you usually do, avoid getting into stuff that you can't get to work. better to just keep it simple, ya know?","I think you should just use what you usually do. Avoid getting into stuff you can't get to work. Better to keep it simple, you know?","Put the main advice first: use your usual approach. | Kept your casual voice; no deadline or ask was in the input, so none added.",,,2,2,2,2,8,
+stanford_01366,stanford,"Thanks! By the way, have you sent anything to Susan since you received the email from the photographer?",Thanks! Have you sent anything to Susan since you received the email from the photographer?,"Removed ""By the way"" so the question is the main point. | Kept the thanks and the wording of the question unchanged.",,,2,2,2,2,8,
+stanford_01370,stanford,"Hi. Are you still a ""maybe"" for the meetup?","Hi. Are you still a ""maybe"" for the meetup?","Already clear, kept as written.",,,2,2,2,2,8,
+stanford_01500,stanford,"I see you reverted another image move back to below the accompanying text. Your summary was ""add to discussion"" - can you explain?",Could you explain why you reverted another image move back to below the accompanying text? Your summary was 'add to discussion'. I'm frustrated this happened again.,Put the ask first: explain the revert. | Named the frustration behind 'another' so it isn't read as a neutral question.,,,1,2,1,2,6,
+stanford_01510,stanford,"Thanks for the info, this is enlightening. A followup question - with panniers do you find it necessary to use a pair with the content's weight somewhat balanced between the sides?","Thanks for the info. A follow-up question: with panniers, do you find you need to use a pair, with the weight roughly balanced between the two sides?","Tightened the question; the ask is unchanged. | ""This is enlightening"" can read as sarcastic, so I left it out. Add it back if you meant it.",,,2,2,1,2,7,
+stanford_01573,stanford,I noticed you just removed this category from [URL] and [URL]. Why don't you think they qualify as historical films?,Could you explain why you removed this category from [URL] and [URL]? Why don't you think they qualify as historical films?,Put the ask first: explain the removal. | Kept both [URL] placeholders and the question as written.,,,1,2,2,2,7,
+stanford_01601,stanford,"Sounds good then. In this case, would it be wise to simply remove the ""influence"" field since it simply overlaps with ""subjects""?","Sounds good. Should we just remove the ""influence"" field, since it overlaps with ""subjects""?","Made the question direct instead of ""would it be wise"". | Kept the field names exactly as written.",,,2,2,2,2,8,
+stanford_01702,stanford,This does not look like Python... what exactly do you want? parse C++ code with a Python program?,This does not look like Python. What exactly do you want? Do you want to parse C++ code with a Python program?,Removed the sarcasm so the confusion reads as a plain question. | Turned the guess into a direct question they can confirm or correct.,,,2,2,1,2,7,
+stanford_01747,stanford,"You've given lots of details, but have not clearly asked a question. Are you interested in knowing why you aren't yet appearing in Google search results?","Do you want to know why you aren't yet appearing in Google search results? You've given lots of details, but you haven't clearly asked a question yet.","Moved the question to the front so the ask is easy to find. | Kept your point that no clear question was asked, in plain words.",,,2,2,2,2,8,
+stanford_01758,stanford,"Hi, I was looking through [URL] and noticed that the Gaza article has been on hold for over five weeks. There doesn't seem to have been much discussion on the talk page in April, so what's the status of the article?","Hi, what's the status of the Gaza article? I was looking through [URL] and noticed it has been on hold for over five weeks. There doesn't seem to have been much discussion on the talk page in April.","Moved your question to the front so the ask is clear. | Kept every detail: [URL], over five weeks, April, talk page.",,,2,2,2,2,8,
+stanford_01785,stanford,I am having the same problem. Anyone have any other ideas?,I am having the same problem. Anyone have any other ideas?,"Already clear, kept as written.",,,2,2,2,2,8,
+stanford_01824,stanford,"OK, lets get a screenshot then. What is your keyboard layout, is it a qwerty keyboard?","OK, let's get a screenshot then. Two things:
+- send me the screenshot
+- tell me your keyboard layout — is it a QWERTY keyboard?",Split the two asks into a list so neither is missed. | Kept your question about the keyboard layout as you wrote it.,,,2,2,2,2,8,
+stanford_01891,stanford,What plataform are you working on? Which packet capture libraries are you using?,"Two questions:
+- Which platform are you working on?
+- Which packet capture libraries are you using?","Listed the two questions separately so both get answered. | Fixed the spelling of ""platform"".",,,2,2,1,2,7,
