@@ -269,6 +269,49 @@ device therefore shows the library cards and not those - a deliberate limit,
 not a gap. The browser remains the source of truth either way: the Study
 page reads `localStorage`, and a failed sync never costs a saved card.
 
+## Progress: `/api/progress`
+
+Signed-in only; `401` otherwise. The progress dashboard's data, so days and
+badges follow an account between devices. Same rules as `/api/cards`: the
+browser stays the source of truth, `PUT` is an idempotent upsert meant to be
+replayed, and nothing the reader typed travels. The focus timer's
+"what are you working on?" text stays in the browser and has no column.
+
+| endpoint | body | success |
+| --- | --- | --- |
+| `GET /api/progress` | – | `200 {activity, phrase_events}` |
+| `PUT /api/progress` | `{device_id, activity, phrase_events}` | `200 {activity, phrase_events, skipped}` - the account's whole set after merging |
+| `DELETE /api/progress` | – | `200 {ok: true}` |
+
+```json
+{
+  "device_id": "random id the browser made for itself",
+  "activity": [
+    { "date": "2026-10-09", "feature": "opened", "minutes": 0 },
+    { "date": "2026-10-09", "feature": "decoder", "minutes": 12 }
+  ],
+  "phrase_events": [
+    { "pattern_id": "7", "kind": "reviewed", "date": "2026-10-09" }
+  ]
+}
+```
+
+- `feature` is one of `opened`, `decoder`, `compose`, `study`, `library`.
+  `opened` with 0 minutes is a day the app was used at all, which is what the
+  badges count. `kind` is `viewed` or `reviewed`. Dates are the reader's own
+  calendar day.
+- Minutes are stored per device, and the **highest** number wins for a
+  device's day and feature, because a browser's total only goes up. Keeping
+  devices apart is what lets the dashboard add a laptop and a phone together
+  without double counting either one's replay. GET returns `device_id` on each
+  activity row for that reason; it is a random string, not a fingerprint.
+- Phrase events are a set: sending one twice is one row.
+- Rows that don't parse are skipped, not fatal, and counted in `skipped`. A
+  missing or malformed `device_id` is `400`; more than 2000 activity rows or
+  5000 phrase events in one request is `413`.
+- `DELETE` is Settings' "delete" while signed in, so cleared progress doesn't
+  sync back down. Deleting the account removes these rows too.
+
 ## Data retention
 
 No message text, extracted elements, or saved cards are ever persisted server-side or logged.
@@ -280,7 +323,11 @@ This is the only place message text is written to disk; nothing is uploaded,
 and Settings -> "clear" removes all of it.
 
 Accounts do not change that. A signed-in account holds a four-character
-handle, two timestamps, and the public half of each registered passkey -
-no message text, no saved cards, no email, no password hash. Saved cards
-stay in the browser whether or not anyone is signed in, which is also why
-deleting an account leaves them untouched.
+handle, two timestamps, and the public half of each registered passkey, plus
+the library cards and progress described above: pattern ids, dates, feature
+names and minute counts. No message text, no email, no password hash, and
+never anything the reader typed, including the focus timer's intent text.
+The browser's own copy of cards and progress stays put whether or not anyone
+is signed in, which is also why deleting an account leaves this device's copy
+untouched. Settings -> "delete" clears both, and the account's copy too when
+signed in.

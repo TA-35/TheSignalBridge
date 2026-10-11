@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { nextTick, ref, watch } from 'vue'
+import { useAccountStore } from '@/stores/account'
+import { useActivityStore } from '@/stores/activity'
 import { useCardsStore } from '@/stores/cards'
 import { useDecodesStore } from '@/stores/decodes'
 import {
@@ -13,6 +15,8 @@ import {
 const settingsStore = useSettingsStore()
 const cardsStore = useCardsStore()
 const decodesStore = useDecodesStore()
+const activityStore = useActivityStore()
+const accountStore = useAccountStore()
 
 const APPEARANCE_OPTIONS: { value: Appearance; label: string }[] = [
   { value: 'system', label: 'System' },
@@ -44,6 +48,10 @@ function confirmDelete() {
   cardsStore.clear()
   // Decodes hold the message text - clearing cards alone would leave it.
   decodesStore.clear()
+  // Progress too: days opened, focus sessions and what was typed for them,
+  // phrases viewed, cards reviewed, and the dashboard's display flags. Signed
+  // in, the account's copy goes as well, or it would sync straight back.
+  activityStore.clearAll()
   showDeleteConfirm.value = false
 }
 
@@ -202,7 +210,7 @@ function trapTab(event: KeyboardEvent) {
         Reset settings
       </button>
       <button type="button" class="btn btn--danger" @click="showDeleteConfirm = true">
-        Delete my saved cards
+        Delete my cards and progress
       </button>
     </div>
 
@@ -219,13 +227,20 @@ function trapTab(event: KeyboardEvent) {
         @keydown.esc="closeDeleteConfirm"
         @keydown.tab="trapTab"
       >
-        <strong id="confirm-delete-title">Delete your saved cards?</strong>
-        <p id="confirm-delete-body">
-          This clears every card in your Study section on this device. It can't be undone, and cards aren't backed
-          up anywhere else.
-        </p>
+        <strong id="confirm-delete-title">Delete your cards and progress?</strong>
+        <div id="confirm-delete-body" class="modal-body">
+          <p>
+            This clears every card in your Study section, your decode history, and your progress on this device:
+            days opened, focus sessions and what you typed for them, phrases viewed and cards reviewed. It can't be
+            undone.
+          </p>
+          <p v-if="accountStore.signedIn">
+            Your account's copy of your library cards and progress is cleared too. Another device you use keeps its
+            own copy until you clear it there.
+          </p>
+        </div>
         <div class="modal-actions">
-          <button type="button" class="btn btn--danger-solid" @click="confirmDelete">Delete cards</button>
+          <button type="button" class="btn btn--danger-solid" @click="confirmDelete">Delete everything</button>
           <button type="button" class="btn btn--secondary" @click="closeDeleteConfirm">Keep them</button>
         </div>
       </div>
@@ -401,6 +416,12 @@ function trapTab(event: KeyboardEvent) {
   font-size: 19px;
   font-weight: 500;
   color: var(--color-text);
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .modal p {

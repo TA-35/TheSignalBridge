@@ -28,12 +28,17 @@
  *                           advertising scripts exist on the site, so there
  *                           is nothing to ask consent for: a session cookie
  *                           for a feature the reader asked for is exempt.
- *   "an account holds"    - users, credentials, user_cards in
- *                           backend/app/models/. A handle, timestamps, public
- *                           keys and pattern ids. No email, no name, no
- *                           message text - see docs/erd.md.
- *   "clear it yourself"   - SettingsView calls decodesStore.clear() and
- *                           cardsStore.clear().
+ *   "an account holds"    - users, credentials, user_cards, user_activity and
+ *                           user_phrase_events in backend/app/models/. A
+ *                           handle, timestamps, public keys, pattern ids,
+ *                           dates and minute counts. No email, no name, no
+ *                           message text, no focus-timer text - see
+ *                           app/models/user_progress.py.
+ *   "progress stays here" - stores/activity.ts keeps it in localStorage
+ *                           (bw-activity-v1); the timer's intent text is never
+ *                           in the upload (buildUpload) and has no column.
+ *   "clear it yourself"   - SettingsView calls decodesStore.clear(),
+ *                           cardsStore.clear() and activityStore.clearAll().
  *   "no audio reaches us" - Dictate (components/VoiceInput.vue,
  *                           composables/useSpeechInput.ts) uses the browser's
  *                           Web Speech API; only the resulting text goes into
@@ -49,7 +54,7 @@ import { RouterLink } from 'vue-router'
 // one thing on this page that would be actively misleading.
 const CONTACT = ''
 
-const LAST_UPDATED = '7 October 2026'
+const LAST_UPDATED = '10 October 2026'
 </script>
 
 <template>
@@ -132,6 +137,12 @@ const LAST_UPDATED = '7 October 2026'
         see <a href="#accounts">If you create an account</a> below.
       </p>
       <p>
+        Your progress is kept the same way: the days you opened the site, your
+        focus sessions and what you typed for them, the phrases you viewed and
+        the cards you reviewed. It stays in this browser only, unless you sign
+        in (see below), and what you type for a focus session never leaves it.
+      </p>
+      <p>
         Because decode history includes the messages you pasted, clearing it
         clears them. You can do that at any time from
         <RouterLink to="/settings">Settings</RouterLink>. Clearing your browser
@@ -149,9 +160,11 @@ const LAST_UPDATED = '7 October 2026'
         There is no password and no email address. Your device holds a passkey
         and we keep only its public half, which cannot be used to sign in as
         you. Alongside it we store a four-character ID, the dates your account
-        was made and last used, and — so your library cards can follow you to
-        another device — which patterns you have kept and when you last opened
-        them. While you link a new device, we also keep a short-lived pairing
+        was made and last used, and — so your library cards and progress can
+        follow you to another device — which patterns you have kept, viewed and
+        reviewed and on which days, the days you opened the site, and how many
+        minutes you spent in each part of it per day. None of that includes
+        anything you typed. While you link a new device, we also keep a short-lived pairing
         code, stored only as a hash, valid for ten minutes and usable once.
         That is the whole of it.
       </p>
@@ -165,7 +178,7 @@ const LAST_UPDATED = '7 October 2026'
         (and, briefly, a one-time sign-in challenge), nothing personal. Scripts
         on the page cannot read it, it is not used to track you, and signing out
         removes it. Deleting your account removes
-        your ID, your passkeys and your saved pattern list for good; you can do
+        your ID, your passkeys, your saved pattern list and your progress for good; you can do
         that from the <RouterLink to="/account">account page</RouterLink>.
       </p>
     </section>
