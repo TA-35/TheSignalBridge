@@ -1,5 +1,5 @@
 {
-  "created": "2026-10-11 03:49:59",
+  "created": "2026-10-11 11:20:31",
   "prompt_fingerprint": "675475a8cd29",
   "prompt_version": "compose-v2",
   "judge_model": "nvidia/nemotron-3-super-120b-a12b",
@@ -28,8 +28,8 @@
   },
   "bertscore": {
     "enron": "60 ids every model answered",
-    "stanford": "skipped: gold rewrites not all human-checked",
-    "circa": "skipped: gold rewrites not all human-checked"
+    "stanford": "60 ids every model answered",
+    "circa": "60 ids every model answered"
   },
   "gold_lock": "not locked"
 }

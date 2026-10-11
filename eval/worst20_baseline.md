@@ -2,9 +2,22 @@
 
 Ranked by: no usable answer, then failing the grounding check, then losing to the baseline in both judge orders, then the rubric score; ties go to the lower BERTScore.
 
-## 1. enron_00015 (enron)
+## 1. stanford_00057 (stanford)
 
-- dropped ['6', '3', '5', '4', '2', '1']
+- dropped ['Practical']
+- rubric meaning_kept 1, clarity 1, warmth 1, notes_accurate 0 (3/8)
+
+**Message:** Herlihy & Shavit's book, The Art of Multiprocessor Programming, or "Lock-free linked lists and skip lists" or java.util.concurrent or Practical lock-freedom. Have you considered using a concurrent hash table like a hopscotch hash table?
+
+**Rewrite:** Herlihy & Shavit's book, The Art of Multiprocessor Programming, covers topics like 'Lock-free linked lists and skip lists' and java.util.concurrent. Have you considered using a concurrent hash table, such as a hopscotch hash table?
+
+*Notes:* Listed the book title and topics exactly as given. / Clarified the suggestion: consider using a concurrent hash table like a hopscotch hash table.
+
+BERTScore vs gold: 0.566
+
+## 2. enron_00015 (enron)
+
+- dropped ['5', '3', '1', '4', '2', '6']
 - rubric meaning_kept 0, clarity 2, warmth 1, notes_accurate 0 (3/8)
 
 **Message:** Cassie: 
@@ -30,7 +43,7 @@ Thanks.
 
 BERTScore vs gold: 0.635
 
-## 2. enron_00017 (enron)
+## 3. enron_00017 (enron)
 
 - dropped ['Alyssa']
 - rubric meaning_kept 1, clarity 1, warmth 1, notes_accurate 0 (3/8)
@@ -47,20 +60,9 @@ Alyssa
 
 BERTScore vs gold: 0.782
 
-## 3. stanford_00057 (stanford)
-
-- dropped ['Practical']
-- rubric meaning_kept 1, clarity 1, warmth 1, notes_accurate 0 (3/8)
-
-**Message:** Herlihy & Shavit's book, The Art of Multiprocessor Programming, or "Lock-free linked lists and skip lists" or java.util.concurrent or Practical lock-freedom. Have you considered using a concurrent hash table like a hopscotch hash table?
-
-**Rewrite:** Herlihy & Shavit's book, The Art of Multiprocessor Programming, covers topics like 'Lock-free linked lists and skip lists' and java.util.concurrent. Have you considered using a concurrent hash table, such as a hopscotch hash table?
-
-*Notes:* Listed the book title and topics exactly as given. / Clarified the suggestion: consider using a concurrent hash table like a hopscotch hash table.
-
 ## 4. enron_00030 (enron)
 
-- dropped ['[PHONE_REDACTED]', 'Brianna Beltran', 'Enron Americas-Office', 'Brittney Obrien']
+- dropped ['Enron Americas-Office', '[PHONE_REDACTED]', 'Brittney Obrien', 'Brianna Beltran']
 - rubric meaning_kept 0, clarity 2, warmth 2, notes_accurate 0 (4/8)
 
 **Message:** Edgar Levine wants to meet with you today-can you give me a time that would be good for you?
@@ -88,7 +90,35 @@ Please reply to all three questions today.
 
 BERTScore vs gold: 0.463
 
-## 5. enron_00003 (enron)
+## 5. stanford_00018 (stanford)
+
+- NLI reads it as contradicting the message
+- rubric meaning_kept 0, clarity 2, warmth 2, notes_accurate 0 (4/8)
+
+**Message:** Thanks. As an aside, since this did turn out to be factual, just very hard to source, do you think the community would countenance an unblock request from Linda if he accepted some strict unblock conditions (such as packing in the 'systemic bias' thing, discussing his edits in a less confrontational manner etc)?
+
+**Rewrite:** Thanks. Since this was factual but hard to source, could you ask Linda if she would accept an unblock request if he agreed to strict conditions, such as removing the 'systemic bias' point and discussing his edits less confrontationally?
+
+*Notes:* Turned the long, indirect question into a clear request to ask Linda. / Listed the specific conditions (removing bias, less confrontational edits) as bullet points for clarity.
+
+BERTScore vs gold: 0.542
+
+## 6. circa_09218 (circa)
+
+- NLI reads it as contradicting the message
+- rubric meaning_kept 1, clarity 2, warmth 1, notes_accurate 0 (4/8)
+
+**Question:** Would you like to have dinner?
+
+**Message:** I've only just eaten.
+
+**Rewrite:** No, I've already eaten.
+
+*Notes:* Turned the statement into a clear 'no' so the answer is immediate. / Removed the question context since the reply is self-contained.
+
+BERTScore vs gold: 0.573
+
+## 7. enron_00003 (enron)
 
 - dropped ['Parks.doc']
 - rubric meaning_kept 1, clarity 1, warmth 2, notes_accurate 0 (4/8)
@@ -122,7 +152,7 @@ Kaylee Gamble
 
 BERTScore vs gold: 0.693
 
-## 6. enron_00048 (enron)
+## 8. enron_00048 (enron)
 
 - dropped ['Katelyn et al']
 - rubric meaning_kept 1, clarity 1, warmth 2, notes_accurate 0 (4/8)
@@ -148,7 +178,7 @@ Dakota
 
 BERTScore vs gold: 0.727
 
-## 7. enron_00053 (enron)
+## 9. enron_00053 (enron)
 
 - NLI reads it as contradicting the message
 - rubric meaning_kept 0, clarity 2, warmth 2, notes_accurate 0 (4/8)
@@ -170,33 +200,9 @@ Kaitlyn
 
 BERTScore vs gold: 0.743
 
-## 8. circa_09218 (circa)
-
-- NLI reads it as contradicting the message
-- rubric meaning_kept 1, clarity 2, warmth 1, notes_accurate 0 (4/8)
-
-**Question:** Would you like to have dinner?
-
-**Message:** I've only just eaten.
-
-**Rewrite:** No, I've already eaten.
-
-*Notes:* Turned the statement into a clear 'no' so the answer is immediate. / Removed the question context since the reply is self-contained.
-
-## 9. stanford_00018 (stanford)
-
-- NLI reads it as contradicting the message
-- rubric meaning_kept 0, clarity 2, warmth 2, notes_accurate 0 (4/8)
-
-**Message:** Thanks. As an aside, since this did turn out to be factual, just very hard to source, do you think the community would countenance an unblock request from Linda if he accepted some strict unblock conditions (such as packing in the 'systemic bias' thing, discussing his edits in a less confrontational manner etc)?
-
-**Rewrite:** Thanks. Since this was factual but hard to source, could you ask Linda if she would accept an unblock request if he agreed to strict conditions, such as removing the 'systemic bias' point and discussing his edits less confrontationally?
-
-*Notes:* Turned the long, indirect question into a clear request to ask Linda. / Listed the specific conditions (removing bias, less confrontational edits) as bullet points for clarity.
-
 ## 10. enron_00057 (enron)
 
-- dropped ['[PHONE_REDACTED]', '3892', '2', '1', 'Kendra St. Calvin\nEB 3892']
+- dropped ['Kendra St. Calvin\nEB 3892', '[PHONE_REDACTED]', '1', '2', '3892']
 - rubric meaning_kept 2, clarity 2, warmth 1, notes_accurate 0 (5/8)
 
 **Message:** Kiara:
@@ -254,7 +260,20 @@ Enron Net Works _ Global Data Mgt.
 
 BERTScore vs gold: 0.428
 
-## 12. enron_00010 (enron)
+## 12. stanford_00007 (stanford)
+
+- dropped ['PS']
+- rubric meaning_kept 2, clarity 2, warmth 1, notes_accurate 0 (5/8)
+
+**Message:** PS, I would seriously like an answer to my question above. What is your native language and where do you come from?
+
+**Rewrite:** Please tell me your native language and where you are from. I need an answer to my previous question.
+
+*Notes:* Removed the 'PS' and softened 'I would like' to make the request direct. / Added 'I need' to carry the implied frustration and urgency of wanting an answer now.
+
+BERTScore vs gold: 0.575
+
+## 13. enron_00010 (enron)
 
 - added ['[EMAIL_REDACTED]']
 - rubric meaning_kept 2, clarity 2, warmth 1, notes_accurate 0 (5/8)
@@ -282,9 +301,9 @@ Please contact us if you can help:
 
 BERTScore vs gold: 0.668
 
-## 13. enron_00014 (enron)
+## 14. enron_00014 (enron)
 
-- dropped ['L.L.C.', '0830']
+- dropped ['0830', 'L.L.C.']
 - rubric meaning_kept 1, clarity 2, warmth 2, notes_accurate 0 (5/8)
 
 **Message:** Attached is a draft of an Assignment whereby ECT-PR-C, L.L.C. assigns its
@@ -329,7 +348,7 @@ Fax: +44 20 7614 0012
 
 BERTScore vs gold: 0.722
 
-## 14. enron_00026 (enron)
+## 15. enron_00026 (enron)
 
 - dropped ['Edgar']
 - added ['tomorrow']
@@ -345,17 +364,6 @@ Edgar
 
 BERTScore vs gold: 0.775
 
-## 15. stanford_00007 (stanford)
-
-- dropped ['PS']
-- rubric meaning_kept 2, clarity 2, warmth 1, notes_accurate 0 (5/8)
-
-**Message:** PS, I would seriously like an answer to my question above. What is your native language and where do you come from?
-
-**Rewrite:** Please tell me your native language and where you are from. I need an answer to my previous question.
-
-*Notes:* Removed the 'PS' and softened 'I would like' to make the request direct. / Added 'I need' to carry the implied frustration and urgency of wanting an answer now.
-
 ## 16. stanford_00024 (stanford)
 
 - dropped ["woun't understand"]
@@ -366,6 +374,8 @@ BERTScore vs gold: 0.775
 **Rewrite:** I can do it, but it's written in Lithuanian, so I think you won't understand. Where should I put it?
 
 *Notes:* Removed 'Anyway' as filler. / Kept the hesitation about the language so the sender's doubt is clear.
+
+BERTScore vs gold: 0.908
 
 ## 17. enron_00023 (enron)
 
@@ -400,7 +410,20 @@ Once we have this information we should approach SDGE. Let's aim at having "firs
 
 BERTScore vs gold: 0.719
 
-## 18. enron_00008 (enron)
+## 18. stanford_00028 (stanford)
+
+- dropped ['2014']
+- rubric meaning_kept 1, clarity 1, warmth 2, notes_accurate 2 (6/8)
+
+**Message:** Thanks for the username change. Now, one last thingu2014since the account 'Dalahxe4st' already exists on Swedish Wikipedia and doesn't appear to have been taken over automatically, where should I go to take care of that?
+
+**Rewrite:** Thanks for the username change. Since the account 'Dalahxe4st' already exists on Swedish Wikipedia and wasn't taken over automatically, where should I go to handle it?
+
+*Notes:* Removed the filler 'one last thing' and 'now' for clarity. / Replaced 'take care of that' with 'handle it' for literal meaning.
+
+BERTScore vs gold: 0.770
+
+## 19. enron_00008 (enron)
 
 - dropped ['a good night']
 - rubric meaning_kept 2, clarity 2, warmth 2, notes_accurate 0 (6/8)
@@ -412,17 +435,6 @@ BERTScore vs gold: 0.719
 *Notes:* Removed the filler 'poor you' and 'bye' to make it direct. / Changed 'have a good night' to the standard 'Goodnight' for clarity.
 
 BERTScore vs gold: 0.781
-
-## 19. stanford_00028 (stanford)
-
-- dropped ['2014']
-- rubric meaning_kept 1, clarity 1, warmth 2, notes_accurate 2 (6/8)
-
-**Message:** Thanks for the username change. Now, one last thingu2014since the account 'Dalahxe4st' already exists on Swedish Wikipedia and doesn't appear to have been taken over automatically, where should I go to take care of that?
-
-**Rewrite:** Thanks for the username change. Since the account 'Dalahxe4st' already exists on Swedish Wikipedia and wasn't taken over automatically, where should I go to handle it?
-
-*Notes:* Removed the filler 'one last thing' and 'now' for clarity. / Replaced 'take care of that' with 'handle it' for literal meaning.
 
 ## 20. enron_00055 (enron)
 
