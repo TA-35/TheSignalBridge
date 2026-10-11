@@ -15,35 +15,7 @@ Ranked by: no usable answer, then failing the grounding check, then losing to th
 
 BERTScore vs gold: 0.566
 
-## 2. enron_00015 (enron)
-
-- dropped ['5', '3', '1', '4', '2', '6']
-- rubric meaning_kept 0, clarity 2, warmth 1, notes_accurate 0 (3/8)
-
-**Message:** Cassie: 
-
-1) Review updated critical systems list / flow diagram
-2) Review transaction scenario summary
-3) Review global data documentation
-4) Review first cut TAGG/ERMS, Enpower, TDS data capture scenario for financial trading
-5) Define USER/IT SWAT teams for Monday and Tuesday to complete test scenarios. (We will need full time commitments from key users to work with us)
-6) Discuss next steps and workplan goals
-
-Thanks.
-
-**Rewrite:** Please complete these tasks before Monday and Tuesday:
-- Review the updated critical systems list and flow diagram
-- Review the transaction scenario summary
-- Review the global data documentation
-- Review the first cut TAGG/ERMS, Enpower, and TDS data capture scenario for financial trading
-- Define USER/IT SWAT teams for Monday and Tuesday (full-time commitment required from key users)
-- Discuss next steps and workplan goals
-
-*Notes:* Turned the numbered list into clear bullet points. / Made the 'full time commitments' requirement explicit in the bullet point. / Removed the name 'Cassie' as it was not in the input text.
-
-BERTScore vs gold: 0.635
-
-## 3. enron_00017 (enron)
+## 2. enron_00017 (enron)
 
 - dropped ['Alyssa']
 - rubric meaning_kept 1, clarity 1, warmth 1, notes_accurate 0 (3/8)
@@ -60,9 +32,9 @@ Alyssa
 
 BERTScore vs gold: 0.782
 
-## 4. enron_00030 (enron)
+## 3. enron_00030 (enron)
 
-- dropped ['Enron Americas-Office', '[PHONE_REDACTED]', 'Brittney Obrien', 'Brianna Beltran']
+- dropped ['Enron Americas-Office', 'Brittney Obrien', '[PHONE_REDACTED]', 'Brianna Beltran']
 - rubric meaning_kept 0, clarity 2, warmth 2, notes_accurate 0 (4/8)
 
 **Message:** Edgar Levine wants to meet with you today-can you give me a time that would be good for you?
@@ -90,7 +62,7 @@ Please reply to all three questions today.
 
 BERTScore vs gold: 0.463
 
-## 5. stanford_00018 (stanford)
+## 4. stanford_00018 (stanford)
 
 - NLI reads it as contradicting the message
 - rubric meaning_kept 0, clarity 2, warmth 2, notes_accurate 0 (4/8)
@@ -103,7 +75,7 @@ BERTScore vs gold: 0.463
 
 BERTScore vs gold: 0.542
 
-## 6. circa_09218 (circa)
+## 5. circa_09218 (circa)
 
 - NLI reads it as contradicting the message
 - rubric meaning_kept 1, clarity 2, warmth 1, notes_accurate 0 (4/8)
@@ -118,7 +90,7 @@ BERTScore vs gold: 0.542
 
 BERTScore vs gold: 0.573
 
-## 7. enron_00003 (enron)
+## 6. enron_00003 (enron)
 
 - dropped ['Parks.doc']
 - rubric meaning_kept 1, clarity 1, warmth 2, notes_accurate 0 (4/8)
@@ -152,7 +124,7 @@ Kaylee Gamble
 
 BERTScore vs gold: 0.693
 
-## 8. enron_00048 (enron)
+## 7. enron_00048 (enron)
 
 - dropped ['Katelyn et al']
 - rubric meaning_kept 1, clarity 1, warmth 2, notes_accurate 0 (4/8)
@@ -178,7 +150,7 @@ Dakota
 
 BERTScore vs gold: 0.727
 
-## 9. enron_00053 (enron)
+## 8. enron_00053 (enron)
 
 - NLI reads it as contradicting the message
 - rubric meaning_kept 0, clarity 2, warmth 2, notes_accurate 0 (4/8)
@@ -200,9 +172,9 @@ Kaitlyn
 
 BERTScore vs gold: 0.743
 
-## 10. enron_00057 (enron)
+## 9. enron_00057 (enron)
 
-- dropped ['Kendra St. Calvin\nEB 3892', '[PHONE_REDACTED]', '1', '2', '3892']
+- dropped ['Kendra St. Calvin\nEB 3892', '2', '[PHONE_REDACTED]', '3892']
 - rubric meaning_kept 2, clarity 2, warmth 1, notes_accurate 0 (5/8)
 
 **Message:** Kiara:
@@ -240,7 +212,7 @@ Let me know if you have any problems with this.
 
 BERTScore vs gold: 0.428
 
-## 11. enron_00050 (enron)
+## 10. enron_00050 (enron)
 
 - dropped ['Jasmin Mccormick', 'Enron Net Works']
 - rubric meaning_kept 2, clarity 2, warmth 1, notes_accurate 0 (5/8)
@@ -260,7 +232,7 @@ Enron Net Works _ Global Data Mgt.
 
 BERTScore vs gold: 0.428
 
-## 12. stanford_00007 (stanford)
+## 11. stanford_00007 (stanford)
 
 - dropped ['PS']
 - rubric meaning_kept 2, clarity 2, warmth 1, notes_accurate 0 (5/8)
@@ -273,7 +245,7 @@ BERTScore vs gold: 0.428
 
 BERTScore vs gold: 0.575
 
-## 13. enron_00010 (enron)
+## 12. enron_00010 (enron)
 
 - added ['[EMAIL_REDACTED]']
 - rubric meaning_kept 2, clarity 2, warmth 1, notes_accurate 0 (5/8)
@@ -301,7 +273,7 @@ Please contact us if you can help:
 
 BERTScore vs gold: 0.668
 
-## 14. enron_00014 (enron)
+## 13. enron_00014 (enron)
 
 - dropped ['0830', 'L.L.C.']
 - rubric meaning_kept 1, clarity 2, warmth 2, notes_accurate 0 (5/8)
@@ -348,10 +320,9 @@ Fax: +44 20 7614 0012
 
 BERTScore vs gold: 0.722
 
-## 15. enron_00026 (enron)
+## 14. enron_00026 (enron)
 
 - dropped ['Edgar']
-- added ['tomorrow']
 - rubric meaning_kept 1, clarity 1, warmth 2, notes_accurate 1 (5/8)
 
 **Message:** Sounds good. If you talk to Kaitlin Brittney or any one else mention Saturday night. I have to pick up some jeans at Underground so I will stop by and visit you tommorow. 
@@ -364,7 +335,7 @@ Edgar
 
 BERTScore vs gold: 0.775
 
-## 16. stanford_00024 (stanford)
+## 15. stanford_00024 (stanford)
 
 - dropped ["woun't understand"]
 - rubric meaning_kept 2, clarity 1, warmth 1, notes_accurate 1 (5/8)
@@ -377,40 +348,7 @@ BERTScore vs gold: 0.775
 
 BERTScore vs gold: 0.908
 
-## 17. enron_00023 (enron)
-
-- dropped ['3', '2']
-- rubric meaning_kept 1, clarity 2, warmth 1, notes_accurate 2 (6/8)
-- politeness fell high -> medium
-
-**Message:** The meeting is at 1:00 p.m. today. Kaitlin, if you come to my office we will walk over to Crystal's office and have the meeting there.
-
-I have spoken to Noah and got a good data dump from him - - there is no need for him to join us this afternoon. I have the trader's name - - we should call him during our meeting.
-
-In order to move forward we need three things:
-
- 1. The PwC valuation of the financial contracts;
- 2. A better understanding of the physical contracts and what happened;
- 3. A good data dump from the trader.
-
-Once we have this information we should approach SDGE. Let's aim at having "first contact" tomorrow morning.
-
-**Rewrite:** The meeting is today at 1:00 p.m. Here is what we need to do:
-- Kaitlin, come to my office first. We will walk to Crystal's office for the meeting there.
-- I have spoken to Noah; he does not need to join us this afternoon.
-- We need to call the trader during the meeting. I have his name.
-- We need three things to move forward:
-  - The PwC valuation of the financial contracts
-  - A better understanding of the physical contracts and what happened
-  - A good data dump from the trader
-- Once we have this, we should approach SDGE.
-- Let's aim for 'first contact' tomorrow morning.
-
-*Notes:* Turned the paragraph into a clear list of steps and asks. / Made the location sequence explicit: come to my office, then walk to Crystal's. / Removed filler like 'good data dump' and kept the literal meaning of the three required items.
-
-BERTScore vs gold: 0.719
-
-## 18. stanford_00028 (stanford)
+## 16. stanford_00028 (stanford)
 
 - dropped ['2014']
 - rubric meaning_kept 1, clarity 1, warmth 2, notes_accurate 2 (6/8)
@@ -423,7 +361,7 @@ BERTScore vs gold: 0.719
 
 BERTScore vs gold: 0.770
 
-## 19. enron_00008 (enron)
+## 17. enron_00008 (enron)
 
 - dropped ['a good night']
 - rubric meaning_kept 2, clarity 2, warmth 2, notes_accurate 0 (6/8)
@@ -436,30 +374,95 @@ BERTScore vs gold: 0.770
 
 BERTScore vs gold: 0.781
 
-## 20. enron_00055 (enron)
+## 18. enron_00004 (enron)
 
-- dropped ['the end of week']
-- added ['the end of the week']
+- dropped ['2']
 
-**Message:** Cheyenne,
+**Message:** Luke, 2 things, do you have any of the letters that the producers sent to Dominion, I would like one of those AND who are you talking to at Dominion?
+ 
+Thanks
 
-Well, today things suck, but overall everything is great. I lost about $100,000 this morning because I'm an idiot, but it's not completely my fault. Anyway, you should definitely take an earlier flight so we could go to dinner or something. Too bad it's not at the end of week so you could stay over, even though if you wanted to, you could. I could leave work pretty much anytime on wednesday, so just let me know. If you don't have my work number, its [PHONE_REDACTED]. Thanks.
+**Rewrite:** Luke, please do these two things:
+- send me the letters the producers sent to Dominion
+- tell me who you are talking to at Dominion
 
-Kelsey
+Thanks
 
-**Rewrite:** Hey Cheyenne,
+*Notes:* Turned the run-on sentence into two clear bullet points. / Removed the comma splice to make the two distinct asks obvious.
 
-Today was rough, but overall things are good. I lost about $100,000 this morning, but it's not my fault.
+BERTScore vs gold: 0.488
 
-Let's go to dinner on Wednesday. Could you take an earlier flight so we can meet?
-- I can leave work anytime on Wednesday.
-- Dinner doesn't have to be at the end of the week.
-- If you don't have my work number, use [PHONE_REDACTED].
+## 19. enron_00052 (enron)
 
-Let me know if this works. Thanks.
+- dropped ['FedExed', 'Caitlyn']
 
-Kelsey
+**Message:** Dear Isabella,
+?
+The electronic copies of the Transwestern Compressor stations reports 
+completed by Statistical Research are attached as PDF files. The reports are 
+considered to be drafts and we look foward to receiving reviewers comments. 
+There are three PDF files:
+?
+transwest1 which contains the report for compressor station 1;
+?
+transwest1_sitecard which contains the ASM site card for the site recorded 
+at compressor station 1 and;
+?
+transwest2 which contains the report for compressor station 2.
+?
+I have also FedExed a hard copy of these documents to Joann Thornton for AM 
+delivery tomorrow.
+?
+Best regards,
+?
+Crystal Prince
+Statistical Research, Caitlyn
+Senior Project Director
+ - transwest2.pdf
+ - transwest1_sitecard.pdf
+ - transwest1.pdf
 
-*Notes:* Removed the emotional venting about the loss to keep the message focused on the ask. / Turned the scattered offers into clear bullet points. / Made the Wednesday deadline and the need for a reply explicit.
+**Rewrite:** Dear Isabella,
 
-BERTScore vs gold: 0.483
+Attached are the draft reports for the Transwestern Compressor stations (PDF files):
+- transwest1.pdf (Compressor station 1)
+- transwest1_sitecard.pdf (ASM site card for station 1)
+- transwest2.pdf (Compressor station 2)
+
+I have also sent a hard copy to Joann Thornton for AM delivery tomorrow.
+
+Please review these drafts and send your comments.
+
+Best regards,
+Crystal Prince
+Senior Project Director, Statistical Research
+
+- transwest2.pdf
+- transwest1_sitecard.pdf
+- transwest1.pdf
+
+*Notes:* Removed the question marks and extra spacing to fix the formatting. / Replaced 'look foward' with 'send your comments' for clarity. / Listed the files clearly so Isabella knows exactly what to review.
+
+BERTScore vs gold: 0.607
+
+## 20. enron_00005 (enron)
+
+- added ['[URL]']
+
+**Message:** You should now have edit access for the financial trading database. Please 
+only edit those entries relating relating to ECTRIC. Below is the icon which 
+I hope should get you entry into the database (it's a shortcut, and I'm not 
+sure it work in Mcdonald, let me know and I'll stop sending it to people there 
+if it doesn't!).
+
+Link -->
+
+**Rewrite:** You should now have edit access for the financial trading database. Please use the link below to edit only entries relating to ECTRIC.
+
+Link: [URL]
+
+Note: This shortcut might not work in McDonald. If it doesn't, let me know and I'll stop sending it to people there.
+
+*Notes:* Turned the broken link into a clear, copyable item. / Made the warning about McDonald explicit so the sender knows to add it if needed.
+
+BERTScore vs gold: 0.678

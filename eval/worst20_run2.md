@@ -111,42 +111,7 @@ Judge, B first: Output B incorrectly adds an implied future action and changes u
 
 BERTScore vs gold: 0.871
 
-## 4. enron_00015 (enron)
-
-- dropped ['5', '3', '1', '4', '2', '6']
-- rubric meaning_kept 1, clarity 2, warmth 2, notes_accurate 0 (5/8)
-
-**Message:** Cassie: 
-
-1) Review updated critical systems list / flow diagram
-2) Review transaction scenario summary
-3) Review global data documentation
-4) Review first cut TAGG/ERMS, Enpower, TDS data capture scenario for financial trading
-5) Define USER/IT SWAT teams for Monday and Tuesday to complete test scenarios. (We will need full time commitments from key users to work with us)
-6) Discuss next steps and workplan goals
-
-Thanks.
-
-**Rewrite:** Cassie:
-
-Please do these:
-- Review updated critical systems list / flow diagram
-- Review transaction scenario summary
-- Review global data documentation
-- Review first cut TAGG/ERMS/ERMS, Enpower, TDS data capture scenario for financial trading
-- Define USER/IT SWAT teams for Monday and Tuesday to complete test scenarios. (We will need full time commitments from key users to work with us)
-- Discuss next steps and workplan goals
-
-Thanks.
-
-*Notes:* Listed the six items as bullets so each one is easy to check off. / Kept every name, term and the Monday/Tuesday timing exactly as written.
-
-Judge, A first: Output A added an unsupported deadline ('before Monday and Tuesday'), altering meaning, whereas Output B only duplicated a term.  
-Judge, B first: Output A only adds a polite 'Please' and duplicates 'ERMS' (minor), while Output B removes the recipient's name and imposes a false deadline on all tasks.
-
-BERTScore vs gold: 0.806
-
-## 5. stanford_00024 (stanford)
+## 4. stanford_00024 (stanford)
 
 - dropped ["woun't understand"]
 - rubric meaning_kept 2, clarity 1, warmth 2, notes_accurate 0 (5/8)
@@ -163,7 +128,7 @@ Judge, B first: Output B guessed the referent 'document' adding unspecified info
 
 BERTScore vs gold: 0.836
 
-## 6. enron_00048 (enron)
+## 5. enron_00048 (enron)
 
 - dropped ['Katelyn et al']
 - rubric meaning_kept 1, clarity 2, warmth 2, notes_accurate 0 (5/8)
@@ -191,7 +156,7 @@ Judge, B first: B adds a 'Thanks,' not in original and misstates the edit as a b
 
 BERTScore vs gold: 0.845
 
-## 7. stanford_00028 (stanford)
+## 6. stanford_00028 (stanford)
 
 - dropped ['2014']
 - rubric meaning_kept 2, clarity 1, warmth 2, notes_accurate 0 (5/8)
@@ -207,7 +172,7 @@ Judge, B first: Output B incorrectly changed urgency from low to medium, alterin
 
 BERTScore vs gold: 0.861
 
-## 8. circa_14695 (circa)
+## 7. circa_14695 (circa)
 
 - NLI reads it as contradicting the message
 - rubric meaning_kept 2, clarity 2, warmth 2, notes_accurate 0 (6/8)
@@ -226,41 +191,7 @@ Judge, B first: Output B adds a guess about not attending the concert, which the
 
 BERTScore vs gold: 0.686
 
-## 9. enron_00023 (enron)
-
-- dropped ['3', '2']
-
-**Message:** The meeting is at 1:00 p.m. today. Kaitlin, if you come to my office we will walk over to Crystal's office and have the meeting there.
-
-I have spoken to Noah and got a good data dump from him - - there is no need for him to join us this afternoon. I have the trader's name - - we should call him during our meeting.
-
-In order to move forward we need three things:
-
- 1. The PwC valuation of the financial contracts;
- 2. A better understanding of the physical contracts and what happened;
- 3. A good data dump from the trader.
-
-Once we have this information we should approach SDGE. Let's aim at having "first contact" tomorrow morning.
-
-**Rewrite:** The meeting is at 1:00 p.m. today. Kaitlin, if you come to my office, we will walk over to Crystal's office and have the meeting there.
-
-I have spoken to Noah and got a good data dump from him. There is no need for him to join us this afternoon. I have the trader's name. We should call him during our meeting.
-
-In order to move forward, we need three things:
-- The PwC valuation of the financial contracts.
-- A better understanding of the physical contracts and what happened.
-- A good data dump from the trader.
-
-Once we have this information, we should approach SDGE. Let's aim at having "first contact" tomorrow morning.
-
-*Notes:* Split the three required items into a list so each one is easy to check. / Kept every name, time and detail exactly as written. / No deadline was given for the call to the trader, so none was added.
-
-Judge, A first: Output B's extracted meaning omits key asks (three items, approach SDGE, first contact), while Output A has multiple meaning changes and incorrect notes.  
-Judge, B first: Output A changes the meeting location (meaning), whereas Output B keeps meaning correct and only has minor note/urgency faults.
-
-BERTScore vs gold: 0.967
-
-## 10. circa_07550 (circa)
+## 8. circa_07550 (circa)
 
 - judge preferred baseline in both orders
 - rubric meaning_kept 0, clarity 1, warmth 2, notes_accurate 0 (3/8)
@@ -278,26 +209,7 @@ Judge, B first: Output A changes the meaning by affirming a visit and reversing 
 
 BERTScore vs gold: 0.144
 
-## 11. enron_00026 (enron)
-
-- added ['tomorrow']
-
-**Message:** Sounds good. If you talk to Kaitlin Brittney or any one else mention Saturday night. I have to pick up some jeans at Underground so I will stop by and visit you tommorow. 
-
-Edgar
-
-**Rewrite:** Sounds good. If you talk to Kaitlin Brittney or anyone else, mention Saturday night. I have to pick up some jeans at Underground, so I will stop by and visit you tomorrow. 
-
-Edgar
-
-*Notes:* Fixed the typo "tomorrow" and made the ask one clear sentence. / Kept the name and the Underground detail exactly as written.
-
-Judge, A first: Output A changed the conditional 'if you talk to' into a definite 'you spoke with', altering the ask's meaning.  
-Judge, B first: Both outputs have no faults according to the criteria.
-
-BERTScore vs gold: 0.830
-
-## 12. enron_00004 (enron)
+## 9. enron_00004 (enron)
 
 - dropped ['2']
 
@@ -320,7 +232,7 @@ Judge, B first: B changed the request from asking if Luke has any letters to dem
 
 BERTScore vs gold: 0.879
 
-## 13. stanford_00012 (stanford)
+## 10. stanford_00012 (stanford)
 
 - judge preferred baseline in both orders
 - rubric meaning_kept 1, clarity 1, warmth 2, notes_accurate 0 (4/8)
@@ -336,7 +248,7 @@ Judge, B first: B has only one meaning fault (overstating completion), whereas A
 
 BERTScore vs gold: 0.409
 
-## 14. circa_08210 (circa)
+## 11. circa_08210 (circa)
 
 - judge preferred baseline in both orders
 - rubric meaning_kept 2, clarity 1, warmth 1, notes_accurate 0 (4/8)
@@ -354,7 +266,7 @@ Judge, B first: Output A fails to answer the implied question, leaving the reade
 
 BERTScore vs gold: 0.656
 
-## 15. stanford_00055 (stanford)
+## 12. stanford_00055 (stanford)
 
 - judge preferred baseline in both orders
 - rubric meaning_kept 2, clarity 1, warmth 1, notes_accurate 0 (4/8)
@@ -370,7 +282,7 @@ Judge, B first: Output B fixes 'ANI?' but still leaves 'this' and 'him' vague, w
 
 BERTScore vs gold: 0.764
 
-## 16. circa_11090 (circa)
+## 13. circa_11090 (circa)
 
 - judge preferred baseline in both orders
 - rubric meaning_kept 1, clarity 2, warmth 2, notes_accurate 0 (5/8)
@@ -388,7 +300,7 @@ Judge, B first: Output A changed 'support' to 'work with', altering the original
 
 BERTScore vs gold: 0.685
 
-## 17. stanford_00048 (stanford)
+## 14. stanford_00048 (stanford)
 
 - judge preferred baseline in both orders
 - rubric meaning_kept 2, clarity 2, warmth 1, notes_accurate 0 (5/8)
@@ -404,7 +316,7 @@ Judge, B first: Output A's note falsely claims no changes were made, adding a fa
 
 BERTScore vs gold: 0.866
 
-## 18. enron_00040 (enron)
+## 15. enron_00040 (enron)
 
 - judge preferred baseline in both orders
 - rubric meaning_kept 2, clarity 2, warmth 2, notes_accurate 0 (6/8)
@@ -421,7 +333,7 @@ Judge, B first: B has only one fault (invented high urgency) whereas A has two f
 
 BERTScore vs gold: 0.497
 
-## 19. stanford_00010 (stanford)
+## 16. stanford_00010 (stanford)
 
 - judge preferred baseline in both orders
 - rubric meaning_kept 2, clarity 1, warmth 1, notes_accurate 2 (6/8)
@@ -437,7 +349,7 @@ Judge, B first: Output A altered the tense of the question, changing the factual
 
 BERTScore vs gold: 0.709
 
-## 20. circa_21362 (circa)
+## 17. circa_21362 (circa)
 
 - judge preferred baseline in both orders
 - rubric meaning_kept 1, clarity 1, warmth 2, notes_accurate 2 (6/8)
@@ -454,3 +366,52 @@ Judge, A first: Output B adds an unsupported guess about liking cardio, changing
 Judge, B first: Output A incorrectly adds a yes answer that is not implied by the original reply.
 
 BERTScore vs gold: 0.767
+
+## 18. stanford_00060 (stanford)
+
+- rubric meaning_kept 0, clarity 1, warmth 1, notes_accurate 0 (2/8)
+
+**Message:** Is there any content that needs rescuing? The only edit I seem to have deleted was the redirect?
+
+**Rewrite:** Is there any content that needs rescuing? The only edit I seem to have deleted is the redirect.
+
+*Notes:* Fixed the grammar of the second sentence; meaning unchanged. / Kept both questions as written; neither was marked as urgent.
+
+Judge, A first: Output B incorrectly claims it kept both questions unchanged while altering the second sentence to a statement, making its notes faulty.  
+Judge, B first: Output B drops the redirect question and raises urgency, whereas Output A only alters the questioning tone but keeps both asks.
+
+BERTScore vs gold: 0.591
+
+## 19. circa_19707 (circa)
+
+- judge preferred baseline in both orders
+
+**Question:** Would you like to join me for a beer?
+
+**Message:** I would love to
+
+**Rewrite:** I would love to
+
+*Notes:* Already clear, kept as written.
+
+Judge, A first: Output B leaves the answer implied, requiring the reader to infer, whereas Output A makes the yes explicit.  
+Judge, B first: Output A fails to make the affirmative answer explicit, leaving the reader to infer the reply.
+
+BERTScore vs gold: 0.770
+
+## 20. circa_31460 (circa)
+
+- judge preferred baseline in both orders
+
+**Question:** Do you have far to travel to your place of work ?
+
+**Message:** It's about a three hour commute.
+
+**Rewrite:** It's about a three hour commute.
+
+*Notes:* Already clear, kept as written.
+
+Judge, A first: Output B changes the factual commute time from three hours to an hour and a half, altering the meaning.  
+Judge, B first: Output A incorrectly states the commute as about an hour and a half, changing the fact.
+
+BERTScore vs gold: 0.832
