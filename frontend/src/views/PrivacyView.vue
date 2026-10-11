@@ -81,8 +81,8 @@ const LAST_UPDATED = '10 October 2026'
         that part.
       </p>
       <p>
-        Second, for the interpretation — the part headed “A closer reading” —
-        the message is sent to
+        Second, for the interpretation (the part headed “What this message
+        means”), the message is sent to
         <strong>NVIDIA’s AI service</strong> (<code>integrate.api.nvidia.com</code>),
         which is operated by NVIDIA in the United States. We do this because the
         model that produces the reading runs there and not on our servers. Your
@@ -159,11 +159,11 @@ const LAST_UPDATED = '10 October 2026'
       <p>
         There is no password and no email address. Your device holds a passkey
         and we keep only its public half, which cannot be used to sign in as
-        you. Alongside it we store a four-character ID, the dates your account
-        was made and last used, and — so your library cards and progress can
-        follow you to another device — which patterns you have kept, viewed and
-        reviewed and on which days, the days you opened the site, and how many
-        minutes you spent in each part of it per day. None of that includes
+        you. Alongside it we store a four-character ID and the dates your account
+        was made and last used. So your library cards and progress can follow
+        you to another device, we also store which patterns you have kept,
+        viewed and reviewed and on which days, the days you opened the site, and
+        how many minutes you spent in each part of it per day. None of that includes
         anything you typed. While you link a new device, we also keep a short-lived pairing
         code, stored only as a hash, valid for ten minutes and usable once.
         That is the whole of it.
@@ -198,7 +198,7 @@ const LAST_UPDATED = '10 October 2026'
       <p>
         BetweenWords is a student project built for FIT5120 at Monash
         University. It is not a commercial service, and it is not covered by a
-        company’s support or retention commitments. Treat it accordingly.
+        company’s support or retention commitments.
       </p>
       <p v-if="CONTACT">
         Questions about this page, or about data you have put into the site:

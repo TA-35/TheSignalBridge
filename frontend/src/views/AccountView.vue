@@ -62,7 +62,7 @@ async function pair() {
 <template>
   <div class="login">
     <header class="intro">
-      <h1>Account Settings</h1>
+      <h1>Account settings</h1>
     </header>
 
     <p v-if="!accountStore.ready" class="pending">Checking whether you're signed in…</p>
@@ -71,7 +71,7 @@ async function pair() {
     <section v-else-if="accountStore.signedIn" class="panel">
       
       <p v-if="justCreated" class="flash">
-        Account created successfully!
+        Account created.
       </p>
 
       <p class="id-label">Your ID</p>
@@ -83,7 +83,7 @@ async function pair() {
         <h2>Use a second device</h2>
         <p class="panel__body">
           Your passkey only works in the browser that made it. To sign in somewhere else, get a
-          code here and enter it there - that device then makes its own passkey and needs no code
+          code here and enter it there. That device then makes its own passkey and needs no code
           again.
         </p>
 
@@ -117,7 +117,7 @@ async function pair() {
         <h2>Delete this account</h2>
         <p class="panel__body">
           Removes your ID and every passkey registered to it. Your saved cards stay in this
-          browser - they were never uploaded. It can't be undone.
+          browser. They were never uploaded. It can't be undone.
         </p>
         <button type="button" class="btn btn--danger" :disabled="accountStore.busy" @click="showDelete = true">
           Delete my account
@@ -130,8 +130,8 @@ async function pair() {
     <section v-else-if="!accountStore.supported" class="panel">
       <h2>This browser can't do passkeys</h2>
       <p class="panel__body">
-        Accounts need a browser that supports passkeys - Chrome, Safari, Edge or Firefox, all
-        reasonably recent. Nothing else on the site is affected: your cards and settings are
+        Accounts need a browser that supports passkeys: a recent version of Chrome, Safari, Edge or
+        Firefox. Nothing else on the site is affected: your cards and settings are
         stored in this browser either way.
       </p>
       <div class="actions">
@@ -143,7 +143,7 @@ async function pair() {
     <section v-else class="panel">
       <h2>Sign in with passkey, or create a new account</h2>
       <p class="panel__body">
-        Either way it's your device that proves it's you - a fingerprint, your face, or the
+        Either way, your device proves it's you, with a fingerprint, your face, or the
         screen lock you already use.
       </p>
 
@@ -162,7 +162,7 @@ async function pair() {
            device never needs it, and a visible code field would imply
            typing something is the normal way in. -->
       <div class="fallback">
-        <h2>Sign in from a new device without passkey?</h2>
+        <h2>Sign in from a new device without a passkey?</h2>
         <button
           v-if="!showPairing"
           type="button"
@@ -229,7 +229,7 @@ async function pair() {
         <li>
           <span class="points__mark" aria-hidden="true"><KeyRound :size="16" :stroke-width="1.8" /></span>
           <span>
-            <strong>No password: </strong>
+            <strong>No password. </strong>
             Your device keeps the key and we keep only the public half of it, so there is nothing
             here worth stealing.
           </span>
@@ -237,9 +237,10 @@ async function pair() {
         <li>
           <span class="points__mark" aria-hidden="true"><Library :size="16" :stroke-width="1.8" /></span>
           <span>
-            <strong>Study progress tracked: </strong>
-            Cards saved from a message stay on the device that made them, we won't save any
-            of your raw email/message data to our server.
+            <strong>Your progress on any device. </strong>
+            Saved library cards and progress follow you when you sign in elsewhere. Cards saved
+            from a message stay on the device that made them, and we never save the text of your
+            messages on our server.
           </span>
         </li>
         <li>
