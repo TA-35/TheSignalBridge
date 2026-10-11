@@ -17,7 +17,7 @@ import {
 import { useAccountStore } from '@/stores/account'
 import { useActivityStore } from '@/stores/activity'
 import { useCardsStore } from '@/stores/cards'
-import { useSettingsStore } from '@/stores/settings'
+import { useSettingsStore, type TextSize } from '@/stores/settings'
 import logoLight from '@/assets/logo.png'
 import logoDark from '@/assets/logo-dark.png'
 
@@ -77,6 +77,21 @@ const navItems = computed(() => [
   ...(accountStore.signedIn ? [{ to: '/progress', label: 'Progress', icon: LayoutDashboard, soon: false }] : []),
   { to: '/settings', label: 'Settings', icon: Settings, soon: false },
 ])
+
+// When the row gives way to the menu button. Measured in Chrome with Bold text
+// on (the widest setting), the row needs 965px signed out and 1100px signed
+// in, where Progress and the account menu replace Login. Text size zooms the
+// whole page, which a CSS breakpoint can't see, so it's worked out here; the
+// scales match --ui-scale in assets/tokens.css, and 17px is a Windows
+// scrollbar. Re-measure if nav items change.
+const UI_SCALE: Record<TextSize, number> = { small: 0.92, standard: 1, large: 1.22 }
+const viewportWidth = ref(window.innerWidth)
+const onResize = () => {
+  viewportWidth.value = window.innerWidth
+}
+const compactNav = computed(
+  () => viewportWidth.value < (accountStore.signedIn ? 1100 : 965) * UI_SCALE[settingsStore.settings.textSize] + 17,
+)
 
 const route = useRoute()
 const isActive = (to: string) => (to === '/' ? route.path === '/' : route.path.startsWith(to))
@@ -141,16 +156,18 @@ function onDocumentKeydown(event: KeyboardEvent) {
 onMounted(() => {
   document.addEventListener('pointerdown', onDocumentPointerDown)
   document.addEventListener('keydown', onDocumentKeydown)
+  window.addEventListener('resize', onResize)
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('pointerdown', onDocumentPointerDown)
   document.removeEventListener('keydown', onDocumentKeydown)
+  window.removeEventListener('resize', onResize)
 })
 </script>
 
 <template>
-  <div class="shell">
+  <div class="shell" :class="{ 'shell--compact-nav': compactNav }">
     <!-- Seven nav items stand between the top of every page and its content.
          This is the standard way out of that for anyone driving by keyboard:
          hidden until focused, first in the tab order. -->
@@ -502,55 +519,51 @@ onBeforeUnmount(() => {
   margin: 0 auto;
 }
 
-/* 860px used to be enough for seven items; with two of them now carrying a
-   qualifier it is not, and the row spilled past the viewport between 861px
-   and roughly 1110px. Progress adds one more item (about 110px), so the
-   horizontal nav now switches to the menu below 1220px, where it still fits. */
-@media (max-width: 1220px) {
-  .menu-toggle {
-    display: flex;
-  }
+/* Narrow viewport: the nav becomes a menu behind the toggle. compactNav in
+   the script decides when (it depends on sign-in and text size). */
+.shell--compact-nav .menu-toggle {
+  display: flex;
+}
 
-  .nav {
-    position: absolute;
-    top: 64px;
-    left: 0;
-    right: 0;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 2px;
-    background: var(--color-frame);
-    border-bottom: 1px solid var(--color-border-soft);
-    padding: 10px 16px 14px;
-    box-shadow: 0 8px 16px rgba(58, 55, 51, 0.06);
-    display: none;
-  }
+.shell--compact-nav .nav {
+  position: absolute;
+  top: 64px;
+  left: 0;
+  right: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  background: var(--color-frame);
+  border-bottom: 1px solid var(--color-border-soft);
+  padding: 10px 16px 14px;
+  box-shadow: 0 8px 16px rgba(58, 55, 51, 0.06);
+  display: none;
+}
 
-  .nav--open {
-    display: flex;
-  }
+.shell--compact-nav .nav--open {
+  display: flex;
+}
 
-  .nav-item {
-    padding: 12px 14px;
-  }
+.shell--compact-nav .nav-item {
+  padding: 12px 14px;
+}
 
-  /* The nav is already a panel here, so the account menu drops into the
-     stack rather than floating a second panel over the first. */
-  .account__menu {
-    position: static;
-    min-width: 0;
-    margin-top: 2px;
-    box-shadow: none;
-    border-color: var(--color-border-soft);
-  }
+/* The nav is already a panel here, so the account menu drops into the
+   stack rather than floating a second panel over the first. */
+.shell--compact-nav .account__menu {
+  position: static;
+  min-width: 0;
+  margin-top: 2px;
+  box-shadow: none;
+  border-color: var(--color-border-soft);
+}
 
-  .account__item {
-    padding: 11px 12px;
-  }
+.shell--compact-nav .account__item {
+  padding: 11px 12px;
+}
 
-  .main {
-    padding: 24px 18px 32px;
-  }
+.shell--compact-nav .main {
+  padding: 24px 18px 32px;
 }
 
 .site-footer {
