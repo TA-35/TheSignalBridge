@@ -19,7 +19,7 @@ export const LOCAL_PATTERNS: LocalPattern[] = [
     name: '"When you get a chance"',
     category: 'Softened request',
     implies:
-      'It is a request with a real deadline attached somewhere else in the thread — the softener is politeness, not optionality.',
+      'It is a request with a real deadline attached somewhere else in the thread. The softener is politeness, not optionality.',
     why_misread:
       'Read literally, it sounds like "whenever, no rush". The urgency lives in context the sender assumed you shared.',
     matchHint: /when you get a chance/i,
@@ -37,7 +37,7 @@ export const LOCAL_PATTERNS: LocalPattern[] = [
     id: 'l3',
     name: '"Loop in whoever owns it"',
     category: 'Unassigned owner',
-    implies: 'Ownership is being handed to you to figure out — the sender does not know either.',
+    implies: 'Ownership is being handed to you to figure out. The sender does not know either.',
     why_misread:
       'It reads as an instruction you should already be able to follow, when it is actually an open question.',
     matchHint: /\b(loop in|whoever|if that'?s easier)\b/i,

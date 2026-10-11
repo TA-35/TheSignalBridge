@@ -689,7 +689,7 @@ async function copyDraftToClipboard() {
       <div class="results-header">
         <div>
           <h1>Here's what the message says</h1>
-          <p>What's stated stays visible. What's unclear stays open.</p>
+          <p>We show what the message states, and leave anything unclear as an open question.</p>
         </div>
         <button type="button" class="btn btn--ghost" @click="editMessage">Edit message</button>
       </div>
@@ -743,7 +743,7 @@ async function copyDraftToClipboard() {
               <span class="card__index" aria-hidden="true">{{ sectionNumber.meaning }}</span>
               <span class="card__title">What this message means</span>
               <span v-if="state.llmLoading && !state.llm" class="card__status">
-                reading closely — usually 5–15 seconds
+                reading closely, usually 5 to 15 seconds
               </span>
               <span v-else-if="state.llm?.degraded" class="card__status card__status--warn">
                 showing only what was quoted directly
@@ -795,7 +795,7 @@ async function copyDraftToClipboard() {
                   <span v-if="item.reading" class="ask__reading">{{ item.reading }}</span>
                 </span>
               </button>
-              <p class="card__hint">Ticking is just for you — nothing is sent anywhere.</p>
+              <p class="card__hint">Ticking is just for you. Nothing is sent anywhere.</p>
             </div>
           </section>
 
@@ -852,7 +852,7 @@ async function copyDraftToClipboard() {
                    as pressure to anyone who bristles at being told. This says
                    what the control does and leaves the choice alone. -->
               <p class="card__hint card__hint--top">
-                Anything you tick goes into the reply below. Anything you leave stays out.
+                Only what you tick goes into the reply below.
               </p>
               <button
                 v-for="gap in gaps"
@@ -921,7 +921,7 @@ async function copyDraftToClipboard() {
             <div>
               <strong>No library match for this wording</strong>
               <span>
-                You can still keep this card, it will show the message and what it left
+                You can still keep this card. It will show the message and what it left
                 unsaid, without a pattern explanation.
                 <RouterLink to="/library">Browse the library</RouterLink> to see what is covered so far.
               </span>
@@ -943,7 +943,7 @@ async function copyDraftToClipboard() {
                was keyed to matchedPattern, so the caveat and the button it
                describes could each appear without the other. -->
           <span v-if="state.record" class="disclaimer">
-            Or just leave &mdash; nothing is kept unless you make a flashcard.
+            Or just leave. Nothing is kept unless you make a flashcard.
           </span>
         </div>
       </div>
@@ -999,7 +999,7 @@ async function copyDraftToClipboard() {
           <strong>{{ state.savedCard?.name }}</strong>
           <span>{{ state.savedCard?.implies }}</span>
         </div>
-        <p class="modal__note">You Flash cards can be found in Study.</p>
+        <p class="modal__note">Your flashcards are in Study.</p>
         <div class="actions">
           <RouterLink to="/study" class="btn btn--primary">View in Study</RouterLink>
           <button type="button" class="btn btn--secondary" @click="closeSaved">Keep reading</button>

@@ -15,7 +15,7 @@ interface FeatureCard {
 // route, so the shape is already familiar by the time someone reaches it.
 const FEATURES: FeatureCard[] = [
   {
-    title: 'Message Decoder',
+    title: 'Message decoder',
     desc: "See what a message covers, what it leaves out, and what to ask next.",
     to: '/decode',
     cta: 'Decode message',
@@ -23,7 +23,7 @@ const FEATURES: FeatureCard[] = [
     icon: MailQuestionMark,
   },
   {
-    title: 'Pattern Library',
+    title: 'Pattern library',
     desc: 'Common workplace phrasings, and what they actually imply.',
     to: '/library',
     cta: 'Browse the library',
@@ -31,23 +31,23 @@ const FEATURES: FeatureCard[] = [
     icon: Library,
   },
   {
-    title: 'Study & Flashcards',
-    desc: 'Save what you learn. Review whenever you want',
+    title: 'Study & flashcards',
+    desc: 'Save what you learn. Review whenever you want.',
     to: '/study',
     cta: 'Open Study',
     status: 'live',
     icon: BookOpen,
   },
   {
-    title: 'Comfort Settings',
-    desc: 'Switch to dark mode, color themes, and different text size & weight.',
+    title: 'Comfort settings',
+    desc: 'Switch to dark mode, pick a color theme, and change text size and weight.',
     to: '/settings',
     cta: 'Adjust settings',
     status: 'live',
     icon: Settings,
   },
   {
-    title: 'Message Composer',
+    title: 'Message composer',
     desc: 'See what a message might be missing before you send it.',
     to: '/compose',
     cta: 'Compose message',
@@ -55,7 +55,7 @@ const FEATURES: FeatureCard[] = [
     icon: PenLine,
   },
   {
-    title: 'Accounts & Progress',
+    title: 'Accounts & progress',
     desc: 'An optional account to keep your history across devices.',
     to: '/account',
     cta: 'Check account',
@@ -75,7 +75,7 @@ const FEATURES: FeatureCard[] = [
         <h1 class="hero-title">Clear communication, <br />with no hidden "surprises".</h1>
         <p class="hero-subtitle">
           Analyse incoming messages to spot unstated expectations and subtext, and see
-          the exact words each reading came from. Drafting help is coming next.
+          the exact words each reading came from.
         </p>
         <div class="actions">
           <RouterLink to="/decode" class="btn btn--primary">Decode a message</RouterLink>

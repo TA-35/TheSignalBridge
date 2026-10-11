@@ -30,7 +30,7 @@ onMounted(async () => {
 const CATEGORY_BLURB: Record<string, string> = {
   'Softened request': 'Politely worded, but still a real ask.',
   'Vague deadline': 'A time is implied, just never stated.',
-  'Unassigned owner': "Someone's expected to own this - it just doesn't say who.",
+  'Unassigned owner': "Someone is expected to own this, but it doesn't say who.",
   'Feedback framing': 'Praise softening a note that matters more than it sounds.',
   'Unclear priority': 'How urgent this really is, left for you to guess.',
   'Undefined scope': 'The size of the ask is narrower than the wording suggests.',

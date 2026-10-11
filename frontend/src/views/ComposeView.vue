@@ -157,7 +157,7 @@ const copyRewrite = () => copyText(rewriteText.value)
         <h1>Make your message clear</h1>
         <p>
           Paste a message you're about to send. 
-          We'll make it clear so it can't be misread.
+          We'll rewrite it so it's harder to misread.
         </p>
       </div>
 
