@@ -1,0 +1,144 @@
+{
+  "stanford_00001": {
+    "why": "NLI flags a contradiction: the draft changes \"I wasn't sure\" to \"I'm not sure\" and adds \"anything I send\", which the sender didn't say.",
+    "status": "proposed",
+    "rewrite": "I wasn't sure whether you were actually reading anything, because facts don't seem to affect you at all. And you accuse me of making things up?"
+  },
+  "stanford_00005": {
+    "why": "Urgency is high, but nothing in the message is time-critical; the other accusatory messages are medium.",
+    "status": "proposed",
+    "meaning": {
+      "urgency": "medium"
+    }
+  },
+  "stanford_00007": {
+    "why": "\"seriously\" was dropped, weakening the insistence the note says was kept; the note also claims a split that didn't happen.",
+    "status": "proposed",
+    "rewrite": "PS — I would seriously like an answer to my question above. What is your native language, and where do you come from?",
+    "notes": [
+      "Kept your insistence on getting an answer.",
+      "'My question above' points to an earlier message. Check the reader can still see it."
+    ]
+  },
+  "stanford_00009": {
+    "why": "The second note says the sentence was split; the draft only changed \"BUT\" to \"but\".",
+    "status": "proposed",
+    "notes": [
+      "Fixed the typo \"don~t\" to \"don't\".",
+      "Changed the capitalised \"BUT\" to \"but\"; the question is unchanged."
+    ]
+  },
+  "stanford_00015": {
+    "why": "The draft adds \"Hi\", which the sender didn't write.",
+    "status": "proposed",
+    "rewrite": "Leah, thanks a lot for your help with the article. Why was the link to the article for \"Advent of Divine Justice\" deleted?"
+  },
+  "stanford_00020": {
+    "why": "Optional: \"Please explain why you reverted ... without any explanation\" reads oddly and turns a direct question into a demand.",
+    "status": "proposed",
+    "rewrite": "Why did you revert my edits to those articles without any explanation?",
+    "notes": [
+      "Dropped \"What's going on?\" — it was vague and the real ask follows.",
+      "Kept your question as the ask: why the edits were reverted."
+    ]
+  },
+  "stanford_00022": {
+    "why": "The draft adds \"Hi,\", which the sender didn't write.",
+    "status": "proposed",
+    "rewrite": "Would you like all of the data? I tried to use logcat, but there's so much data that I don't know how to sort through it."
+  },
+  "stanford_00023": {
+    "why": "\"On the small side\" means a bit small; \"too small\" is stronger than the sender said.",
+    "status": "proposed",
+    "rewrite": "Hi. The font size for the links in this template may be a bit small. It seems to be floating okay. Do I need to check more places where this template is used?",
+    "meaning": {
+      "implied": "The sender thinks the link font size may be a bit small and wants a decision from the reader."
+    }
+  },
+  "stanford_00030": {
+    "why": "The second note says a long sentence was split; the draft has the same two sentences as the message.",
+    "status": "proposed",
+    "notes": [
+      "'The more powerful topic' is vague. Name it so the reader knows what to expand on."
+    ]
+  },
+  "stanford_00035": {
+    "why": "\"Would you please stop?\" became \"Please stop.\" - curter than the sender, and no note says so.",
+    "status": "proposed",
+    "rewrite": "So far, four editors on [URL] have told you about your edit-warring. Would you please stop?"
+  },
+  "stanford_00040": {
+    "why": "The first note says the question was moved first; nothing was moved.",
+    "status": "proposed",
+    "notes": [
+      "Made each question a full sentence so the ask is easy to answer.",
+      "Kept your guess as a question, so it reads as a check, not a fact."
+    ]
+  },
+  "stanford_00041": {
+    "why": "The first note says the question was moved first; it already was.",
+    "status": "proposed",
+    "notes": [
+      "Made the first question a full request: can you explain what you mean?",
+      "Kept the quoted sentence exactly as written."
+    ]
+  },
+  "stanford_00043": {
+    "why": "meaning.ask turns \"Have you tried the script debugger in IE8?\" into an instruction to try it.",
+    "status": "proposed",
+    "meaning": {
+      "ask": "Say which debugger you are using, and whether you have tried the script debugger in IE8"
+    }
+  },
+  "stanford_00049": {
+    "why": "\"Wait ... before adding it\" is wrong (the reference was already added), and dropping \"Great\" guesses it was sarcastic.",
+    "status": "proposed",
+    "rewrite": "Great. I understand why you added the reference, but I think it would be better to wait until it has been peer-reviewed.",
+    "notes": [
+      "Replaced the rhetorical question with a plain suggestion: wait for peer review.",
+      "Kept 'Great' and your reasoning as written."
+    ],
+    "meaning": {
+      "ask": "Wait until the reference has been peer-reviewed",
+      "implied": "The sender would rather the reference waited for peer review."
+    }
+  },
+  "stanford_00050": {
+    "why": "Already clear: the draft adds \"Let me know.\" and its note claims a split that didn't happen.",
+    "status": "proposed",
+    "rewrite": "Aha, problem solved, while I was writing that, you set up a new article! Should we change [URL] into a disambiguation page?",
+    "notes": [
+      "Already clear, kept as written."
+    ]
+  },
+  "stanford_00055": {
+    "why": "Judgment call: the bare \"ANI?\" is left for the reader to decode; it asks whether to take this to ANI.",
+    "status": "proposed",
+    "rewrite": "What's the best way to raise this? I can't remove it from him because I'm involved. Should I take it to ANI?",
+    "notes": [
+      "Replaced 'take this up' with 'raise this'.",
+      "Turned 'ANI?' into a full question: should I take it to ANI?",
+      "Say what 'it' refers to, so the reader knows what is being raised."
+    ],
+    "meaning": {
+      "ask": "Advise on the best way to raise this, and whether to take it to ANI"
+    }
+  },
+  "stanford_00056": {
+    "why": "The second note explains HTML comments instead of describing a change; the change made (question moved first) isn't noted.",
+    "status": "proposed",
+    "notes": [
+      "Put your question first so it is easy to find.",
+      "You didn't say what \"it\" is. Name it so the reader knows what should be visible."
+    ]
+  },
+  "stanford_00060": {
+    "why": "The draft turns the second question into a statement, while its note says both questions were kept.",
+    "status": "proposed",
+    "rewrite": "Does any content need to be restored? As far as I can see, the only edit I deleted was the redirect. Is that right?",
+    "notes": [
+      "Replaced \"rescuing\" with \"restored\" so the meaning is literal.",
+      "Made your second question explicit: was the redirect the only edit deleted?"
+    ]
+  }
+}

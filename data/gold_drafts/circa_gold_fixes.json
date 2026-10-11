@@ -1,0 +1,82 @@
+{
+  "circa_01237": {
+    "why": "A conditional answer: other drafts state the qualified yes (\"Yes, when it's about dragons.\"), and \"the mystery novel\" reads oddly.",
+    "status": "proposed",
+    "rewrite": "Yes, but only mystery novels based on real life.",
+    "notes": [
+      "Stated the qualified yes directly.",
+      "Kept your condition: only ones based on real life."
+    ]
+  },
+  "circa_01920": {
+    "why": "\"I've never been here\" answers \"Do you eat here often?\" with a clear no; the style guide's Circa example states the answer.",
+    "status": "proposed",
+    "rewrite": "No, I've never been here.",
+    "notes": [
+      "Stated the answer directly: no."
+    ]
+  },
+  "circa_02263": {
+    "why": "\"A few I like to do\" became \"a few activities I really enjoy doing\" - stronger than the sender said.",
+    "status": "proposed",
+    "rewrite": "Yes, there are a few I like to do."
+  },
+  "circa_08169": {
+    "why": "\"I have so much to do\" answers \"Did you get everything finished?\" with a clear no; the draft rewords it without answering, and its note says it answered.",
+    "status": "proposed",
+    "rewrite": "No, not yet. I still have so much to do.",
+    "notes": [
+      "Stated the answer directly: not finished yet.",
+      "Kept your words about how much is left."
+    ]
+  },
+  "circa_09579": {
+    "why": "Optional: \"sounds good\" is a fairly clear yes; stating it matches the other drafts.",
+    "status": "proposed",
+    "rewrite": "Yes, that sounds good.",
+    "notes": [
+      "Made the yes explicit."
+    ]
+  },
+  "circa_19403": {
+    "why": "Moving to Oregon almost 20 years ago is a clear yes; similar drafts state it (circa_22741, Colombia).",
+    "status": "proposed",
+    "rewrite": "Yes, I moved to Oregon almost 20 years ago.",
+    "notes": [
+      "Stated the answer directly: yes, a long time."
+    ]
+  },
+  "circa_22771": {
+    "why": "Judgment call: \"I'm not into jazz\" doesn't say whether they've been to a jazz show, so \"Already clear\" is wrong, but adding \"No\" would be a guess. Keep the words and ask for the answer, as circa_16983 does.",
+    "status": "proposed",
+    "notes": [
+      "Your reply doesn't say yes or no. Add whether you've been to a jazz show."
+    ],
+    "meaning": {
+      "implied": "Probably no, but the reply doesn't say whether the sender has been to a jazz show."
+    }
+  },
+  "circa_26731": {
+    "why": "\"I'd rather rest\" is a clear no; similar drafts state it (\"No thanks, I've only just eaten.\").",
+    "status": "proposed",
+    "rewrite": "No, I'd rather rest.",
+    "notes": [
+      "Stated the answer directly: no."
+    ]
+  },
+  "circa_28792": {
+    "why": "Kept as written, so the notes should be the standard one; the extra note asks for detail the question didn't need.",
+    "status": "proposed",
+    "notes": [
+      "Already clear, kept as written."
+    ]
+  },
+  "circa_31460": {
+    "why": "A three-hour commute answers \"Do you have far to travel?\" with a clear yes; the convention states it.",
+    "status": "proposed",
+    "rewrite": "Yes, it's about a three-hour commute.",
+    "notes": [
+      "Stated the answer directly: yes, it's far."
+    ]
+  }
+}

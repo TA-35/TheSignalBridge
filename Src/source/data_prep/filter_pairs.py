@@ -16,6 +16,7 @@ Checks, in order:
   3. dropped_entity - every PERSON/ORG/DATE/TIME/MONEY/number in the source is in the rewrite
   4. added_entity   - nothing in the rewrite that isn't in the source
   5. length         - rewrite is 0.5-2.5x the source word count (short ones: up to +12 words)
+  5b. hedge_kept    - "no rush" / "if you get a chance" kept although there is a deadline
   6. contradiction  - NLI (cross-encoder/nli-deberta-v3-base) doesn't say it contradicts
 
 Run from the repo root:
@@ -49,7 +50,7 @@ SOURCE_GLOB = "data/source/*_source.jsonl"
 OUT_DIR = Path("data/filtered")
 
 CHECKS = ["gold_overlap", "prompt_version", "json_valid", "notes_ok", "dropped_entity",
-          "added_entity", "length", "contradiction"]
+          "added_entity", "length", "hedge_kept", "contradiction"]
 ENT_TYPES = {"PERSON", "ORG", "DATE", "TIME", "MONEY"}
 NLI_MODEL = "cross-encoder/nli-deberta-v3-base"
 SEED = 42
@@ -87,10 +88,19 @@ ABBREV = {
 }
 ABBREV_RE = [(re.compile(rf"\b{k}\b\.?", re.I), v) for k, v in ABBREV.items()]
 
+# A rewrite that fixes the spelling of a date ("tommorow" -> "tomorrow") would
+# otherwise read as adding one.
+MISSPELT = {
+    r"tom+or+ow": "tomorrow", r"tomarrow": "tomorrow",
+    r"wen?d?n?e?sday": "wednesday", r"wedensday": "wednesday",
+    r"thrusday": "thursday", r"febuary": "february", r"saturaday": "saturday",
+}
+MISSPELT_RE = [(re.compile(rf"\b{k}\b", re.I), v) for k, v in MISSPELT.items()]
+
 
 def norm(text):
     t = str(text).lower().replace("\u2019", "'").replace("\u2018", "'")
-    for rx, full in ABBREV_RE:
+    for rx, full in ABBREV_RE + MISSPELT_RE:
         t = rx.sub(full, t)
     t = re.sub(r"'s\b", "", t)                     # Friday's -> Friday
     t = re.sub(r"(?<=\d),(?=\d{3}\b)", "", t)      # 1,000 -> 1000
@@ -126,6 +136,13 @@ def nlp():
 
 
 NUM_RE = re.compile(r"\$?\d+(?:[.,:/]\d+)*%?")
+# "(1) ", "2) ", "3. " at the start of a line number a list; they aren't facts.
+# The prompt turns lists into "- " bullets, so counting them dropped good pairs.
+LIST_MARKER_RE = re.compile(r"(?m)^[ \t]*\(?\d{1,2}[.)][ \t]+")
+# spaCy tags these as organisations or people; a rewrite may spell them out
+# ("ASAP" -> "as soon as possible"), drop them ("FYI") or add a heading.
+NOT_ENTITIES = {"fyi", "asap", "background", "forwarded"}
+ARTICLES = re.compile(r"\b(?:the|a|an)\b")
 PLACEHOLDER_RE = re.compile(r"\[[A-Z_]+\]")
 
 
@@ -133,9 +150,9 @@ def entities(text):
     """Things that must survive the rewrite: named entities + any number + redaction tags."""
     found = set()
     for e in nlp()(str(text)).ents:
-        if e.label_ in ENT_TYPES:
+        if e.label_ in ENT_TYPES and e.text.strip().lower() not in NOT_ENTITIES:
             found.add(e.text.strip())
-    for m in NUM_RE.findall(str(text)):
+    for m in NUM_RE.findall(LIST_MARKER_RE.sub(" ", str(text))):
         found.add(m.rstrip(".,"))
     for m in PLACEHOLDER_RE.findall(str(text)):
         found.add(m)
@@ -150,6 +167,10 @@ def present(ent, other_text, other_norm, other_tokens):
     if not e:
         return True
     if e in other_norm:
+        return True
+    # "end of week" vs "end of the week"
+    bare_e = re.sub(r"\s+", " ", ARTICLES.sub(" ", e)).strip()
+    if bare_e and bare_e in re.sub(r"\s+", " ", ARTICLES.sub(" ", other_norm)):
         return True
     words = [w for w in tokens(ent) if w not in STOP]
     return bool(words) and all(w in other_tokens for w in words)
@@ -233,6 +254,21 @@ def check_length(r):
     ratio = w / max(s, 1)
     if ratio < 0.5 or w > max(2.5 * s, s + 12):
         return f"length ratio {ratio:.2f} ({w} vs {s} words)"
+    return None
+
+
+# The style guide's hedged request: "No rush, but before Thursday" has a
+# deadline, so the rewrite says the deadline plainly and drops the hedge.
+# Without a deadline "no rush" is real information about urgency and stays.
+DEADLINE_HEDGES = re.compile(
+    r"\bno rush\b|\b(?:if|when) you get a chance\b|\bwhenever (?:you can|suits)\b", re.I)
+
+
+def check_hedge_kept(r):
+    deadline = str((r.get("meaning") or {}).get("deadline", "")).strip()
+    hedge = DEADLINE_HEDGES.search(r["rewrite"])
+    if deadline and hedge:
+        return f'kept "{hedge.group(0)}" although there is a deadline ({deadline[:40]})'
     return None
 
 
@@ -390,7 +426,8 @@ def step_filter(a):
 
             failed = False
             for name, fn in [("notes_ok", check_notes), ("dropped_entity", check_dropped),
-                             ("added_entity", check_added), ("length", check_length)]:
+                             ("added_entity", check_added), ("length", check_length),
+                             ("hedge_kept", check_hedge_kept)]:
                 seen[name] += 1
                 why = fn(r)
                 if why:
