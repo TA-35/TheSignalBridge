@@ -812,7 +812,6 @@ const copyRewrite = () => copyText(rewriteText.value)
   font-size: 16px;
   line-height: 1.72;
   color: var(--color-text);
-  outline: none;
 }
 
 .card--reason {
