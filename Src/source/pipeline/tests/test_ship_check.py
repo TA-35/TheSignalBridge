@@ -4,6 +4,8 @@ from __future__ import annotations
 import csv
 import json
 
+import pytest
+
 from Src.source.pipeline import ship_check as sc
 
 
@@ -61,3 +63,38 @@ def test_exit_status_and_decision_file(tmp_path, monkeypatch):
     results(row("run2", 0.70, 0.75, 40, 10))                           # recall 10 points down
     assert sc.main(["--finetuned", "run2"]) == 1
     assert json.loads((tmp_path / "eval/ship_decision.json").read_text())["verdict"] == "SHIP baseline"
+
+
+def test_a_waiver_stands_in_for_the_human_check_and_is_recorded():
+    out = sc.decide(BASE, row("run2", 0.95, 0.75, 40, 10), judge_trusted=None, gold_lock="locked",
+                    preview=False, waiver="Sanket: AI rater instead of people")
+    assert out["verdict"] == "SHIP run2 (human validation of the judge waived)" and out["ship"] == "run2"
+    assert out["waiver"] == "Sanket: AI rater instead of people"
+    assert out["preconditions"][0]["ok"] and "WAIVED" in out["preconditions"][0]["detail"]
+
+
+def test_a_waiver_skips_neither_the_gold_lock_nor_the_rules():
+    reason = {"judge_trusted": None, "preview": False, "waiver": "owner"}
+    assert sc.decide(BASE, row("run2", 0.95, 0.75, 40, 10), gold_lock="not locked", **reason)["verdict"] == "UNDECIDED"
+    out = sc.decide(BASE, row("run2", 0.70, 0.75, 40, 10), gold_lock="locked", **reason)
+    assert out["ship"] == "baseline" and out["verdict"].startswith("SHIP baseline")
+
+
+def test_a_waiver_is_not_used_when_people_did_validate_the_judge():
+    out = sc.decide(BASE, row("run2", 0.95, 0.75, 40, 10), judge_trusted=True, gold_lock="locked",
+                    preview=False, waiver="not needed")
+    assert out["verdict"] == "SHIP run2" and out["waiver"] is None
+
+
+def test_waiver_on_the_command_line(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sc, "gold_lock_status", lambda: "locked")
+    (tmp_path / "eval").mkdir()
+    with (tmp_path / "eval/results.csv").open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(BASE))
+        w.writeheader()
+        w.writerows([BASE, row("run2", 0.95, 0.75, 40, 10)])
+    with pytest.raises(SystemExit):
+        sc.main(["--finetuned", "run2", "--waive-human-validation", "  "])
+    assert sc.main(["--finetuned", "run2", "--waive-human-validation", "owner's call"]) == 0
+    assert json.loads((tmp_path / "eval/ship_decision.json").read_text())["waiver"] == "owner's call"
