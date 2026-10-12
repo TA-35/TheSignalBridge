@@ -78,6 +78,13 @@ def test_entity_closing_a_sentence_is_kept(nli):
     assert g.check(src, rewrite).ok
 
 
+def test_casual_shorthand_rewrite_passes(nli):
+    # Withheld on the live site: "b4" read as the number 4.
+    src = "hey can u check the budget numbers b4 thursday, the client wants them early if possible"
+    assert g.check(src, "Hey, can you check the budget numbers before Thursday? "
+                        "The client wants them early if possible.").ok
+
+
 def test_a_broken_check_fails_closed(nli, monkeypatch):
     def broken(record):
         raise RuntimeError("spaCy fell over")

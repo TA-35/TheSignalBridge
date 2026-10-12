@@ -153,3 +153,37 @@ def test_hedge_next_to_a_deadline_is_rejected():
 def test_no_rush_without_a_deadline_is_real_urgency_and_stays():
     r = {"rewrite": "No rush. Could you send me the deck when it's ready?", "meaning": {"deadline": ""}}
     assert fp.check_hedge_kept(r) is None
+
+
+# Live Compose withheld good rewrites of casual messages for their form, not
+# their meaning: "b4" read as the number 4, "if you have a sec" as a time, and
+# "2 things" written out as "two things" as a dropped number.
+
+def test_texting_shorthand_is_not_a_number():
+    r = {"source": "hey can u check the budget numbers b4 thursday, the client wants them early if possible",
+         "rewrite": "Hey, can you check the budget numbers before Thursday? The client wants them early if possible."}
+    assert fp.check_dropped(r) is None and fp.check_added(r) is None
+    r = {"source": "can we meet 2moro?", "rewrite": "Can we meet tomorrow?"}
+    assert fp.check_dropped(r) is None and fp.check_added(r) is None
+    r = {"source": "pls review the draft b4 friday, gr8 thx", "rewrite": "Please review the draft before Friday. Thanks!"}
+    assert fp.check_dropped(r) is None and fp.check_added(r) is None
+
+
+def test_shorthand_does_not_hide_a_dropped_date():
+    r = {"source": "check the numbers b4 thursday", "rewrite": "Check the numbers soon."}
+    assert fp.check_dropped(r) is not None
+
+
+def test_a_sec_is_a_hedge_not_a_time():
+    r = {"source": "Might be worth double-checking the budget figures with finance, if you have a sec.",
+         "rewrite": "Could you double-check the budget figures with finance?"}
+    assert fp.check_dropped(r) is None
+    timed = {"source": "The call starts in 10 minutes.", "rewrite": "The call starts soon."}
+    assert fp.check_dropped(timed) is not None
+
+
+def test_a_number_written_out_is_the_same_number():
+    r = {"source": "need 2 things fixed before the demo", "rewrite": "I need two things fixed before the demo."}
+    assert fp.check_dropped(r) is None and fp.check_added(r) is None
+    r["rewrite"] = "I need three things fixed before the demo."
+    assert fp.check_dropped(r) is not None
