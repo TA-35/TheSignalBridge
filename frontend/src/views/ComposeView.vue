@@ -70,7 +70,7 @@ const missingItems = computed(() => {
   const r = state.result
   if (!r?.rewrite) return []
   const skip = state.message === answered.value.draft ? answered.value.keys : new Set<MissingKey>()
-  return findMissing(state.message, r.meaning).filter((item) => !skip.has(item.key))
+  return findMissing(state.message, r.meaning, r.notes).filter((item) => !skip.has(item.key))
 })
 
 function addMissing(answers: Partial<Record<MissingKey, Answer>>) {
