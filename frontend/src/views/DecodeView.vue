@@ -11,6 +11,7 @@ import { ELEMENT_LABELS, NOT_SPECIFIED, type DecodeResult } from '@/types/decode
 import type { Pattern, SavedCard } from '@/types/pattern'
 import type { DecodeRecord } from '@/types/decode'
 import VoiceInput from '@/components/VoiceInput.vue'
+import { confirmLine, deadlineWords, detailWords } from '@/utils/confirmBack'
 import {
   REVIEW_FIELD_LABELS,
   type FullReview,
@@ -536,33 +537,67 @@ const checkedPrompts = computed(() =>
 // them pick is faster than either guessing or leaving them to rewrite it.
 const draftTone = ref<'plain' | 'warm'>('plain')
 
+// What the reader understood, to open the reply with, so the sender can
+// confirm or correct it before any work starts - asking about the gaps alone
+// leaves the reader's reading of everything else unchecked. Every ask not yet
+// ticked done, turned round to the reader's side (utils/confirmBack.ts), less
+// any it can't turn round safely. The model's one deadline goes after a single
+// ask; with several asks it isn't clear which it belongs to, and the questions
+// can settle that.
+const confirmBack = ref(true)
+const confirmLines = computed(() => {
+  const open = todo.value.filter((item) => !state.done.has(item.text))
+  const deadline = modelSettled.value.find((c) => c.field === 'deadline')?.text ?? ''
+  return open
+    .map((item) => {
+      const detail = item.detail
+        ? detailWords(item.detail)
+        : open.length === 1 && deadline
+          ? deadlineWords(deadline)
+          : ''
+      return confirmLine(item.text, detail)
+    })
+    .filter((line): line is string => line !== null)
+})
+
+const replyShown = computed(() => checkedPrompts.value.length > 0 || confirmLines.value.length > 0)
+
 const replyDraft = computed(() => {
   const questions = checkedPrompts.value.map((q) => q.question.trim()).filter(Boolean)
-  if (!questions.length) return ''
-
-  const count = questions.length === 1 ? 'one' : questions.length === 2 ? 'couple' : 'few'
-  const opener =
-    draftTone.value === 'warm'
-      ? {
-          one: 'Just one thing I wanted to check first, if that is okay:',
-          couple: 'Just a couple of things I wanted to check first, if that is okay:',
-          few: 'Just a few things I wanted to check first, if that is okay:',
-        }[count]
-      : {
-          one: 'One thing I wanted to check:',
-          couple: 'A couple of things I wanted to check:',
-          few: 'A few things I wanted to check:',
-        }[count]
-
-  // A single question reads better inline than as a one-item bullet list.
-  const body =
-    questions.length === 1 ? questions[0] : questions.map((q) => `- ${q}`).join('\n')
+  const understood = confirmBack.value ? confirmLines.value : []
+  if (!questions.length && !understood.length) return ''
 
   // Still no name in either register - see the note above. The warm version
   // adds a thank-you, which needs nothing from the message to be true.
-  const greeting = draftTone.value === 'warm' ? 'Hi,\n\nThanks for this.' : 'Hi,'
+  const blocks = [draftTone.value === 'warm' ? 'Hi,\n\nThanks for this.' : 'Hi,']
 
-  return `${greeting}\n\n${opener}\n\n${body}\n\nThanks!`
+  if (understood.length) {
+    blocks.push(`Just to check I've got this right:\n\n${understood.map((line) => `- ${line}`).join('\n')}`)
+  }
+
+  if (questions.length) {
+    const count = questions.length === 1 ? 'one' : questions.length === 2 ? 'couple' : 'few'
+    const opener = understood.length
+      ? { one: 'And one question:', couple: 'And a couple of questions:', few: 'And a few questions:' }[count]
+      : draftTone.value === 'warm'
+        ? {
+            one: 'Just one thing I wanted to check first, if that is okay:',
+            couple: 'Just a couple of things I wanted to check first, if that is okay:',
+            few: 'Just a few things I wanted to check first, if that is okay:',
+          }[count]
+        : {
+            one: 'One thing I wanted to check:',
+            couple: 'A couple of things I wanted to check:',
+            few: 'A few things I wanted to check:',
+          }[count]
+    // A single question reads better inline than as a one-item bullet list.
+    blocks.push(`${opener}\n\n${questions.length === 1 ? questions[0] : questions.map((q) => `- ${q}`).join('\n')}`)
+  } else {
+    blocks.push("Let me know if I've missed anything.")
+  }
+
+  blocks.push('Thanks!')
+  return blocks.join('\n\n')
 })
 
 // What the cards show about the model's progress, as one sentence for the
@@ -586,7 +621,7 @@ const sectionNumber = computed(() => {
     ['asks', todo.value.length > 0],
     ['states', coveredRows.value.length > 0],
     ['gaps', true],
-    ['reply', checkedPrompts.value.length > 0],
+    ['reply', replyShown.value],
   ]
   const out: Record<string, string> = {}
   let i = 0
@@ -876,11 +911,11 @@ async function copyDraftToClipboard() {
           </section>
 
           <!-- 6. The reply -------------------------------------------------- -->
-          <section v-if="checkedPrompts.length" class="card card--reply">
+          <section v-if="replyShown" class="card card--reply">
             <div class="card__head card__head--static">
               <span class="card__index" aria-hidden="true">{{ sectionNumber.reply }}</span>
               <span class="card__title">Your reply</span>
-              <button type="button" class="copy-btn" @click="copyDraftToClipboard">
+              <button type="button" class="copy-btn" :disabled="!replyDraft" @click="copyDraftToClipboard">
                 <Check v-if="copyState === 'copied'" :size="14" :stroke-width="2" aria-hidden="true" />
                 <Copy v-else :size="14" :stroke-width="2" aria-hidden="true" />
                 <span aria-live="polite">{{
@@ -908,11 +943,19 @@ async function copyDraftToClipboard() {
                 >Warmer</button>
               </div>
 
+              <label v-if="confirmLines.length" class="confirm-pick">
+                <input v-model="confirmBack" type="checkbox" />
+                Start with what I understood, so they can confirm it
+              </label>
+
               <!-- A <pre> because this is newline-formatted text meant to be
                    pasted elsewhere exactly as it reads here. Styled back to
                    the body font so it looks like a message, not code. -->
-              <pre class="draft">{{ replyDraft }}</pre>
-              <p class="card__hint">Copy it when you are ready. Nothing is sent from here.</p>
+              <pre v-if="replyDraft" class="draft">{{ replyDraft }}</pre>
+              <p v-else class="card__hint">
+                Tick a question above, or start with what you understood, and your reply appears here.
+              </p>
+              <p v-if="replyDraft" class="card__hint">Copy it when you are ready. Nothing is sent from here.</p>
             </div>
           </section>
 
@@ -1385,8 +1428,34 @@ async function copyDraftToClipboard() {
   white-space: nowrap;
 }
 
-.copy-btn:hover {
+.copy-btn:hover:not(:disabled) {
   border-color: var(--color-primary-border);
+}
+
+.copy-btn:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+/* Under the Wording pill, one line: whether the reply opens with what the
+   reader understood. */
+.confirm-pick {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: -4px 0 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.confirm-pick input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--color-primary);
 }
 
 .disclaimer {
