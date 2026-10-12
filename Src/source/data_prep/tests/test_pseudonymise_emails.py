@@ -49,10 +49,10 @@ def test_display_names_and_odd_addresses_go_too(tmp_path):
     assert row["subject"] == "Get FREE [EMAIL_0004]! (open for details)"
 
 
-def test_body_message_id_and_labels_are_untouched(tmp_path):
-    # The body and message_id are how enron_register.py keeps eval rows out of training.
+def test_ids_labels_and_redacted_entries_are_untouched(tmp_path):
+    # message_id is how enron_register.py and enron_step1.py keep eval rows out of training.
     f = tmp_path / "f.csv"
-    body = "Please call me. [EMAIL_REDACTED] cc Dasovich@ENRON"
+    body = "Please call me. [EMAIL_REDACTED] cc [PERSON_REDACTED]/HOU/ECT@ECT, meet @ 3"
     _write(f, [["a@enron.com", "", "Re: lunch", "2001-05-14", "<4.JavaMail.evans@thyme>", body, "formal"],
                ["", "", "no address here", "2001-05-15", "<5.JavaMail.evans@thyme>", "hi", "casual"]])
     before = f.read_bytes().splitlines()
@@ -61,6 +61,45 @@ def test_body_message_id_and_labels_are_untouched(tmp_path):
     assert row["body"] == body and row["message_id"] == "<4.JavaMail.evans@thyme>"
     assert row["label"] == "formal" and row["to"] == ""
     assert f.read_bytes().splitlines()[2] == before[2]        # a row with no address, byte for byte
+
+
+def test_named_lotus_entries_in_bodies_are_replaced(tmp_path):
+    # What the earlier scrub left: surnames, a first name Lotus wrapped onto the line
+    # above, and a correspondent's initials.
+    f = tmp_path / "f.csv"
+    body = ("cc: Jeff Skilling/Corp/Enron@ENRON, Stacy E \nDickson/HOU/ECT@ECT\n"
+            "From: [PERSON_REDACTED] Dasovich@ENRON on 05/14\nCopy to wcs@modrallcom.")
+    _write(f, [["", "", "x", "d", "<8@thyme>", body, "formal"]])
+    pe.main([str(f)])
+    assert _read(f)[0]["body"] == ("cc: [EMAIL_0001], [EMAIL_0002]\n"
+                                   "From: [PERSON_REDACTED] [EMAIL_0003] on 05/14\nCopy to [EMAIL_0004].")
+
+
+def test_a_sign_off_above_a_blank_line_is_not_a_first_name(tmp_path):
+    f = tmp_path / "f.csv"
+    body = "Thanks.\n\nTanya\n\n\n[PERSON_REDACTED]@ENRON"
+    _write(f, [["", "", "x", "d", "<9@thyme>", body, "formal"]])
+    pe.main([str(f)])
+    assert _read(f)[0]["body"] == body
+
+
+def test_numbering_carries_on_after_pseudonyms_already_there(tmp_path):
+    # A second run must not hand out [EMAIL_0001] again for a different address.
+    f = tmp_path / "f.csv"
+    _write(f, [["[EMAIL_0007]", "new.person@enron.com", "x", "d", "<10@thyme>", "y", "z"]])
+    pe.main([str(f)])
+    row = _read(f)[0]
+    assert (row["from_"], row["to"]) == ("[EMAIL_0007]", "[EMAIL_0008]")
+
+
+def test_stanford_requests_lose_real_addresses_only(tmp_path):
+    f = tmp_path / "s.csv"
+    with f.open("w", newline="", encoding="utf-8") as out:
+        csv.writer(out, lineterminator="\n").writerows([
+            ["Id", "Community", "Request", "Normalized Score"],
+            ["1", "Wikipedia", "Could I email permissions-en@wikimedia.org, or use pick-an-email@domain?", "0.3"]])
+    pe.main([str(f)])
+    assert _read(f)[0]["Request"] == "Could I email [EMAIL_0001], or use pick-an-email@domain?"
 
 
 def test_a_body_with_its_own_crlf_is_rewritten_byte_for_byte(tmp_path):
@@ -81,8 +120,15 @@ def test_check_counts_what_pt14_counts(tmp_path, capsys):
     assert pe.main(["--check", str(f)]) == 0
 
 
-@pytest.mark.parametrize("path", sorted((ROOT / "data" / "processed").glob("*.csv")), ids=lambda p: p.name)
-def test_processed_data_holds_no_email_addresses(path):
-    # PT-14 found real Enron addresses in the tone CSVs; keep them out.
+DATA = sorted((ROOT / "data" / "processed").glob("*.csv")) + sorted((ROOT / "data" / "Stanford_Politeness").glob("*.csv"))
+
+
+@pytest.mark.parametrize("path", DATA, ids=lambda p: p.name)
+def test_data_holds_no_email_addresses(path):
+    # PT-14 found real addresses in the Enron tone CSVs and the Stanford requests; keep them out.
     rows, _ = pe.load(path)
     assert not pe.email_like(rows), f"{path.name} has email addresses - run pseudonymise_emails.py on it"
+    if "body" in rows[0]:
+        i = rows[0].index("body")
+        named = [m.group(0) for row in rows[1:] for m in pe.LOTUS_RE.finditer(row[i]) if pe.holds_a_name(m)]
+        assert not named, f"{path.name} has named Lotus Notes addresses in its bodies: {named[:3]}"
