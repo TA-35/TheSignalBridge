@@ -129,24 +129,34 @@ function addMissing(answers: Partial<Record<MissingKey, Answer>>) {
   answered.value = { draft: state.message, keys: new Set([...earlier, ...(Object.keys(answers) as MissingKey[])]) }
   editing.value = false
   shown.value = 'rewrite'
-  void rewrite()
+  void runRewrite(true)
 }
 
-async function rewrite() {
+const rewrite = () => runRewrite(false)
+
+// `inPlace`: an answer from the card. The page stays on the result, dimmed,
+// while the new version comes, instead of dropping back to the draft box for
+// the seconds it takes.
+async function runRewrite(inPlace: boolean) {
   const text = state.message.trim()
   state.error = ''
   state.errorTitle = ''
   state.quick = null
-  state.result = null
+  if (!inPlace) state.result = null
   state.loading = true
 
   try {
-    state.result = await composeMessage(text, (quick) => {
+    const result = await composeMessage(text, (quick) => {
       state.quick = quick
     })
+    // A late reply for a draft the sender has since cleared or changed.
+    if (state.message.trim() !== text) return
+    state.result = result
     answerCount.value++
     countDraft(text, state.result)
   } catch (err) {
+    // Errors are shown with the draft, so an answer that fails goes back there.
+    state.result = null
     if (err instanceof EmptyMessageError) {
       state.errorTitle = 'Nothing to rewrite yet'
       state.error = 'Paste the message you are about to send and we will go through it.'
@@ -346,7 +356,12 @@ const copyRewrite = () => copyText(rewriteText.value)
               </div>
             </section>
 
-            <MissingCheck v-if="missingItems.length" :items="missingItems" @add="addMissing" />
+            <MissingCheck
+              v-if="missingItems.length || afterCard"
+              :items="missingItems"
+              :busy="state.loading"
+              @add="addMissing"
+            />
 
             <RewriteFeedback
               :key="answerCount"
@@ -446,7 +461,7 @@ const copyRewrite = () => copyText(rewriteText.value)
 
         <div class="layout">
           <div class="layout__main">
-            <section class="card card--message">
+            <section class="card card--message" :class="{ 'card--busy': state.loading }" :aria-busy="state.loading">
               <textarea
                 v-if="editing"
                 id="compose-edit"
@@ -459,7 +474,12 @@ const copyRewrite = () => copyText(rewriteText.value)
               </p>
             </section>
 
-            <MissingCheck v-if="missingItems.length" :items="missingItems" @add="addMissing" />
+            <MissingCheck
+              v-if="missingItems.length || afterCard"
+              :items="missingItems"
+              :busy="state.loading"
+              @add="addMissing"
+            />
 
             <section v-if="state.result.notes.length && shown === 'rewrite'" class="card">
               <h2 class="card__title">What changed and why</h2>
@@ -524,10 +544,11 @@ const copyRewrite = () => copyText(rewriteText.value)
 
           <aside class="actions-panel">
             <h2 class="actions-panel__title">Actions</h2>
-            <button type="button" class="btn btn--primary" @click="copyRewrite">
+            <!-- Not while an answer is being added: it would copy the version before it. -->
+            <button type="button" class="btn btn--primary" :disabled="state.loading" @click="copyRewrite">
               {{ copyState === 'copied' ? 'Copied' : 'Copy clearer version' }}
             </button>
-            <button type="button" class="btn btn--secondary" @click="toggleEditing">
+            <button type="button" class="btn btn--secondary" :disabled="state.loading" @click="toggleEditing">
               {{ editing ? 'Done editing' : 'Edit clearer version' }}
             </button>
             <button type="button" class="text-link panel-only" @click="editDraft">Keep my original</button>
@@ -921,6 +942,12 @@ const copyRewrite = () => copyText(rewriteText.value)
 
 .card--message {
   min-height: 170px;
+  transition: opacity 0.2s;
+}
+
+/* An answer is being added: this version is about to be replaced. */
+.card--busy {
+  opacity: 0.55;
 }
 
 .card--fold {
@@ -1039,7 +1066,8 @@ const copyRewrite = () => copyText(rewriteText.value)
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fold__caret {
+  .fold__caret,
+  .card--message {
     transition: none;
   }
 }
