@@ -174,6 +174,33 @@ def test_shorthand_does_not_hide_a_dropped_date():
     assert fp.check_dropped(r) is not None
 
 
+# Found by the 100-message Compose test (2026-10-12): these drafts got no
+# rewrite at all. "sum1" holds a 1, and "tmrw", "this arvo" and "last yr"
+# spelled out read as an added date or time.
+
+@pytest.mark.parametrize("source, rewrite", [
+    ("can sum1 grab the parcel from the post office b4 it closes? im stuck at work rn",
+     "Can someone grab the parcel from the post office before it closes? I'm stuck at work right now."),
+    ("if anyone can cover the front desk 12-1 tmrw that'd be amazing",
+     "If anyone can cover the front desk from 12 to 1 tomorrow, that would be amazing."),
+    ("Whoever is free this arvo, can you give the new starter a hand with their laptop setup?",
+     "Whoever is free this afternoon, can you help the new starter set up their laptop?"),
+    ("might be worth booking the tix soon, they sold out in like a day last yr",
+     "It might be worth booking the tickets soon. They sold out in about a day last year."),
+    # spaCy tags "tidy ur floor" as a name
+    ("Jamie ur room is a disaster. pls tidy ur floor, make ur bed and take the dirty plates down b4 nana gets here.",
+     "Jamie, your room is a mess. Please tidy your floor, make your bed and take the dirty plates down before Nana gets here."),
+])
+def test_more_texting_shorthand_passes(source, rewrite):
+    r = {"source": source, "rewrite": rewrite}
+    assert fp.check_dropped(r) is None and fp.check_added(r) is None
+
+
+def test_spelled_out_shorthand_still_keeps_the_date():
+    r = {"source": "can u cover the desk tmrw", "rewrite": "Can you cover the desk next week?"}
+    assert fp.check_dropped(r) is not None
+
+
 def test_a_sec_is_a_hedge_not_a_time():
     r = {"source": "Might be worth double-checking the budget figures with finance, if you have a sec.",
          "rewrite": "Could you double-check the budget figures with finance?"}
