@@ -37,16 +37,23 @@ export interface Answer {
 
 export interface MissingItem {
   key: MissingKey
-  /** The card's title when this is the only question (default: one per key). */
-  title?: string
+  /** The short name over the question (default: one per key, "When", "Who"...). */
+  label?: string
+  /** One short question: "Who should do it?" */
   question: string
+  /** The draft's own words that raised it, shown highlighted: You wrote “can someone”. */
+  quote?: string
+  /** One short sentence on why a literal reader is left guessing. */
+  why?: string
   quick: readonly QuickAnswer[]
   /** Placeholder for a typed answer; empty means no typed answer. */
   placeholder: string
   /** Text to edit in place, when the answer is a rewrite of the draft's own sentence. */
   prefill?: string
-  /** What a good rewrite of `prefill` looks like. */
-  hint?: string
+  /** The label over `prefill`: what to do with the sentence. */
+  fieldLabel?: string
+  /** What a good rewrite of `prefill` looks like, without quote marks. */
+  example?: string
   /** A typed answer as one sentence to add ('' if it adds none). */
   sentence: (typed: string) => string
   /** Whether this answer says anything (default: a quick choice, or a typed sentence). */
@@ -82,9 +89,10 @@ const BARE_START = /^(?:[.!?]\s+|\n\s*)?$/
 // soon; "maybe" words say whether at all. A SOFT phrase carries its sentence,
 // so it is reworded rather than cut.
 // ("at some point this morning they were removed" is the past, not a hedge;
-// "arriving sometime before noon" has its time)
+// "arriving sometime before noon" has its time; "went out later than we'd
+// hoped" compares, it doesn't put off)
 const LOOSE_PHRASE = String.raw`when(?:ever|evr|eva)? ${YOU} (?:get|have|got|find) (?:a|the) (?:chance|minute|min|moment|mo|sec|second)|when(?:ever|evr)? ${YOU} can|if ${YOU} (?:get|have|find) (?:a|the) (?:chance|minute|min|moment|sec|second)|at (?:some|any) point(?! (?:this morning|yesterday|last|earlier|overnight)\b)|at (?:your|ur) (?:earliest )?convenience|back at the earliest`
-const LOOSE_WORD = String.raw`(?:some ?time )?soon(?:ish)?|some ?time(?! (?:before|after|between|by|around|on|today|tonight|tomorrow)\b)(?: (?:this|next) (?:week|month|weekend))?|later(?! (?:in|this|next|on)\b)(?: today| on)?|in a (?:bit|while)|whenever(?: works)?`
+const LOOSE_WORD = String.raw`(?:some ?time )?soon(?:ish)?|some ?time(?! (?:before|after|between|by|around|on|today|tonight|tomorrow)\b)(?: (?:this|next) (?:week|month|weekend))?|later(?! (?:in|this|next|on|than)\b)(?: today| on)?|in a (?:bit|while)|whenever(?: works)?`
 const LOOSE_TIME = new RegExp(String.raw`\b(?:${LOOSE_PHRASE}|${LOOSE_WORD})\b`, 'i')
 const LOOSE_DEADLINE = new RegExp(String.raw`\b(?:${LOOSE_PHRASE}|${LOOSE_WORD}|eventually)\b`, 'i')
 // "No rush on your timesheet" is about something else, so it doesn't count.
@@ -305,8 +313,9 @@ export function dropHedges(draft: string): string {
         ),
         (_m, lead: string, c: string) => lead + (BARE_START.test(lead) ? c.toUpperCase() : c),
       )
-      // set off by commas: "Could you, if you get a chance, check it", "Hey Ava, when you get a chance, it'd be"
-      .replace(new RegExp(String.raw`,\s*${h}\s*,`, 'gi'), (_m, at: number, whole: string) =>
+      // set off by commas: "Could you, if you get a chance, check it", "Hey Ava, when you get a chance, it'd be",
+      // with its "so" too: "hectic lately, so no pressure at all, but" -> "hectic lately, but"
+      .replace(new RegExp(String.raw`,\s*(?:(?:so|and)\s+)?${h}\s*,`, 'gi'), (_m, at: number, whole: string) =>
         /\b(?:you|u|to|please|pls|and|but|or|then)\s*$/i.test(whole.slice(0, at)) ? '' : ',',
       )
       // set off by "tho" in a run-on text: "tell me if its too cringe no rush tho the party's not till"
@@ -514,13 +523,14 @@ const NO_ASK_NOTE = /\bno (?:ask|request)\b/i
 /** For a draft that only hints: the sender says what they want, if anything. */
 const hinted = (): MissingItem => ({
   key: 'what',
-  title: "It doesn't ask for anything directly",
-  question:
-    'If you want them to do something, say what (and who and by when, if it matters). If you only meant to let them know, leave this.',
+  label: 'What you want',
+  question: 'Do you want them to do something?',
+  why: "Your message hints at it but doesn't ask. If you only meant to let them know, leave this.",
   quick: [],
   placeholder: '',
   prefill: '',
-  hint: "Such as “Could someone take the bins out tonight?” Press Enter when it's done.",
+  fieldLabel: 'Write the sentence that asks for it',
+  example: 'Could someone take the bins out tonight?',
   sentence: finish,
   answered: (answer) => words(answer.typed) >= MIN_WORDS,
 })
@@ -556,7 +566,9 @@ export function findMissing(draft: string, meaning: Meaning, notes: readonly str
     if (loose || !needless) {
       items.push({
         key: 'when',
-        question: `${loose ? `“${loose.text}” doesn't give a time. ` : ''}When do you need ${answer ? 'an answer' : 'it'}?`,
+        question: `When do you need ${answer ? 'an answer' : 'it'}?`,
+        quote: loose?.text,
+        why: loose ? "That doesn't give a time." : undefined,
         quick: QUICK_DEADLINES.map((d) => ({ label: d.label, sentence: d.phrase ? deadlineLine(d.phrase, answer) : NO_DEADLINE })),
         placeholder: '3pm Friday',
         sentence: (typed) => (deadlinePhrase(typed) ? deadlineLine(deadlinePhrase(typed), answer) : ''),
@@ -573,12 +585,13 @@ export function findMissing(draft: string, meaning: Meaning, notes: readonly str
 
   const nobody = FINE_IF_NOT.test(draft) ? undefined : unassigned(draft, meaning.ask)
   if (nobody) {
-    const quoted = `“${nobody.phrase.toLowerCase()}” doesn't say who.`
+    const said = { quote: nobody.phrase.toLowerCase(), why: "That doesn't say who." }
     const whoOf = (answer: Answer) => (answer.quick !== null ? 'you' : plain(answer.typed))
     if (assignTo(draft, 'Sam') !== draft) {
       items.push({
         key: 'who',
-        question: `${quoted} Who should do it?`,
+        question: 'Who should do it?',
+        ...said,
         quick: WHO_ANSWERS,
         placeholder: 'A name, such as Sam',
         sentence: (typed) =>
@@ -596,11 +609,13 @@ export function findMissing(draft: string, meaning: Meaning, notes: readonly str
       // contradicts theirs.
       items.push({
         key: 'who',
-        question: `${quoted} Rewrite this sentence to name who should do it, or let anyone who can take it:`,
+        question: 'Who should do it?',
+        ...said,
         quick: [WHO_ANSWERS[ANYONE]],
         placeholder: '',
         prefill: nobody.sentence,
-        hint: "Name them, such as “Ravi, can you change the smoke alarm battery tonight?” Press Enter when it's done.",
+        fieldLabel: 'Or edit this sentence to name them',
+        example: 'Ravi, can you change the smoke alarm battery tonight?',
         sentence: () => '',
         answered: (answer) => answer.quick !== null || rewrote(answer.typed, nobody.sentence),
         settle: (text, answer) =>
@@ -613,11 +628,14 @@ export function findMissing(draft: string, meaning: Meaning, notes: readonly str
   if (vague) {
     items.push({
       key: 'what',
-      question: `“${vague.phrase.toLowerCase()}” could mean a lot of things. Rewrite this to say exactly what you need:`,
+      question: 'What exactly do you need?',
+      quote: vague.phrase.toLowerCase(),
+      why: 'That could mean a lot of things.',
       quick: [],
       placeholder: '',
       prefill: vague.core,
-      hint: "Say what should be done and to what, such as “Could you fix the totals in the numbers section so they match the finance report?” Press Enter when it's done.",
+      fieldLabel: 'Edit this sentence to say it',
+      example: 'Could you fix the totals in the numbers section so they match the finance report?',
       sentence: () => '',
       answered: (answer) => rewrote(answer.typed, vague.core),
       settle: (text, answer) => ({ draft: swap(text, vague.core, answer.typed), done: true }),
@@ -634,7 +652,9 @@ export function findMissing(draft: string, meaning: Meaning, notes: readonly str
     const says = (i: number) => (i === NEEDED && firm) || (i === TRULY_OPTIONAL && /\bno worries if\b/i.test(hedge))
     items.push({
       key: 'urgency',
-      question: `You wrote “${hedge.toLowerCase()}”. How urgent is it, really?`,
+      question: 'How urgent is it?',
+      quote: hedge.toLowerCase(),
+      why: 'A literal reader may take that as optional.',
       quick: URGENCY_ANSWERS.map((a, i) => (says(i) ? { ...a, sentence: '' } : a)),
       placeholder: '',
       sentence: () => '',
