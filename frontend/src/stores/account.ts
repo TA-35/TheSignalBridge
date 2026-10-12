@@ -13,6 +13,7 @@ import {
   signIn,
   signOut,
 } from '@/services/accountService'
+import { useActivityStore } from '@/stores/activity'
 
 // Who is signed in, if anyone. Deliberately thin: an account changes what
 // the app can REMEMBER, never what it can do. Every page works signed out,
@@ -72,12 +73,18 @@ export const useAccountStore = defineStore('account', () => {
   const pair = (handle: string, code: string) =>
     run(() => pairWithCode(handle.trim().toUpperCase(), code.trim().toUpperCase()))
 
-  const logout = () =>
-    run(async () => {
+  const logout = async () => {
+    await run(async () => {
       await signOut()
       pairing.value = null
       return null
     })
+    // Signing in merged the account's days, views and reviews into this
+    // browser. Left behind, the next account to sign in here would upload them
+    // as its own. Only once the sign-out has gone through: while still signed
+    // in, clearAll() deletes the account's own copy as well.
+    if (!account.value) useActivityStore().clearAll()
+  }
 
   const remove = () =>
     run(async () => {

@@ -2,29 +2,23 @@
 // Focus timer for the progress page.
 // Built for time blindness: short lengths, a ring you can read at a glance,
 // an open count-up mode, no alarm at the end, and partial sessions still count.
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { FEATURES, type Feature } from '@/utils/progress'
 import { useActivityStore } from '@/stores/activity'
-
-const props = defineProps<{ preset?: { minutes: number; feature: Feature; intent: string; nonce: number } }>()
+import { useFocusTimerStore } from '@/stores/focusTimer'
 
 const activity = useActivityStore()
 const LENGTHS = [5, 10, 15, 25] as const
 const HYPERFOCUS_MIN = 45
 const CIRC = 2 * Math.PI * 56
 
-const lengthMin = ref<number>(10) // 0 = open, counts up
-const feature = ref<Feature>('decoder')
-const intent = ref('')
-const elapsed = ref(0) // seconds
-const running = ref(false)
-const notice = ref<null | 'timeUp' | 'hyperfocus' | 'saved'>(null)
-const savedMinutes = ref(0)
+// The session lives in a store (stores/focusTimer.ts), so going to another
+// page and coming back doesn't end it.
+const { lengthMin, feature, intent, elapsed, running, startedAt, nudgedAt, notice, savedMinutes } = storeToRefs(useFocusTimerStore())
 const hideDigits = ref(readFlag('bw-timer-hide-digits'))
 
-let startedAt = 0
 let tick: number | undefined
-let nudgedAt = 0
 
 const FEATURE_LABEL: Record<Feature, string> = { decoder: 'Decoder', compose: 'Compose', study: 'Study', library: 'Library' }
 
@@ -46,19 +40,30 @@ function setLength(m: number) {
   lengthMin.value = m
 }
 
+function update() {
+  // based on timestamps so it stays right when the tab is in the background
+  elapsed.value = (Date.now() - startedAt.value) / 1000
+  if (lengthMin.value && elapsed.value >= lengthMin.value * 60) {
+    // Capped at the planned length: back from another page or a sleeping
+    // laptop, it's time's up, not however long it has been.
+    elapsed.value = lengthMin.value * 60
+    timeUp()
+  } else if (!lengthMin.value && elapsed.value / 60 >= nudgedAt.value + HYPERFOCUS_MIN) {
+    nudgedAt.value += HYPERFOCUS_MIN
+    notice.value = 'hyperfocus'
+  }
+}
+
+function keepTicking() {
+  window.clearInterval(tick)
+  tick = window.setInterval(update, 250)
+}
+
 function start() {
   notice.value = null
-  // based on timestamps so it stays right when the tab is in the background
-  startedAt = Date.now() - elapsed.value * 1000
+  startedAt.value = Date.now() - elapsed.value * 1000
   running.value = true
-  tick = window.setInterval(() => {
-    elapsed.value = (Date.now() - startedAt) / 1000
-    if (lengthMin.value && elapsed.value >= lengthMin.value * 60) timeUp()
-    if (!lengthMin.value && elapsed.value / 60 >= nudgedAt + HYPERFOCUS_MIN) {
-      nudgedAt += HYPERFOCUS_MIN
-      notice.value = 'hyperfocus'
-    }
-  }, 250)
+  keepTicking()
 }
 
 function pause() {
@@ -84,24 +89,25 @@ function finish() {
   activity.logSession(feature.value, m, intent.value || `Focus session in ${FEATURE_LABEL[feature.value]}`)
   savedMinutes.value = m
   elapsed.value = 0
-  nudgedAt = 0
+  nudgedAt.value = 0
   if (!LENGTHS.includes(lengthMin.value as (typeof LENGTHS)[number])) lengthMin.value = 10
   intent.value = ''
   notice.value = 'saved'
 }
 
-// the "Start here" card can start a session with its own length and task
-watch(() => props.preset?.nonce, () => {
-  const p = props.preset
-  if (!p || running.value) return
-  elapsed.value = 0
-  lengthMin.value = p.minutes
-  feature.value = p.feature
-  intent.value = p.intent
-  start()
+// A session started before leaving the page carries on, and if its time ran
+// out meanwhile, it says so now.
+onMounted(() => {
+  if (!running.value) return
+  update()
+  if (running.value) keepTicking()
 })
 
-onBeforeUnmount(() => window.clearInterval(tick))
+onBeforeUnmount(() => {
+  window.clearInterval(tick)
+  // "Saved N minutes" is for the moment it happens, not for the next visit
+  if (notice.value === 'saved') notice.value = null
+})
 </script>
 
 <template>
@@ -130,7 +136,8 @@ onBeforeUnmount(() => window.clearInterval(tick))
           <button type="button" :aria-pressed="lengthMin === 0" @click="setLength(0)">Open</button>
         </div>
         <div class="pd-row">
-          <button type="button" class="pd-primary" @click="running ? pause() : start()">
+          <!-- At time's up the notice below offers the two real choices; resuming here would only end again at once -->
+          <button v-if="notice !== 'timeUp'" type="button" class="pd-primary" @click="running ? pause() : start()">
             {{ running ? 'Pause' : elapsed ? 'Resume' : 'Start' }}
           </button>
           <button type="button" :disabled="!elapsed" @click="finish">Finish</button>

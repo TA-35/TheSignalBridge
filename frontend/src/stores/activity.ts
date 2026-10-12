@@ -12,6 +12,7 @@ import { defineStore } from 'pinia'
 import { dateKey, type ActivityEvent, type Feature } from '@/utils/progress'
 import { useAccountStore } from '@/stores/account'
 import { useCardsStore } from '@/stores/cards'
+import { useFocusTimerStore } from '@/stores/focusTimer'
 import {
   clearProgress,
   pushProgress,
@@ -267,7 +268,8 @@ export const useActivityStore = defineStore('activity', {
     },
 
     // Settings' "delete": everything the dashboard keeps, here and (if signed
-    // in) on the account, so it doesn't sync straight back down.
+    // in) on the account, so it doesn't sync straight back down. Sign-out
+    // calls it too, once signed out, so only this browser's copy goes.
     clearAll() {
       epoch++
       again = false
@@ -283,6 +285,8 @@ export const useActivityStore = defineStore('activity', {
       for (const k of SESSION_FLAG_KEYS) {
         try { sessionStorage.removeItem(k) } catch { /* ignore */ }
       }
+      // a session in progress goes too, with what they typed for it
+      useFocusTimerStore().reset()
       if (syncTimer) {
         clearTimeout(syncTimer)
         syncTimer = null
