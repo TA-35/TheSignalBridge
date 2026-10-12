@@ -145,6 +145,16 @@ def compose(message: str) -> dict[str, Any]:
         except cp.ComposeOutputError:
             reasons = [INVALID_OUTPUT]
             continue
+        if out["notes"] == [cp.ALREADY_CLEAR_NOTE]:
+            # Nothing needed changing, so the answer is the sender's own words,
+            # which have nothing to verify. The model's copy can still differ
+            # (a typo fixed, a name "corrected"), and checking that copy could
+            # withhold a message that was fine as written.
+            return {"stage": "compose", "degraded": False, "degraded_reason": [],
+                    "rewrite": message, "notes": out["notes"], "meaning": out["meaning"],
+                    "signals": sig, "checks": {"entities_kept": True, "nothing_added": True,
+                                               "no_contradiction": True},
+                    "model": conf["model"]}
         check = grounding.check(message, out["rewrite"])
         if check.ok:
             return {"stage": "compose", "degraded": False, "degraded_reason": [],

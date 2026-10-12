@@ -97,9 +97,31 @@ MISSPELT = {
 }
 MISSPELT_RE = [(re.compile(rf"\b{k}\b", re.I), v) for k, v in MISSPELT.items()]
 
+# Texting shorthand. Read literally, "b4" holds the number 4 and spaCy tags
+# "pls review" as an organisation, so a rewrite that spells them out ("before",
+# "Please review") looked like it had dropped a fact, and live Compose withheld it.
+TEXTISMS = {
+    "b4": "before", "2day": "today", "2nite": "tonight", "2night": "tonight",
+    "2moro": "tomorrow", "2morrow": "tomorrow", "2mrw": "tomorrow", "l8r": "later",
+    "gr8": "great", "any1": "anyone", "some1": "someone", "every1": "everyone", "no1": "no one",
+    "pls": "please", "plz": "please",
+}
+TEXTISM_RE = re.compile(r"\b(" + "|".join(TEXTISMS) + r")\b", re.I)
+
+# "2 things" rewritten as "two things" is the same fact.
+NUMBER_WORDS = {w: str(i) for i, w in enumerate(
+    "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen "
+    "fifteen sixteen seventeen eighteen nineteen twenty".split())}
+NUMBER_WORD_RE = re.compile(r"\b(" + "|".join(NUMBER_WORDS) + r")\b")
+
+
+def expand_textisms(text):
+    return TEXTISM_RE.sub(lambda m: TEXTISMS[m.group(1).lower()], str(text))
+
 
 def norm(text):
-    t = str(text).lower().replace("\u2019", "'").replace("\u2018", "'")
+    t = expand_textisms(str(text).lower().replace("\u2019", "'").replace("\u2018", "'"))
+    t = NUMBER_WORD_RE.sub(lambda m: NUMBER_WORDS[m.group(1)], t)
     for rx, full in ABBREV_RE + MISSPELT_RE:
         t = rx.sub(full, t)
     t = re.sub(r"'s\b", "", t)                     # Friday's -> Friday
@@ -142,17 +164,23 @@ LIST_MARKER_RE = re.compile(r"(?m)^[ \t]*\(?\d{1,2}[.)][ \t]+")
 # spaCy tags these as organisations or people; a rewrite may spell them out
 # ("ASAP" -> "as soon as possible"), drop them ("FYI") or add a heading.
 NOT_ENTITIES = {"fyi", "asap", "background", "forwarded"}
+# "if you have a sec", "got a minute?": spaCy tags these as times, but they are
+# hedges the style guide takes out, not facts. A real duration keeps its
+# number, and NUM_RE checks that on its own.
+VAGUE_TIME_RE = re.compile(r"^(?:an?\s+)?(?:secs?|seconds?|mins?|minutes?|moments?|tick|jiffy)$", re.I)
 ARTICLES = re.compile(r"\b(?:the|a|an)\b")
 PLACEHOLDER_RE = re.compile(r"\[[A-Z_]+\]")
 
 
 def entities(text):
     """Things that must survive the rewrite: named entities + any number + redaction tags."""
+    text = expand_textisms(text)
     found = set()
-    for e in nlp()(str(text)).ents:
-        if e.label_ in ENT_TYPES and e.text.strip().lower() not in NOT_ENTITIES:
-            found.add(e.text.strip())
-    for m in NUM_RE.findall(LIST_MARKER_RE.sub(" ", str(text))):
+    for e in nlp()(text).ents:
+        name = e.text.strip()
+        if e.label_ in ENT_TYPES and name.lower() not in NOT_ENTITIES and not VAGUE_TIME_RE.match(name):
+            found.add(name)
+    for m in NUM_RE.findall(LIST_MARKER_RE.sub(" ", text)):
         found.add(m.rstrip(".,"))
     for m in PLACEHOLDER_RE.findall(str(text)):
         found.add(m)

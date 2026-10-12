@@ -74,6 +74,17 @@ def test_two_failed_checks_withhold_the_rewrite(fake):
     assert out["signals"] == SIGNALS
 
 
+def test_already_clear_returns_the_message_itself_unchecked(fake):
+    # The model said nothing needed changing but still "fixed" its copy. The
+    # sender gets their own words back, which have nothing to verify.
+    fake["answers"] = [dict(_answer("No rush, but could you maybe check the deck before Fri?"),
+                            notes=[cp.ALREADY_CLEAR_NOTE])]
+    out = cs.compose(MESSAGE)            # no verdicts scripted: a grounding call would fail
+    assert out["degraded"] is False and out["rewrite"] == MESSAGE
+    assert out["notes"] == [cp.ALREADY_CLEAR_NOTE] and out["meaning"] == MEANING
+    assert out["checks"] == {"entities_kept": True, "nothing_added": True, "no_contradiction": True}
+
+
 def test_an_unusable_reply_is_retried(fake):
     fake["answers"] = [cp.ComposeOutputError("no JSON object"), _answer("Could you check the deck before Friday?")]
     fake["verdicts"] = [PASS]
