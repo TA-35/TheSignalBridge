@@ -1,0 +1,25 @@
+#!/bin/sh
+# Stops pushing to main, including a force push or deleting it. main changes
+# only when a pull request is merged on GitHub, and that merge happens on
+# GitHub, so this hook never gets in its way.
+#
+# Git passes one line per ref being pushed:
+#   <local ref> <local sha> <remote ref> <remote sha>
+
+remote=$1
+blocked=0
+while read -r _ _ remote_ref _; do
+  case "$remote_ref" in
+    refs/heads/main | refs/heads/master)
+      echo "Blocked: this would push to '${remote_ref#refs/heads/}' on $remote." >&2
+      blocked=1
+      ;;
+  esac
+done
+
+if [ "$blocked" -eq 1 ]; then
+  echo "Push your branch and open a pull request instead:" >&2
+  echo "  git push -u origin <branch-name>" >&2
+  exit 1
+fi
+exit 0
