@@ -1,0 +1,22 @@
+#!/bin/sh
+# Stops a commit made straight onto main. Work goes on a branch and reaches
+# main through a pull request, where CI checks it and the team can see it.
+#
+# GitHub can't enforce this for us: branch protection on a private repository
+# needs a paid plan. See .githooks/README.md, including how to switch it on.
+
+# Finishing a merge (a `git pull` that conflicted) is fine; it adds no new work.
+git rev-parse -q --verify MERGE_HEAD >/dev/null && exit 0
+
+# A detached HEAD (mid-rebase, an old commit checked out) isn't on main.
+branch=$(git symbolic-ref --quiet --short HEAD) || exit 0
+
+case "$branch" in
+  main | master)
+    echo "Blocked: this would commit straight onto '$branch'." >&2
+    echo "Your changes are still there. Move them to a new branch and commit there:" >&2
+    echo "  git switch -c <branch-name>" >&2
+    exit 1
+    ;;
+esac
+exit 0

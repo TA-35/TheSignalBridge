@@ -47,6 +47,13 @@ curl -sI https://www.thesignalbridge.com/ | head -3    # expect HTTP/2 401
 
 ## Local development
 
+Once per clone, turn on the hooks that keep commits and pushes off `main`
+(changes reach it through pull requests; see [.githooks/README.md](.githooks/README.md)):
+
+```sh
+git config core.hooksPath .githooks
+```
+
 ### Frontend
 
 ```
