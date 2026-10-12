@@ -157,6 +157,12 @@ const LAST_UPDATED = '12 October 2026'
         browser for that day only, and is never sent anywhere.
       </p>
       <p>
+        Compose counts what your last ten drafts left out, such as a deadline
+        or who should do it, so it can show you your own habits. Only the kind
+        of gap and the day are kept, never a word of the draft, in this browser
+        only. Clear them from the Compose page or Settings.
+      </p>
+      <p>
         Because decode history includes the messages you pasted, clearing it
         clears them. You can do that at any time from
         <RouterLink to="/settings">Settings</RouterLink>. Clearing your browser

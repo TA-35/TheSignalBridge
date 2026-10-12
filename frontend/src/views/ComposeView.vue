@@ -24,6 +24,7 @@ import {
 import VoiceInput from '@/components/VoiceInput.vue'
 import MissingCheck from '@/components/MissingCheck.vue'
 import RewriteFeedback from '@/components/RewriteFeedback.vue'
+import { clearHabits, habitSummary, MIN_DRAFTS, readHabits, recordDraft } from '@/utils/draftHabits'
 import { applyAnswers, findMissing, type Answer, type MissingKey } from '@/utils/missing'
 
 const SAMPLE =
@@ -79,6 +80,37 @@ const missingItems = computed(() => {
 const answerCount = ref(0)
 const afterCard = computed(() => state.message === answered.value.draft && answered.value.keys.size > 0)
 
+// What the writer's own drafts tend to leave out (utils/draftHabits.ts):
+// counted once per draft, in this browser only, as gap kinds and a day. Not
+// again for the version their answers made, nor for the same text composed
+// twice - the text it compares against is held in memory here, never stored.
+const habits = ref(readHabits())
+const habitView = computed(() => habitSummary(habits.value))
+let lastCounted = ''
+const HABIT_LINE: Record<MissingKey, string> = {
+  when: 'No deadline',
+  who: 'No one named to do it',
+  what: 'A vague ask, like “take a look”',
+  urgency: 'Unclear urgency, like “no rush”',
+}
+const HABIT_TIP: Record<MissingKey, string> = {
+  when: 'Add a day and time, such as “by 3pm Friday”.',
+  who: 'Name the person: “Sam, can you…” rather than “can someone…”.',
+  what: 'Say the action you want: “check the totals match” rather than “take a look”.',
+  urgency: 'Say how much it matters: “I need it by Friday” or “only if you have time”.',
+}
+function countDraft(text: string, result: ComposeResult) {
+  if (!result.rewrite || text === lastCounted || state.message === answered.value.draft) return
+  lastCounted = text
+  // A draft that asks for nothing (a thank-you, an update) leaves nothing out.
+  const gaps = result.meaning.ask.trim() ? findMissing(state.message, result.meaning, result.notes).map((i) => i.key) : []
+  habits.value = recordDraft(gaps)
+}
+function forgetHabits() {
+  clearHabits()
+  habits.value = []
+}
+
 function addMissing(answers: Partial<Record<MissingKey, Answer>>) {
   const earlier = state.message === answered.value.draft ? answered.value.keys : new Set<MissingKey>()
   state.message = applyAnswers(state.message, missingItems.value, answers)
@@ -101,6 +133,7 @@ async function rewrite() {
       state.quick = quick
     })
     answerCount.value++
+    countDraft(text, state.result)
   } catch (err) {
     if (err instanceof EmptyMessageError) {
       state.errorTitle = 'Nothing to rewrite yet'
@@ -249,6 +282,22 @@ const copyRewrite = () => copyText(rewriteText.value)
           <p class="preview__note">
             3. You see what changed and why, then copy it or keep your original.
           </p>
+
+          <!-- The writer's own habits, once there are enough drafts to show one -->
+          <section v-if="habitView.drafts >= MIN_DRAFTS" class="habits" aria-labelledby="habits-title">
+            <h3 id="habits-title" class="habits__title">Your last {{ habitView.drafts }} drafts</h3>
+            <ul v-if="habitView.counts.length" class="habits__list">
+              <li v-for="c in habitView.counts" :key="c.key">
+                {{ HABIT_LINE[c.key] }}: <strong>{{ c.count }} of {{ habitView.drafts }}</strong>
+              </li>
+            </ul>
+            <p v-else class="habits__note">Every one said when, who, what exactly and how urgent.</p>
+            <p v-if="habitView.counts.length" class="habits__tip">{{ HABIT_TIP[habitView.counts[0]!.key] }}</p>
+            <p class="habits__foot">
+              Counted in this browser only, never your words.
+              <button type="button" class="link-button" @click="forgetHabits">Clear counts</button>
+            </p>
+          </section>
         </aside>
       </div>
     </template>
@@ -634,6 +683,51 @@ const copyRewrite = () => copyText(rewriteText.value)
   text-align: left;
   font-size: 14px;
   line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+/* The writer's own habits, under the three steps in the same panel. */
+.habits {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  max-width: 38ch;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+  text-align: left;
+}
+
+.habits__title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.habits__list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+.habits__note,
+.habits__tip {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--color-text);
+}
+
+.habits__foot {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
   color: var(--color-text-muted);
 }
 

@@ -4,6 +4,7 @@ import { useAccountStore } from '@/stores/account'
 import { useActivityStore } from '@/stores/activity'
 import { useCardsStore } from '@/stores/cards'
 import { useDecodesStore } from '@/stores/decodes'
+import { clearHabits } from '@/utils/draftHabits'
 import {
   useSettingsStore,
   type Accent,
@@ -52,6 +53,8 @@ function confirmDelete() {
   // phrases viewed, cards reviewed, and the dashboard's display flags. Signed
   // in, the account's copy goes as well, or it would sync straight back.
   activityStore.clearAll()
+  // And the counts of what Compose drafts left out (no text, but still theirs).
+  clearHabits()
   showDeleteConfirm.value = false
 }
 
@@ -231,8 +234,8 @@ function trapTab(event: KeyboardEvent) {
         <div id="confirm-delete-body" class="modal-body">
           <p>
             This clears every card in your Study section, your decode history, and your progress on this device:
-            days opened, focus sessions and what you typed for them, phrases viewed and cards reviewed. It can't be
-            undone.
+            days opened, focus sessions and what you typed for them, phrases viewed and cards reviewed, and what your
+            Compose drafts tended to leave out. It can't be undone.
           </p>
           <p v-if="accountStore.signedIn">
             Your account's copy of your library cards and progress is cleared too. Another device you use keeps its
