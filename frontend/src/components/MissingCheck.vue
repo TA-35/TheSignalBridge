@@ -4,7 +4,7 @@
 // sender knows the answers, and the rewriter may not invent them, so this asks.
 // ComposeView adds the answers to the draft and rewrites once.
 import { computed, reactive, watch } from 'vue'
-import type { Answer, MissingItem, MissingKey } from '@/utils/missing'
+import { isAnswered, type Answer, type MissingItem, type MissingKey } from '@/utils/missing'
 
 const props = defineProps<{ items: MissingItem[] }>()
 const emit = defineEmits<{ add: [answers: Partial<Record<MissingKey, Answer>>] }>()
@@ -26,7 +26,7 @@ watch(
   () => props.items.map((item) => item.key).join(),
   () => {
     for (const key of Object.keys(answers)) delete answers[key]
-    for (const item of props.items) answers[item.key] = { quick: null, typed: '' }
+    for (const item of props.items) answers[item.key] = { quick: null, typed: item.prefill ?? '' }
   },
   { immediate: true },
 )
@@ -46,7 +46,7 @@ const given = computed(() => {
   const out: Partial<Record<MissingKey, Answer>> = {}
   for (const item of props.items) {
     const answer = answers[item.key]
-    if (answer && (answer.quick !== null || item.sentence(answer.typed))) out[item.key] = { ...answer }
+    if (answer && isAnswered(item, answer)) out[item.key] = { ...answer }
   }
   return out
 })
@@ -83,6 +83,20 @@ function submit() {
           </button>
         </div>
 
+        <div v-if="item.prefill !== undefined && answers[item.key]" class="missing__typed">
+          <label :for="`missing-${item.key}`" class="missing__sublabel">Your sentence</label>
+          <textarea
+            :id="`missing-${item.key}`"
+            v-model="answers[item.key]!.typed"
+            rows="3"
+            maxlength="400"
+          />
+          <p class="missing__hint">
+            Say what should be done and to what, such as “Could you fix the totals in the numbers
+            section so they match the finance report?”
+          </p>
+        </div>
+
         <div v-if="item.placeholder && answers[item.key]" class="missing__typed">
           <label :for="`missing-${item.key}`" class="missing__sublabel">
             {{ item.quick.length ? 'Or type it' : 'Type it' }}
@@ -102,8 +116,9 @@ function submit() {
       <div class="missing__actions">
         <button type="submit" class="missing__add" :disabled="!hasAnswer">Add to my message and rewrite</button>
         <p class="missing__hint">
-          Your answers go into your draft - as a plain sentence such as “I need this by 3pm Friday.”,
-          or in place of the words they settle - and you can see it under “Your original”.
+          Your answers change your draft: your rewritten sentence replaces the old one, softeners like
+          “no rush” go if it's urgent, and a deadline is added, such as “I need this by 3pm Friday.”
+          You can see it under “Your original”.
         </p>
       </div>
     </form>
@@ -205,7 +220,13 @@ function submit() {
   opacity: 0.6;
 }
 
-.missing__typed input {
+.missing__typed textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.missing__typed input,
+.missing__typed textarea {
   min-width: 0;
   min-height: 40px;
   padding: 8px 12px;
