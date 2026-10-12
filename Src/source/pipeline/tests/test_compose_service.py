@@ -131,8 +131,9 @@ def test_signals_come_back_in_the_contract_shape(monkeypatch):
 # --------------------------------------------------------------------------
 
 @pytest.fixture
-def client():
+def client(monkeypatch):
     flask = pytest.importorskip("flask")  # noqa: F841 - the service's own dependency
+    monkeypatch.delenv("PIPELINE_SERVICE_TOKEN", raising=False)
     from Src.source.pipeline.service import create_service
     return create_service(warm=False).test_client()
 
@@ -194,11 +195,13 @@ def remote(monkeypatch):
     """COMPOSE_REMOTE_URL set; records every request urllib makes."""
     monkeypatch.delenv("COMPOSE_LLM_URL", raising=False)
     monkeypatch.setenv("COMPOSE_REMOTE_URL", "http://127.0.0.1:18100")
-    sent = []
+    monkeypatch.delenv("COMPOSE_REMOTE_TOKEN", raising=False)
+    sent, auth = [], []
 
     def answer(payload):
         def fake_urlopen(req, timeout=None):
             sent.append({"url": req.full_url, "body": json.loads(req.data), "timeout": timeout})
+            auth.append(req.get_header("Authorization"))
             if isinstance(payload, Exception):
                 raise payload
             return _Reply(payload)
@@ -206,7 +209,7 @@ def remote(monkeypatch):
 
     monkeypatch.setattr(compose_client, "complete", lambda *a, **k: pytest.fail("must not call a local model"))
     monkeypatch.setattr(grounding, "check", lambda *a, **k: pytest.fail("must not check locally"))
-    answer.sent = sent
+    answer.sent, answer.auth = sent, auth
     return answer
 
 
@@ -215,7 +218,7 @@ def test_remote_compose_returns_the_remote_answer(remote):
               "notes": ["Made the ask direct."], "meaning": MEANING, "model": "qwen3.5-4b-ft"}
     remote(answer)
     assert cs.compose(MESSAGE) == answer
-    assert remote.sent == [{"url": "http://127.0.0.1:18100/compose", "body": {"message": MESSAGE}, "timeout": 95.0}]
+    assert remote.sent == [{"url": "http://127.0.0.1:18100/compose", "body": {"message": MESSAGE}, "timeout": 25.0}]
 
 
 def test_remote_degraded_answer_never_carries_a_rewrite(remote):
@@ -245,3 +248,43 @@ def test_health_says_compose_is_remote(remote):
     from Src.source.pipeline.service import create_service
     compose = create_service(warm=False).test_client().get("/health").get_json()["compose"]
     assert compose["enabled"] is True and compose["remote"] is True
+
+
+def test_remote_calls_carry_the_token_only_when_one_is_set(remote, monkeypatch):
+    remote({"stage": "analyse", "signals": SIGNALS})
+    cs.signals(MESSAGE)
+    monkeypatch.setenv("COMPOSE_REMOTE_TOKEN", "s3cret")
+    cs.signals(MESSAGE)
+    remote({"stage": "compose", "degraded": True, "degraded_reason": ["dropped_entity"]})
+    cs.compose(MESSAGE)
+    assert remote.auth == [None, "Bearer s3cret", "Bearer s3cret"]
+
+
+@pytest.fixture
+def locked(monkeypatch, fake):
+    """The service with PIPELINE_SERVICE_TOKEN set, as on the uni GPU server."""
+    pytest.importorskip("flask")
+    monkeypatch.setenv("PIPELINE_SERVICE_TOKEN", "s3cret")
+    from Src.source.pipeline.service import create_service
+    return create_service(warm=False).test_client()
+
+
+@pytest.mark.parametrize("path", ["/compose", "/compose/quick", "/analyse", "/review"])
+def test_every_endpoint_but_health_needs_the_token(locked, path):
+    for headers in ({}, {"Authorization": "Bearer wrong"}, {"Authorization": "s3cret"}):
+        r = locked.post(path, json={"message": MESSAGE}, headers=headers)
+        assert r.status_code == 401 and r.get_json() == {"error": "unauthorized"}
+
+
+def test_the_right_token_gets_through_and_health_stays_open(locked, fake):
+    fake["answers"] = [_answer("Could you check the deck before Friday?")]
+    fake["verdicts"] = [PASS]
+    r = locked.post("/compose", json={"message": MESSAGE}, headers={"Authorization": "Bearer s3cret"})
+    assert r.status_code == 200 and r.get_json()["rewrite"] == "Could you check the deck before Friday?"
+    health = locked.get("/health")
+    assert health.status_code == 200 and health.get_json()["token_required"] is True
+
+
+def test_without_a_token_the_service_is_open_as_before(client, fake):
+    assert client.post("/compose/quick", json={"message": MESSAGE}).status_code == 200
+    assert client.get("/health").get_json()["token_required"] is False
