@@ -229,7 +229,11 @@ export async function pairWithCode(handle: string, code: string): Promise<Accoun
 }
 
 export async function signOut(): Promise<void> {
-  await call('/logout', { method: 'POST' })
+  // The route answers 200 whether or not anyone is signed in, so anything
+  // else means it never ran (a server or proxy fault) and the session may
+  // still be live. Callers must not treat that as signed out.
+  const response = await call('/logout', { method: 'POST' })
+  if (!response.ok) throw await errorFrom(response, 'Could not sign out.')
 }
 
 export async function deleteAccount(): Promise<void> {

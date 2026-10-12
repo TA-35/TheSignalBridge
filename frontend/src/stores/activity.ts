@@ -137,6 +137,11 @@ export function mergeSnapshot(s: Saved, snap: ProgressSnapshot): void {
 let syncTimer: ReturnType<typeof setTimeout> | null = null
 let current: Promise<boolean> | null = null // the sync on the wire, if any
 let again = false
+// Every local change bumps `version`; `savedVersion` is the newest one the
+// account has confirmed. Sign-out waits until they match. -1 because after a
+// page load nobody knows yet whether the last upload made it.
+let version = 0
+let savedVersion = -1
 // "Delete everything" has to win over a sync that is already on the wire.
 // clearAll() bumps the epoch, and a sync that started before it throws its
 // reply away (it holds the account's data from before the delete). The
@@ -158,6 +163,7 @@ export const useActivityStore = defineStore('activity', {
 
   actions: {
     persist() {
+      version++
       try {
         localStorage.setItem(KEY, JSON.stringify(this.snapshot()))
       } catch {
@@ -258,6 +264,7 @@ export const useActivityStore = defineStore('activity', {
       // view isn't sent again with a new date tomorrow
       for (const id of this.viewed) if (!this.viewedOn[id]) this.viewedOn[id] = today
 
+      const sending = version
       const request = pushProgress(buildUpload(this.snapshot(), today, localOnly))
       inflight = request
       let snap: ProgressSnapshot | null
@@ -267,6 +274,7 @@ export const useActivityStore = defineStore('activity', {
         inflight = null
       }
       if (!snap || started !== epoch) return false
+      savedVersion = Math.max(savedVersion, sending)
       const s = this.snapshot()
       mergeSnapshot(s, snap)
       this.$patch({ openDays: s.openDays, remoteEvents: s.remoteEvents, viewed: s.viewed, viewedOn: s.viewedOn, reviews: s.reviews })
@@ -282,18 +290,24 @@ export const useActivityStore = defineStore('activity', {
      * Before sign-out clears this browser: everything here has to reach the
      * account first. A change normally goes up a few seconds after it
      * happens, and an upload can fail, so this sends now - after any sync
-     * already on the wire - and is true only once the account confirms it.
+     * already on the wire - and keeps sending until the account has
+     * confirmed the newest change, including one made while an upload was
+     * on its way. False as soon as an upload isn't confirmed.
      */
     async saveToAccount(): Promise<boolean> {
-      if (syncTimer) {
-        clearTimeout(syncTimer)
-        syncTimer = null
+      for (let round = 0; round < 5; round++) {
+        if (syncTimer) {
+          clearTimeout(syncTimer)
+          syncTimer = null
+        }
+        while (current) {
+          again = false // the next round sends instead of the queued re-run
+          await current
+        }
+        if (savedVersion === version) return true
+        if (!(await this.syncWithAccount())) return false
       }
-      while (current) {
-        again = false // ours below replaces the queued re-run
-        await current
-      }
-      return this.syncWithAccount()
+      return savedVersion === version
     },
 
     // Settings' "delete": everything the dashboard keeps, here and (if signed
@@ -320,6 +334,7 @@ export const useActivityStore = defineStore('activity', {
         clearTimeout(syncTimer)
         syncTimer = null
       }
+      savedVersion = version // nothing here is waiting to be saved any more
       try {
         localStorage.setItem(KEY, JSON.stringify(this.snapshot()))
       } catch {

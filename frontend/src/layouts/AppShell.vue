@@ -115,40 +115,59 @@ watch(
 )
 
 // Sign-out saves progress to the account before clearing this browser
-// (stores/account.ts). When the account can't confirm the save, this asks
-// before anything is lost, and signing out anyway is always one press away.
+// (stores/account.ts). If the save can't be confirmed, or the sign-out itself
+// fails, this dialog says so: nothing is cleared until the person decides,
+// and signing out anyway is one press away when it's the save that failed.
 const unsavedDialog = ref<HTMLDialogElement | null>(null)
+const problem = ref<'unsaved' | 'failed'>('unsaved')
 const retrying = ref(false)
 const retryNote = ref('')
+// Bumped whenever the dialog closes or the choice changes, so a retry still
+// saving knows it was called off and stops before signing out.
+let attempt = 0
+
+function showProblem(result: Awaited<ReturnType<typeof accountStore.logout>>) {
+  if (result !== 'unsaved' && result !== 'failed') return false
+  problem.value = result
+  if (!unsavedDialog.value?.open) unsavedDialog.value?.showModal()
+  return true
+}
 
 async function signOutFromMenu() {
   accountOpen.value = false
-  if ((await accountStore.logout()) === 'unsaved') {
-    retryNote.value = ''
-    unsavedDialog.value?.showModal()
-  }
+  retryNote.value = ''
+  showProblem(await accountStore.logout())
 }
 
 // Focus goes back to the account button, or to the page once signed out,
-// instead of staying on a button inside the closed dialog.
+// instead of staying on a button inside the closed dialog. Not while the
+// sign-out request itself is on the wire: that can't be called back.
 function closeUnsaved() {
+  if (accountStore.busy) return
+  attempt++
+  retrying.value = false
   unsavedDialog.value?.close()
   if (accountStore.signedIn) accountToggleEl.value?.focus()
   else document.getElementById('main-content')?.focus()
 }
 
 async function tryAgain() {
+  const mine = ++attempt
   retrying.value = true
   retryNote.value = ''
-  const result = await accountStore.logout()
+  const result = await accountStore.logout(false, () => mine === attempt)
+  if (mine !== attempt) return // they closed the dialog or chose something else meanwhile
   retrying.value = false
-  if (result === 'unsaved') retryNote.value = 'Still no answer from your account.'
-  else closeUnsaved()
+  if (showProblem(result)) {
+    retryNote.value = result === 'unsaved' ? 'Still no answer from your account.' : "The sign-out still didn't go through."
+  } else closeUnsaved()
 }
 
 async function signOutAnyway() {
-  await accountStore.logout(true)
-  closeUnsaved()
+  attempt++
+  retrying.value = false
+  retryNote.value = ''
+  if (!showProblem(await accountStore.logout(true))) closeUnsaved()
 }
 
 // The menu covers the page on a phone, so the two ways people expect to get
@@ -312,7 +331,8 @@ onBeforeUnmount(() => {
     </footer>
 
     <!-- A native <dialog>: showModal() brings focus trapping, Escape and the
-         backdrop with it. Escape or "Stay signed in" keeps everything as it was. -->
+         backdrop with it. Escape or "Stay signed in" keeps everything as it
+         was, and calls off a retry that is still saving. -->
     <dialog
       ref="unsavedDialog"
       class="unsaved"
@@ -320,18 +340,37 @@ onBeforeUnmount(() => {
       aria-describedby="unsaved-body"
       @cancel.prevent="closeUnsaved"
     >
-      <h2 id="unsaved-title">Your latest progress isn't saved yet</h2>
-      <p id="unsaved-body">
-        We couldn't reach your account to save it. Signing out clears it from this browser, so
-        anything not saved yet would be lost.
-      </p>
+      <template v-if="problem === 'unsaved'">
+        <h2 id="unsaved-title">Your latest progress isn't saved yet</h2>
+        <p id="unsaved-body">
+          We couldn't reach your account to save it. Signing out clears it from this browser, so
+          anything not saved yet would be lost.
+        </p>
+      </template>
+      <template v-else>
+        <h2 id="unsaved-title">Sign-out didn't go through</h2>
+        <p id="unsaved-body">
+          The server didn't confirm it, so you're still signed in and nothing has been cleared from
+          this browser. Try again in a moment.
+        </p>
+      </template>
       <p class="unsaved__status" role="status">{{ retryNote }}</p>
       <div class="unsaved__actions">
-        <button type="button" class="btn btn--primary" :disabled="retrying" @click="tryAgain">
+        <button type="button" class="btn btn--primary" :disabled="retrying || accountStore.busy" @click="tryAgain">
           {{ retrying ? 'Trying…' : 'Try again' }}
         </button>
-        <button type="button" class="btn btn--secondary" @click="signOutAnyway">Sign out anyway</button>
-        <button type="button" class="btn btn--ghost" @click="closeUnsaved">Stay signed in</button>
+        <button
+          v-if="problem === 'unsaved'"
+          type="button"
+          class="btn btn--secondary"
+          :disabled="accountStore.busy"
+          @click="signOutAnyway"
+        >
+          Sign out anyway
+        </button>
+        <button type="button" class="btn btn--ghost" :disabled="accountStore.busy" @click="closeUnsaved">
+          Stay signed in
+        </button>
       </div>
     </dialog>
   </div>

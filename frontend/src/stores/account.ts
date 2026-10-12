@@ -76,10 +76,19 @@ export const useAccountStore = defineStore('account', () => {
   // Sign-out clears this browser's progress, so it saves it to the account
   // first. If the account can't confirm the save (offline, or the session
   // ran out), nothing happens and the caller gets 'unsaved' to ask the
-  // person; `discard` is their answer to sign out anyway.
-  const logout = async (discard = false): Promise<'signedOut' | 'unsaved' | 'failed'> => {
+  // person; `discard` is their answer to sign out anyway. `stillWanted` is
+  // asked once the save is done: the person may have chosen to stay signed
+  // in while it was on the wire. The sign-out request after that can't be
+  // called back, and `busy` is true while it runs.
+  const logout = async (
+    discard = false,
+    stillWanted: () => boolean = () => true,
+  ): Promise<'signedOut' | 'unsaved' | 'failed' | 'cancelled'> => {
     const activity = useActivityStore()
     if (account.value && !discard && !(await activity.saveToAccount())) return 'unsaved'
+    if (!stillWanted()) return 'cancelled'
+    // A change made during the sign-out request below can't be saved once it
+    // finishes; the page only allows that by clicking in the same instant.
     await run(async () => {
       await signOut()
       pairing.value = null
