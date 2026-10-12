@@ -11,10 +11,28 @@
  *                           the database; the only persistence is the
  *                           browser's own localStorage.
  *   "sent to NVIDIA"      - Src/source/pipeline/config.py posts the message to
- *                           https://integrate.api.nvidia.com/v1. This is the
- *                           disclosure the page exists for. It is stated
- *                           plainly and early rather than buried, because it
- *                           is the part a reader would not guess.
+ *                           https://integrate.api.nvidia.com/v1 (live
+ *                           /api/review/health on 2026-10-13: provider nvidia).
+ *                           This is the disclosure the page exists for. It is
+ *                           stated plainly and early rather than buried,
+ *                           because it is the part a reader would not guess.
+ *   "reply made here"     - DecodeView's replyDraft is computed in the
+ *                           browser; copying it is all that ever happens to it.
+ *   "Compose on a team    - with COMPOSE_REMOTE_URL set (live health:
+ *    computer"              compose.remote true), compose_service.py forwards
+ *                           /compose and /compose/quick unchanged and nothing
+ *                           loads on AWS; there is no fallback to another
+ *                           service. The remote is run 2 on a team member's
+ *                           Mac (infra/compose-mac/), published with Tailscale
+ *                           Funnel: TLS ends on the Mac, and Tailscale's docs
+ *                           say "Funnel relay servers do not decrypt the
+ *                           traffic". When Compose moves (infra/compose-uni/),
+ *                           that section changes with it.
+ *   "logs hold timings"   - the Mac's ~/Library/Logs/signalbridge/: checked on
+ *                           2026-10-13, none of that day's test drafts' words
+ *                           appear in either log.
+ *   "answers in your      - utils/missing.ts applyAnswers edits the draft in
+ *    browser"               the page; ComposeView then sends the new draft.
  *   "one cookie"          - the Flask session cookie, set by the account
  *                           routes (backend/app/routes/account.py) as soon as
  *                           someone starts registering or signing in. Flask's
@@ -62,7 +80,7 @@ import { RouterLink } from 'vue-router'
 // one thing on this page that would be actively misleading.
 const CONTACT = ''
 
-const LAST_UPDATED = '12 October 2026'
+const LAST_UPDATED = '13 October 2026'
 </script>
 
 <template>
@@ -72,13 +90,14 @@ const LAST_UPDATED = '12 October 2026'
       <p class="policy__lede">
         This page explains what happens to a message when you paste it into
         BetweenWords. The short version: it is analysed, it is never stored
-        on our servers, and part of the analysis happens at NVIDIA.
+        on our servers, part of decoding happens at NVIDIA, and Compose’s
+        rewrite is made by our own model on a computer the project team runs.
       </p>
       <p class="policy__date">Last updated {{ LAST_UPDATED }}</p>
     </header>
 
     <section>
-      <h2>What happens to a message you paste</h2>
+      <h2>When you decode a message</h2>
       <p>
         When you decode a message, the text is sent to our API so it can be
         analysed. Two things then happen to it.
@@ -97,9 +116,41 @@ const LAST_UPDATED = '12 October 2026'
         message is subject to NVIDIA’s own terms and privacy practices while it
         is with them.
       </p>
+      <p>
+        The reply under “Your reply” is put together in your browser from what
+        is on the page. It is never sent anywhere: you copy it and send it
+        yourself.
+      </p>
       <p class="policy__callout">
         If a message is confidential enough that sending it to a third-party AI
         provider would be a problem, do not paste it here.
+      </p>
+    </section>
+
+    <section>
+      <h2>When you compose a message</h2>
+      <p>
+        When you press Compose, your draft is sent to our API and on to the
+        model that rewrites it. That model is our own copy of a small, openly
+        published language model, trained further by the project team for this
+        job. It is not a third-party AI service. Everything Compose does with
+        your draft happens in the same place, including the check that the
+        rewrite kept every name, date and number and added none.
+      </p>
+      <p>
+        At the moment that model runs on a computer operated by a member of the
+        project team. Our server reaches it through
+        <a href="https://tailscale.com/docs/features/tailscale-funnel">Tailscale Funnel</a>,
+        over an encrypted connection that ends on that computer, so Tailscale’s
+        relay passes your draft on without being able to read it. Nothing is
+        stored there, and its logs record timings, never the text of a message.
+        When that computer is off, Compose says it can’t be reached, and your
+        draft is not sent anywhere else instead.
+      </p>
+      <p>
+        If you answer the questions under a rewrite, your answer is added to
+        your draft in your browser, and the new draft is sent the same way for
+        a fresh rewrite.
       </p>
     </section>
 
