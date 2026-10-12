@@ -166,38 +166,3 @@ export function usageByDay(events: ActivityEvent[], today: string, days = 14): D
   }
   return rows
 }
-
-// ---------------------------------------------------------------- one next step
-export type Energy = 'low' | 'okay' | 'good'
-export interface NextStep {
-  text: string
-  minutes: number
-  feature: Feature
-  intent: string
-}
-
-export function nextStep(energy: Energy, due: DueCard[], cards: CardProgress[], events: ActivityEvent[]): NextStep {
-  const last = [...events].filter((e) => e.intent).sort((a, b) => (a.date < b.date ? -1 : 1)).at(-1)
-  if (energy === 'low') {
-    return due.length
-      ? { text: `Just one thing: look over ${due.length === 1 ? 'one saved card' : 'two of your saved cards'} in Study. Five minutes is plenty.`,
-          minutes: 5, feature: 'study', intent: 'Reviewed a couple of saved cards' }
-      : { text: 'Just one thing: decode one message you got today. Five minutes is plenty.',
-          minutes: 5, feature: 'decoder', intent: 'Decoded one message' }
-  }
-  if (energy === 'good') {
-    const cats = progressByCategory(cards).sort((a, b) => b.notOpened - a.notOpened)
-    const fresh = cats[0]
-    if (fresh && fresh.notOpened > 0) {
-      return { text: `You've got some energy, so try a category you haven't explored much: ${fresh.category} (${fresh.opened} of ${fresh.total} opened). Save any phrases you want to come back to.`,
-               minutes: 15, feature: 'library', intent: `Explored ${fresh.category}` }
-    }
-    return { text: 'Try rewriting a message you need to send this week in Compose. 15 minutes.',
-             minutes: 15, feature: 'compose', intent: 'Rewrote a message in Compose' }
-  }
-  if (last?.intent) {
-    return { text: `Pick up where you left off: "${last.intent}". 10 minutes.`,
-             minutes: 10, feature: last.feature, intent: last.intent }
-  }
-  return { text: 'Try decoding one message. 10 minutes.', minutes: 10, feature: 'decoder', intent: 'Decoded a message' }
-}

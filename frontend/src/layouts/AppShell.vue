@@ -114,9 +114,60 @@ watch(
   },
 )
 
+// Sign-out saves progress to the account before clearing this browser
+// (stores/account.ts). If the save can't be confirmed, or the sign-out itself
+// fails, this dialog says so: nothing is cleared until the person decides,
+// and signing out anyway is one press away when it's the save that failed.
+const unsavedDialog = ref<HTMLDialogElement | null>(null)
+const problem = ref<'unsaved' | 'failed'>('unsaved')
+const retrying = ref(false)
+const retryNote = ref('')
+// Bumped whenever the dialog closes or the choice changes, so a retry still
+// saving knows it was called off and stops before signing out.
+let attempt = 0
+
+function showProblem(result: Awaited<ReturnType<typeof accountStore.logout>>) {
+  if (result !== 'unsaved' && result !== 'failed') return false
+  problem.value = result
+  if (!unsavedDialog.value?.open) unsavedDialog.value?.showModal()
+  return true
+}
+
 async function signOutFromMenu() {
   accountOpen.value = false
-  await accountStore.logout()
+  retryNote.value = ''
+  showProblem(await accountStore.logout())
+}
+
+// Focus goes back to the account button, or to the page once signed out,
+// instead of staying on a button inside the closed dialog. Not while the
+// sign-out request itself is on the wire: that can't be called back.
+function closeUnsaved() {
+  if (accountStore.busy) return
+  attempt++
+  retrying.value = false
+  unsavedDialog.value?.close()
+  if (accountStore.signedIn) accountToggleEl.value?.focus()
+  else document.getElementById('main-content')?.focus()
+}
+
+async function tryAgain() {
+  const mine = ++attempt
+  retrying.value = true
+  retryNote.value = ''
+  const result = await accountStore.logout(false, () => mine === attempt)
+  if (mine !== attempt) return // they closed the dialog or chose something else meanwhile
+  retrying.value = false
+  if (showProblem(result)) {
+    retryNote.value = result === 'unsaved' ? 'Still no answer from your account.' : "The sign-out still didn't go through."
+  } else closeUnsaved()
+}
+
+async function signOutAnyway() {
+  attempt++
+  retrying.value = false
+  retryNote.value = ''
+  if (!showProblem(await accountStore.logout(true))) closeUnsaved()
 }
 
 // The menu covers the page on a phone, so the two ways people expect to get
@@ -278,6 +329,50 @@ onBeforeUnmount(() => {
         <RouterLink to="/privacy" class="site-footer__link">Privacy</RouterLink>
       </div>
     </footer>
+
+    <!-- A native <dialog>: showModal() brings focus trapping, Escape and the
+         backdrop with it. Escape or "Stay signed in" keeps everything as it
+         was, and calls off a retry that is still saving. -->
+    <dialog
+      ref="unsavedDialog"
+      class="unsaved"
+      aria-labelledby="unsaved-title"
+      aria-describedby="unsaved-body"
+      @cancel.prevent="closeUnsaved"
+    >
+      <template v-if="problem === 'unsaved'">
+        <h2 id="unsaved-title">Your latest progress isn't saved yet</h2>
+        <p id="unsaved-body">
+          We couldn't reach your account to save it. Signing out clears it from this browser, so
+          anything not saved yet would be lost.
+        </p>
+      </template>
+      <template v-else>
+        <h2 id="unsaved-title">Sign-out didn't go through</h2>
+        <p id="unsaved-body">
+          The server didn't confirm it, so you're still signed in and nothing has been cleared from
+          this browser. Try again in a moment.
+        </p>
+      </template>
+      <p class="unsaved__status" role="status">{{ retryNote }}</p>
+      <div class="unsaved__actions">
+        <button type="button" class="btn btn--primary" :disabled="retrying || accountStore.busy" @click="tryAgain">
+          {{ retrying ? 'Trying…' : 'Try again' }}
+        </button>
+        <button
+          v-if="problem === 'unsaved'"
+          type="button"
+          class="btn btn--secondary"
+          :disabled="accountStore.busy"
+          @click="signOutAnyway"
+        >
+          Sign out anyway
+        </button>
+        <button type="button" class="btn btn--ghost" :disabled="accountStore.busy" @click="closeUnsaved">
+          Stay signed in
+        </button>
+      </div>
+    </dialog>
   </div>
 </template>
 
@@ -608,5 +703,49 @@ onBeforeUnmount(() => {
     justify-content: center;
     text-align: center;
   }
+}
+.unsaved {
+  width: min(440px, calc(100% - 32px));
+  padding: 22px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.unsaved::backdrop {
+  background: rgba(20, 18, 16, 0.45);
+}
+
+.unsaved h2 {
+  margin: 0 0 8px;
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.unsaved p {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+.unsaved__status:not(:empty) {
+  margin-top: 8px;
+  color: var(--color-text);
+}
+
+.unsaved__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.unsaved .btn {
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
 }
 </style>

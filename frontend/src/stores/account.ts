@@ -13,6 +13,7 @@ import {
   signIn,
   signOut,
 } from '@/services/accountService'
+import { useActivityStore } from '@/stores/activity'
 
 // Who is signed in, if anyone. Deliberately thin: an account changes what
 // the app can REMEMBER, never what it can do. Every page works signed out,
@@ -72,12 +73,35 @@ export const useAccountStore = defineStore('account', () => {
   const pair = (handle: string, code: string) =>
     run(() => pairWithCode(handle.trim().toUpperCase(), code.trim().toUpperCase()))
 
-  const logout = () =>
-    run(async () => {
+  // Sign-out clears this browser's progress, so it saves it to the account
+  // first. If the account can't confirm the save (offline, or the session
+  // ran out), nothing happens and the caller gets 'unsaved' to ask the
+  // person; `discard` is their answer to sign out anyway. `stillWanted` is
+  // asked once the save is done: the person may have chosen to stay signed
+  // in while it was on the wire. The sign-out request after that can't be
+  // called back, and `busy` is true while it runs.
+  const logout = async (
+    discard = false,
+    stillWanted: () => boolean = () => true,
+  ): Promise<'signedOut' | 'unsaved' | 'failed' | 'cancelled'> => {
+    const activity = useActivityStore()
+    if (account.value && !discard && !(await activity.saveToAccount())) return 'unsaved'
+    if (!stillWanted()) return 'cancelled'
+    // A change made during the sign-out request below can't be saved once it
+    // finishes; the page only allows that by clicking in the same instant.
+    await run(async () => {
       await signOut()
       pairing.value = null
       return null
     })
+    if (account.value) return 'failed' // `error` says why
+    // Signing in merged the account's days, views and reviews into this
+    // browser. Left behind, the next account to sign in here would upload them
+    // as its own. Only once the sign-out has gone through: while still signed
+    // in, clearAll() deletes the account's own copy as well.
+    activity.clearAll()
+    return 'signedOut'
+  }
 
   const remove = () =>
     run(async () => {

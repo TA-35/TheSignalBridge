@@ -12,6 +12,7 @@ import { defineStore } from 'pinia'
 import { dateKey, type ActivityEvent, type Feature } from '@/utils/progress'
 import { useAccountStore } from '@/stores/account'
 import { useCardsStore } from '@/stores/cards'
+import { useFocusTimerStore } from '@/stores/focusTimer'
 import {
   clearProgress,
   pushProgress,
@@ -134,8 +135,13 @@ export function mergeSnapshot(s: Saved, snap: ProgressSnapshot): void {
 // ---------------------------------------------------------------- store
 
 let syncTimer: ReturnType<typeof setTimeout> | null = null
-let syncing = false
+let current: Promise<boolean> | null = null // the sync on the wire, if any
 let again = false
+// Every local change bumps `version`; `savedVersion` is the newest one the
+// account has confirmed. Sign-out waits until they match. -1 because after a
+// page load nobody knows yet whether the last upload made it.
+let version = 0
+let savedVersion = -1
 // "Delete everything" has to win over a sync that is already on the wire.
 // clearAll() bumps the epoch, and a sync that started before it throws its
 // reply away (it holds the account's data from before the delete). The
@@ -157,6 +163,7 @@ export const useActivityStore = defineStore('activity', {
 
   actions: {
     persist() {
+      version++
       try {
         localStorage.setItem(KEY, JSON.stringify(this.snapshot()))
       } catch {
@@ -224,41 +231,20 @@ export const useActivityStore = defineStore('activity', {
     /**
      * Called when an account signs in (AppShell), and after changes while
      * signed in. Sends everything this device has, then folds the account's
-     * whole set back in. Safe to call any number of times.
+     * whole set back in. Safe to call any number of times. True when the
+     * account confirmed it has everything that was sent.
      */
-    async syncWithAccount() {
-      if (!useAccountStore().signedIn) return
-      if (syncing) {
+    async syncWithAccount(): Promise<boolean> {
+      if (!useAccountStore().signedIn) return false
+      if (current) {
         again = true
-        return
+        return false
       }
-      syncing = true
+      current = this.pushAndMerge()
       try {
-        while (clearing) await clearing
-        const started = epoch
-        // Review keys for cards saved from a decode are local card ids, not
-        // library patterns. They stay on this device, like the cards do.
-        const localOnly = new Set(useCardsStore().cards.filter((c) => !c.patternId).map((c) => c.id))
-        const today = dateKey()
-        // pin today's date on any older view that never had one, so the same
-        // view isn't sent again with a new date tomorrow
-        for (const id of this.viewed) if (!this.viewedOn[id]) this.viewedOn[id] = today
-
-        const request = pushProgress(buildUpload(this.snapshot(), today, localOnly))
-        inflight = request
-        const snap = await request
-        if (!snap || started !== epoch) return
-        const s = this.snapshot()
-        mergeSnapshot(s, snap)
-        this.$patch({ openDays: s.openDays, remoteEvents: s.remoteEvents, viewed: s.viewed, viewedOn: s.viewedOn, reviews: s.reviews })
-        try {
-          localStorage.setItem(KEY, JSON.stringify(this.snapshot()))
-        } catch {
-          /* ignore */
-        }
+        return await current
       } finally {
-        syncing = false
-        inflight = null
+        current = null
         if (again) {
           again = false
           void this.syncWithAccount()
@@ -266,8 +252,67 @@ export const useActivityStore = defineStore('activity', {
       }
     },
 
+    // One upload and merge. Only syncWithAccount() calls this, so two never overlap.
+    async pushAndMerge(): Promise<boolean> {
+      while (clearing) await clearing
+      const started = epoch
+      // Review keys for cards saved from a decode are local card ids, not
+      // library patterns. They stay on this device, like the cards do.
+      const localOnly = new Set(useCardsStore().cards.filter((c) => !c.patternId).map((c) => c.id))
+      const today = dateKey()
+      // pin today's date on any older view that never had one, so the same
+      // view isn't sent again with a new date tomorrow
+      for (const id of this.viewed) if (!this.viewedOn[id]) this.viewedOn[id] = today
+
+      const sending = version
+      const request = pushProgress(buildUpload(this.snapshot(), today, localOnly))
+      inflight = request
+      let snap: ProgressSnapshot | null
+      try {
+        snap = await request
+      } finally {
+        inflight = null
+      }
+      if (!snap || started !== epoch) return false
+      savedVersion = Math.max(savedVersion, sending)
+      const s = this.snapshot()
+      mergeSnapshot(s, snap)
+      this.$patch({ openDays: s.openDays, remoteEvents: s.remoteEvents, viewed: s.viewed, viewedOn: s.viewedOn, reviews: s.reviews })
+      try {
+        localStorage.setItem(KEY, JSON.stringify(this.snapshot()))
+      } catch {
+        /* ignore */
+      }
+      return true
+    },
+
+    /**
+     * Before sign-out clears this browser: everything here has to reach the
+     * account first. A change normally goes up a few seconds after it
+     * happens, and an upload can fail, so this sends now - after any sync
+     * already on the wire - and keeps sending until the account has
+     * confirmed the newest change, including one made while an upload was
+     * on its way. False as soon as an upload isn't confirmed.
+     */
+    async saveToAccount(): Promise<boolean> {
+      for (let round = 0; round < 5; round++) {
+        if (syncTimer) {
+          clearTimeout(syncTimer)
+          syncTimer = null
+        }
+        while (current) {
+          again = false // the next round sends instead of the queued re-run
+          await current
+        }
+        if (savedVersion === version) return true
+        if (!(await this.syncWithAccount())) return false
+      }
+      return savedVersion === version
+    },
+
     // Settings' "delete": everything the dashboard keeps, here and (if signed
-    // in) on the account, so it doesn't sync straight back down.
+    // in) on the account, so it doesn't sync straight back down. Sign-out
+    // calls it too, once signed out, so only this browser's copy goes.
     clearAll() {
       epoch++
       again = false
@@ -283,10 +328,13 @@ export const useActivityStore = defineStore('activity', {
       for (const k of SESSION_FLAG_KEYS) {
         try { sessionStorage.removeItem(k) } catch { /* ignore */ }
       }
+      // a session in progress goes too, with what they typed for it
+      useFocusTimerStore().reset()
       if (syncTimer) {
         clearTimeout(syncTimer)
         syncTimer = null
       }
+      savedVersion = version // nothing here is waiting to be saved any more
       try {
         localStorage.setItem(KEY, JSON.stringify(this.snapshot()))
       } catch {

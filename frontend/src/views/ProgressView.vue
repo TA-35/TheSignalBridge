@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Progress dashboard. Calm by design: one next step, gentle reminders,
+// Progress dashboard. Calm by design: gentle reminders,
 // badges for total days used (never streaks), and no missed days anywhere.
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
@@ -8,8 +8,8 @@ import { useProgressSources } from '@/composables/useProgressSources'
 import { useAccountStore } from '@/stores/account'
 import { categoryHue } from '@/utils/categories'
 import {
-  BADGES, FEATURES, badgeStatus, dateKey, dueForReview, libraryProgress, nextStep,
-  progressByCategory, reviewReminder, usageByDay, type Energy, type Feature,
+  BADGES, FEATURES, badgeStatus, dateKey, dueForReview, libraryProgress,
+  progressByCategory, reviewReminder, usageByDay, type Feature,
 } from '@/utils/progress'
 
 const { activity, loading, libraryCards, allCards } = useProgressSources()
@@ -31,18 +31,8 @@ const hideBadges = ref(readFlag('bw-progress-nobadges'))
 watch(largeText, (v) => saveFlag('bw-progress-large', v))
 watch(hideBadges, (v) => saveFlag('bw-progress-nobadges', v))
 
-// ---------------------------------------------------------------- start here
-const energy = ref<Energy>('okay')
-const due = computed(() => dueForReview(allCards.value, today.value))
-const step = computed(() => nextStep(energy.value, due.value, libraryCards.value, activity.allEvents))
-const timerPreset = ref<{ minutes: number; feature: Feature; intent: string; nonce: number }>()
-function startStep() {
-  timerPreset.value = { ...step.value, nonce: Date.now() }
-  document.getElementById('timer-title')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-}
-const lastSession = computed(() => activity.events.at(-1))
-
 // ---------------------------------------------------------------- refresher, as points
+const due = computed(() => dueForReview(allCards.value, today.value))
 const reminder = computed(() => reviewReminder(due.value))
 const snoozedToday = ref(sessionStorageGet('bw-refresher-later') === today.value)
 function sessionStorageGet(k: string) { try { return sessionStorage.getItem(k) } catch { return null } }
@@ -151,24 +141,6 @@ onMounted(() => {
       </div>
     </header>
 
-    <!-- one next step -->
-    <section class="pd-card pd-start" aria-labelledby="start-title">
-      <div class="pd-head">
-        <h2 id="start-title">Start here</h2>
-        <span v-if="lastSession" class="pd-muted pd-small">Last session: {{ FEATURE_LABEL[lastSession.feature] }}</span>
-      </div>
-      <p class="pd-muted pd-small">How much energy do you have right now?</p>
-      <div class="pd-row pd-seg" role="group" aria-label="Energy level">
-        <button v-for="e in (['low', 'okay', 'good'] as const)" :key="e" type="button" :aria-pressed="energy === e" @click="energy = e">
-          {{ e.charAt(0).toUpperCase() + e.slice(1) }}
-        </button>
-      </div>
-      <div class="pd-step">
-        <p>{{ step.text }}</p>
-        <button type="button" class="pd-primary" @click="startStep">Start</button>
-      </div>
-    </section>
-
     <!-- refresher, as points -->
     <section v-if="reminder && !snoozedToday" class="pd-card pd-refresh" aria-labelledby="refresh-title" aria-live="polite">
       <div>
@@ -194,7 +166,7 @@ onMounted(() => {
     </section>
 
     <div class="pd-grid2">
-      <FocusTimer :preset="timerPreset">
+      <FocusTimer>
         <template #today><span class="pd-muted pd-small">{{ todayMinutes }} min today</span></template>
       </FocusTimer>
 
@@ -333,7 +305,7 @@ onMounted(() => {
 .pd-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .pd-toggle input { width: 18px; height: 18px; accent-color: var(--pd-accent); }
 .pd-card { background: var(--pd-surface); border: 1px solid var(--pd-line); border-radius: var(--radius-md, 14px); padding: 20px; display: grid; gap: 14px; min-width: 0; }
-.pd-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+.pd-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 18px; }
 .pd-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .pd-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .pd-muted { color: var(--pd-muted-c); }
@@ -358,8 +330,6 @@ onMounted(() => {
   background: var(--pd-accent); color: #fff; text-decoration: none; }
 .pd-page .pd-link-button:hover { color: #fff; filter: brightness(1.08); }
 .pd-page .pd-link-button:focus-visible { outline: 3px solid var(--pd-accent); outline-offset: 2px; }
-.pd-step { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; padding: 14px; border-radius: 12px; background: var(--pd-accent-soft); }
-.pd-step p { font-size: 1.05em; max-width: 60ch; }
 
 .pd-refresh { --pd-accent: var(--pd-lavender); --pd-accent-soft: var(--pd-lavender-soft); border-left: 5px solid var(--pd-accent);
   grid-template-columns: 1fr auto; align-items: start; }
@@ -413,7 +383,7 @@ onMounted(() => {
 .pd-page, .pd-page .pd-card { --pd-accent-ink: color-mix(in srgb, var(--pd-accent) 60%, var(--pd-ink)); }
 
 @media (max-width: 560px) {
-  .pd-step, .pd-refresh { grid-template-columns: 1fr; }
+  .pd-refresh { grid-template-columns: 1fr; }
   .pd-lib, .pd-timer-body { grid-template-columns: 1fr; justify-items: center; }
   .pd-cats, .pd-timer-controls { width: 100%; }
 }
