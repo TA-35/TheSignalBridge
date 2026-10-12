@@ -97,14 +97,17 @@ MISSPELT = {
 }
 MISSPELT_RE = [(re.compile(rf"\b{k}\b", re.I), v) for k, v in MISSPELT.items()]
 
-# Texting shorthand. Read literally, "b4" holds the number 4 and spaCy tags
-# "pls review" as an organisation, so a rewrite that spells them out ("before",
-# "Please review") looked like it had dropped a fact, and live Compose withheld it.
+# Texting shorthand. Read literally, "b4" and "sum1" hold a number and spaCy tags
+# "pls review" and "tidy ur floor" as names, so a rewrite that spells them out
+# ("before", "Please review") looked like it had dropped a fact, and live Compose withheld it.
+# Spelled out, "tmrw", "this arvo" and "last yr" looked like an added date.
 TEXTISMS = {
     "b4": "before", "2day": "today", "2nite": "tonight", "2night": "tonight",
-    "2moro": "tomorrow", "2morrow": "tomorrow", "2mrw": "tomorrow", "l8r": "later",
-    "gr8": "great", "any1": "anyone", "some1": "someone", "every1": "everyone", "no1": "no one",
-    "pls": "please", "plz": "please",
+    "2moro": "tomorrow", "2morrow": "tomorrow", "2mrw": "tomorrow", "2mro": "tomorrow",
+    "tmrw": "tomorrow", "tmr": "tomorrow", "tmw": "tomorrow", "tomoz": "tomorrow", "l8r": "later",
+    "arvo": "afternoon", "last yr": "last year", "this yr": "this year", "next yr": "next year",
+    "gr8": "great", "any1": "anyone", "some1": "someone", "sum1": "someone", "every1": "everyone",
+    "no1": "no one", "pls": "please", "plz": "please", "ur": "your",
 }
 TEXTISM_RE = re.compile(r"\b(" + "|".join(TEXTISMS) + r")\b", re.I)
 
@@ -135,9 +138,12 @@ def tokens(text):
     return {t.rstrip(".:/") for t in re.findall(r"[a-z0-9$%.:/\[\]_]+", norm(text))} - {""}
 
 
+# "about", "like" and "around" only round a time ("like a day last yr" ->
+# "about a day last year"); the number or date beside them is the fact.
 STOP = {"the", "a", "an", "of", "this", "that", "next", "last", "by", "on", "in",
         "at", "to", "and", "or", "for", "end", "week", "day", "morning",
-        "afternoon", "evening", "tonight", "today", "tomorrow"}
+        "afternoon", "evening", "tonight", "today", "tomorrow",
+        "about", "around", "roughly", "approximately", "like"}
 
 
 def text_hash(t):
