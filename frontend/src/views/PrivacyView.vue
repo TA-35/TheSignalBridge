@@ -161,6 +161,15 @@ const LAST_UPDATED = '12 October 2026'
         <RouterLink to="/settings">Settings</RouterLink>. Clearing your browser
         data for this site has the same effect.
       </p>
+      <p>
+        If you rate a Compose rewrite with 👍 or 👎, we save the rating and
+        nothing of what you wrote: the vote, any reasons you pick from our
+        fixed list, which version of the rewriting model wrote it, whether we
+        left your message unchanged, and whether you answered our questions
+        about it first. Not your message, not the rewrite, and nothing that
+        links the rating to you or your account. We use the totals to decide
+        what the model needs to learn next.
+      </p>
     </section>
 
     <section id="accounts">

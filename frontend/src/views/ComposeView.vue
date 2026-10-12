@@ -23,6 +23,7 @@ import {
 } from '@/types/compose'
 import VoiceInput from '@/components/VoiceInput.vue'
 import MissingCheck from '@/components/MissingCheck.vue'
+import RewriteFeedback from '@/components/RewriteFeedback.vue'
 import { applyAnswers, findMissing, type Answer, type MissingKey } from '@/utils/missing'
 
 const SAMPLE =
@@ -73,6 +74,11 @@ const missingItems = computed(() => {
   return findMissing(state.message, r.meaning, r.notes).filter((item) => !skip.has(item.key))
 })
 
+// The 👍/👎 card starts fresh for every answer, even a second rewrite of the
+// same draft, and says whether the sender's answers above went into it.
+const answerCount = ref(0)
+const afterCard = computed(() => state.message === answered.value.draft && answered.value.keys.size > 0)
+
 function addMissing(answers: Partial<Record<MissingKey, Answer>>) {
   const earlier = state.message === answered.value.draft ? answered.value.keys : new Set<MissingKey>()
   state.message = applyAnswers(state.message, missingItems.value, answers)
@@ -94,6 +100,7 @@ async function rewrite() {
     state.result = await composeMessage(text, (quick) => {
       state.quick = quick
     })
+    answerCount.value++
   } catch (err) {
     if (err instanceof EmptyMessageError) {
       state.errorTitle = 'Nothing to rewrite yet'
@@ -279,6 +286,13 @@ const copyRewrite = () => copyText(rewriteText.value)
             </section>
 
             <MissingCheck v-if="missingItems.length" :items="missingItems" @add="addMissing" />
+
+            <RewriteFeedback
+              :key="answerCount"
+              :model="state.result.model ?? 'unknown'"
+              :kept-as-written="true"
+              :after-card="afterCard"
+            />
           </div>
 
           <aside class="actions-panel">
@@ -395,6 +409,13 @@ const copyRewrite = () => copyText(rewriteText.value)
                 </li>
               </ol>
             </section>
+
+            <RewriteFeedback
+              :key="answerCount"
+              :model="state.result.model ?? 'unknown'"
+              :kept-as-written="false"
+              :after-card="afterCard"
+            />
 
             <!-- Folded away: useful when something in the rewrite looks
                  wrong, noise when it doesn't. -->
