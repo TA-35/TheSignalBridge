@@ -56,6 +56,11 @@ const MOCK = import.meta.env.VITE_COMPOSE_MOCK === '1'
 // answers to fake, so both can be seen from the sample message.
 const HEDGES = /might be good|when you get a chance|if you get a chance|no pressure|sometime|would be great/i
 
+// The deadline as the draft states it, or "" - the model's convention. Rough,
+// but enough to see the deadline check appear and go away.
+const DEADLINE = /\b(?:by|before)\s+[^.?!\n]{2,40}|\b(?:today|tonight|tomorrow|this week|(?:mon|tues|wednes|thurs|fri)day)\b/i
+const mockDeadline = (message: string) => message.match(DEADLINE)?.[0] ?? ''
+
 function mockResult(message: string): ComposeResult {
   if (!HEDGES.test(message)) {
     return {
@@ -65,7 +70,7 @@ function mockResult(message: string): ComposeResult {
       notes: ['Already clear, kept as written.'],
       meaning: {
         ask: 'Send the Q3 sales report',
-        deadline: '3pm Thursday',
+        deadline: mockDeadline(message),
         urgency: 'medium',
         tone: 'direct',
         implied: 'The ask, who does it and the deadline are all stated directly.',
@@ -88,7 +93,7 @@ function mockResult(message: string): ComposeResult {
     ],
     meaning: {
       ask: 'Send the Q3 numbers',
-      deadline: "Before Friday's meeting",
+      deadline: mockDeadline(message),
       urgency: 'high',
       tone: 'friendly',
       implied: 'Required, not optional',
