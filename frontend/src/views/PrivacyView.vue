@@ -153,7 +153,8 @@ const LAST_UPDATED = '12 October 2026'
         from this browser. If your account can't be reached, you're asked
         before signing out, because anything not saved yet would be lost. What
         you typed for focus sessions is never sent to your account, so signing
-        out removes it.
+        out removes it. The energy level you pick on Progress is kept in this
+        browser for that day only, and is never sent anywhere.
       </p>
       <p>
         Because decode history includes the messages you pasted, clearing it
