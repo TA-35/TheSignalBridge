@@ -1,6 +1,7 @@
 <script setup lang="ts">
-// Progress dashboard. Calm by design: gentle reminders,
-// badges for total days used (never streaks), and no missed days anywhere.
+// Progress dashboard. Calm by design: an energy check-in that sizes the card
+// reminder, gentle reminders, badges for total days used (never streaks), and
+// no missed days anywhere.
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import FocusTimer from '@/components/progress/FocusTimer.vue'
@@ -8,8 +9,8 @@ import { useProgressSources } from '@/composables/useProgressSources'
 import { useAccountStore } from '@/stores/account'
 import { categoryHue } from '@/utils/categories'
 import {
-  BADGES, FEATURES, badgeStatus, dateKey, dueForReview, libraryProgress,
-  progressByCategory, reviewReminder, usageByDay, type Feature,
+  BADGES, FEATURES, REVIEW_LOAD, addDays, badgeStatus, dateKey, dueForReview, libraryProgress,
+  nextReviewDate, progressByCategory, reviewReminder, usageByDay, type Energy, type Feature,
 } from '@/utils/progress'
 
 const { activity, loading, libraryCards, allCards } = useProgressSources()
@@ -31,14 +32,58 @@ const hideBadges = ref(readFlag('bw-progress-nobadges'))
 watch(largeText, (v) => saveFlag('bw-progress-large', v))
 watch(hideBadges, (v) => saveFlag('bw-progress-nobadges', v))
 
+// ---------------------------------------------------------------- energy today (this browser only, for today only)
+// Sizes the card reminder below. Stored as "<day>:<level>" so tomorrow starts unasked.
+const ENERGIES: Energy[] = ['low', 'okay', 'good']
+const ENERGY_LABEL: Record<Energy, string> = { low: 'Low', okay: 'Okay', good: 'Good' }
+const ENERGY_NOTE: Record<Energy | 'unset', string> = {
+  unset: 'Pick one and the card reminder below matches it. It resets tomorrow.',
+  low: 'Low energy is fine. The reminder offers just two cards, and skipping today is fine too.',
+  okay: 'The reminder offers up to five cards.',
+  good: 'Good energy, so the reminder offers up to ten cards.',
+}
+function readEnergy(): Energy | null {
+  try {
+    const [day, level] = (localStorage.getItem('bw-energy') ?? '').split(':')
+    return day === dateKey() && ENERGIES.includes(level as Energy) ? (level as Energy) : null
+  } catch { return null }
+}
+const energy = ref<Energy | null>(readEnergy())
+function setEnergy(level: Energy) {
+  energy.value = level
+  try { localStorage.setItem('bw-energy', `${today.value}:${level}`) } catch { /* ignore */ }
+}
+
 // ---------------------------------------------------------------- refresher, as points
+// Always on the page, so a reminder is never just missing: cards to review,
+// nothing due yet (and when the next one is), or how to save a first card.
 const due = computed(() => dueForReview(allCards.value, today.value))
-const reminder = computed(() => reviewReminder(due.value))
+const reminder = computed(() => reviewReminder(due.value, REVIEW_LOAD[energy.value ?? 'okay']))
+const reminderHeading = computed(() => {
+  const r = reminder.value
+  if (!r) return ''
+  return energy.value === 'low' ? `Just ${r.cards.length === 1 ? 'one card' : `${r.cards.length} cards`} today` : r.heading
+})
+const moreNote = computed(() => {
+  const more = reminder.value?.moreCount ?? 0
+  if (!more) return ''
+  return energy.value === 'low' ? `The other ${more} can wait.` : `and ${more} more after these`
+})
+const hasSaved = computed(() => allCards.value.some((c) => c.saved))
+const nextDue = computed(() => (due.value.length ? null : nextReviewDate(allCards.value, today.value)))
+const onDay = (k: string) =>
+  k === addDays(today.value, 1)
+    ? 'tomorrow'
+    : `on ${new Date(`${k}T00:00`).toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' })}`
 const snoozedToday = ref(sessionStorageGet('bw-refresher-later') === today.value)
 function sessionStorageGet(k: string) { try { return sessionStorage.getItem(k) } catch { return null } }
 function later() {
   snoozedToday.value = true
   try { sessionStorage.setItem('bw-refresher-later', today.value) } catch { /* ignore */ }
+}
+function showAgain() {
+  snoozedToday.value = false
+  try { sessionStorage.removeItem('bw-refresher-later') } catch { /* ignore */ }
 }
 // opens the most faded card. Opening it in Study counts as a review
 // (cards store touch()), so the reminder updates by itself afterwards
@@ -141,28 +186,73 @@ onMounted(() => {
       </div>
     </header>
 
-    <!-- refresher, as points -->
-    <section v-if="reminder && !snoozedToday" class="pd-card pd-refresh" aria-labelledby="refresh-title" aria-live="polite">
-      <div>
-        <div class="pd-eyebrow">Time for a refresher</div>
-        <h2 id="refresh-title" class="pd-refresh-head">{{ reminder.heading }}</h2>
-        <ul class="pd-review-list">
-          <li v-for="g in reminder.groups" :key="g.category">
-            <div class="pd-review-cat">
-              <strong>{{ g.category }}</strong>
-              <span class="pd-muted pd-small">{{ g.cards.length }} card{{ g.cards.length === 1 ? '' : 's' }} · last looked {{ ago(g.daysSince) }}</span>
-            </div>
-            <ul>
-              <li v-for="c in g.cards" :key="c.id">“{{ c.text }}”</li>
-            </ul>
-          </li>
-        </ul>
-        <p v-if="reminder.moreCount" class="pd-muted pd-small">and {{ reminder.moreCount }} more after these</p>
+    <!-- energy today: sizes the card reminder under it -->
+    <section class="pd-card pd-start" aria-labelledby="energy-title">
+      <h2 id="energy-title">How's your energy today?</h2>
+      <div class="pd-row pd-seg" role="group" aria-labelledby="energy-title">
+        <button v-for="e in ENERGIES" :key="e" type="button" :aria-pressed="energy === e" @click="setEnergy(e)">
+          {{ ENERGY_LABEL[e] }}
+        </button>
       </div>
-      <div class="pd-row">
-        <button type="button" class="pd-primary" @click="reviewNow">Review ({{ reminder.minutes }} min)</button>
-        <button type="button" class="pd-ghost" @click="later">Later</button>
+      <p class="pd-muted pd-small" aria-live="polite">{{ ENERGY_NOTE[energy ?? 'unset'] }}</p>
+    </section>
+
+    <!-- refresher, as points: always here, so the reminder is never just missing -->
+    <section class="pd-card pd-refresh" aria-labelledby="refresh-title" aria-live="polite">
+      <template v-if="reminder && !snoozedToday">
+        <div>
+          <div class="pd-eyebrow">Time for a refresher</div>
+          <h2 id="refresh-title" class="pd-refresh-head">{{ reminderHeading }}</h2>
+          <ul class="pd-review-list">
+            <li v-for="g in reminder.groups" :key="g.category">
+              <div class="pd-review-cat">
+                <strong>{{ g.category }}</strong>
+                <span class="pd-muted pd-small">{{ g.cards.length }} card{{ g.cards.length === 1 ? '' : 's' }} · last looked {{ ago(g.daysSince) }}</span>
+              </div>
+              <ul>
+                <li v-for="c in g.cards" :key="c.id">“{{ c.text }}”</li>
+              </ul>
+            </li>
+          </ul>
+          <p v-if="moreNote" class="pd-muted pd-small">{{ moreNote }}</p>
+        </div>
+        <div class="pd-row">
+          <button type="button" class="pd-primary" @click="reviewNow">Review ({{ reminder.minutes }} min)</button>
+          <button type="button" class="pd-ghost" @click="later">Later</button>
+        </div>
+      </template>
+
+      <template v-else-if="reminder">
+        <div>
+          <div class="pd-eyebrow">Card reviews</div>
+          <h2 id="refresh-title" class="pd-refresh-head">
+            {{ due.length === 1 ? 'One card is' : `${due.length} cards are` }} waiting for later
+          </h2>
+          <p class="pd-muted pd-small">You chose Later. They'll still be here.</p>
+        </div>
+        <div class="pd-row">
+          <button type="button" class="pd-ghost" @click="showAgain">Show them</button>
+        </div>
+      </template>
+
+      <div v-else-if="hasSaved">
+        <div class="pd-eyebrow">Card reviews</div>
+        <h2 id="refresh-title" class="pd-refresh-head">Nothing to review today</h2>
+        <p v-if="nextDue" class="pd-muted pd-small">Your next card comes up {{ onDay(nextDue) }}.</p>
       </div>
+
+      <template v-else>
+        <div>
+          <div class="pd-eyebrow">Card reviews</div>
+          <h2 id="refresh-title" class="pd-refresh-head">No saved cards yet</h2>
+          <p class="pd-muted pd-small">
+            Save a phrase from the Library, and it comes back here when it's time to look at it again.
+          </p>
+        </div>
+        <div class="pd-row">
+          <RouterLink :to="{ name: 'library' }" class="pd-link-button">Open the Library</RouterLink>
+        </div>
+      </template>
     </section>
 
     <div class="pd-grid2">

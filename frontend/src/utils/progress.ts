@@ -109,16 +109,40 @@ export interface DueCard extends CardProgress {
   daysSince: number
 }
 
-export function retention(c: CardProgress, today: string, base = 1.5) {
-  // saving a card counts as the first time they learned it, then every
-  // review in Study after that makes the memory last longer
+// saving a card counts as the first time they learned it, then every
+// review in Study after that makes the memory last longer
+function memory(c: CardProgress, base: number) {
   const exposures = [...new Set([c.firstSeen, ...c.reviews].filter((d): d is string => !!d))].sort()
   const last = exposures[exposures.length - 1]
-  if (!last) return null
-  const daysSince = daysBetween(last, today)
-  const stability = base * 2 ** (exposures.length - 1)
-  return { retention: Math.exp(-daysSince / stability), daysSince }
+  return last ? { last, stability: base * 2 ** (exposures.length - 1) } : null
 }
+
+export function retention(c: CardProgress, today: string, base = 1.5) {
+  const m = memory(c, base)
+  if (!m) return null
+  const daysSince = daysBetween(m.last, today)
+  return { retention: Math.exp(-daysSince / m.stability), daysSince }
+}
+
+// The first day a saved card's retention drops under the threshold: when the
+// refresher next has something to show. e^(-t/S) < threshold once
+// t > -S ln(threshold), so the first whole day past that.
+export function nextReviewDate(cards: CardProgress[], today: string, threshold = 0.7, base = 1.5): string | null {
+  let next: string | null = null
+  for (const c of cards) {
+    const m = c.saved ? memory(c, base) : null
+    if (!m) continue
+    const day = addDays(m.last, Math.floor(-m.stability * Math.log(threshold)) + 1)
+    const when = day < today ? today : day
+    if (!next || when < next) next = when
+  }
+  return next
+}
+
+// How many due cards the refresher offers, by the energy picked for today.
+// Low still offers two, never a demand: skipping a day costs nothing here.
+export type Energy = 'low' | 'okay' | 'good'
+export const REVIEW_LOAD: Record<Energy, number> = { low: 2, okay: 5, good: 10 }
 
 export function dueForReview(cards: CardProgress[], today: string, threshold = 0.7): DueCard[] {
   const due: DueCard[] = []
