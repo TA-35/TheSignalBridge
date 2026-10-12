@@ -2,6 +2,7 @@
 processed data in the repo holds no email addresses."""
 import csv
 import importlib.util
+import re
 from pathlib import Path
 
 import pytest
@@ -118,6 +119,17 @@ def test_check_counts_what_pt14_counts(tmp_path, capsys):
     assert pe.main(["--check", str(f)]) == 1 and "2 unique" in capsys.readouterr().out
     pe.main([str(f)])
     assert pe.main(["--check", str(f)]) == 0
+
+
+@pytest.mark.parametrize("name", ["enron_tone_eval_human.csv", "enron_tone_labeled.csv"])
+def test_enron_message_ids_stay_the_original_ids(name):
+    # enron_register.py and enron_step1.py keep the 300 human-labelled eval emails out of
+    # training by matching message_id against the original Enron corpus. A hashed ID
+    # (as pseudonymise_enron_pt14.py writes) matches nothing there, and nothing else fails.
+    rows, _ = pe.load(ROOT / "data" / "processed" / name)
+    i = rows[0].index("message_id")
+    odd = [row[i] for row in rows[1:] if not re.fullmatch(r"<[\d.]+\.JavaMail\.evans@thyme>", row[i])]
+    assert not odd, f"{name}: {len(odd)} message_id values aren't original Enron IDs, e.g. {odd[:2]}"
 
 
 DATA = sorted((ROOT / "data" / "processed").glob("*.csv")) + sorted((ROOT / "data" / "Stanford_Politeness").glob("*.csv"))
