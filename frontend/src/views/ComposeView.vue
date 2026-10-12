@@ -22,8 +22,8 @@ import {
   type ComposeResult,
 } from '@/types/compose'
 import VoiceInput from '@/components/VoiceInput.vue'
-import DeadlineCheck from '@/components/DeadlineCheck.vue'
-import { addToDraft } from '@/utils/deadline'
+import MissingCheck from '@/components/MissingCheck.vue'
+import { applyAnswers, findMissing, type Answer, type MissingKey } from '@/utils/missing'
 
 const SAMPLE =
   "Hi,\n\nWhen you get a chance, could you take a look at the Q3 deck and tighten up the numbers section? Would be great to have it before the leadership sync.\n\nThanks!"
@@ -61,18 +61,22 @@ const meaningRows = computed(() => {
   ].filter((row) => !!row.value)
 })
 
-// The model found an ask but no deadline ("" is its word for none). Not
-// offered again for the draft they just added one to, even if the reply
-// still reports none.
-const draftWithDeadline = ref('')
-const needsDeadline = computed(() => {
+// What the draft leaves a literal reader to guess (utils/missing.ts). A
+// question once answered isn't asked again for the draft the answer went
+// into, even where the words that raised it are still there - "no rush"
+// stays in the draft after "This is urgent." is added.
+const answered = ref<{ draft: string; keys: Set<MissingKey> }>({ draft: '', keys: new Set() })
+const missingItems = computed(() => {
   const r = state.result
-  return !!r?.rewrite && !!r.meaning.ask.trim() && !r.meaning.deadline.trim() && state.message !== draftWithDeadline.value
+  if (!r?.rewrite) return []
+  const skip = state.message === answered.value.draft ? answered.value.keys : new Set<MissingKey>()
+  return findMissing(state.message, r.meaning).filter((item) => !skip.has(item.key))
 })
 
-function addDeadline(sentence: string) {
-  state.message = addToDraft(state.message, sentence)
-  draftWithDeadline.value = state.message
+function addMissing(answers: Partial<Record<MissingKey, Answer>>) {
+  const earlier = state.message === answered.value.draft ? answered.value.keys : new Set<MissingKey>()
+  state.message = applyAnswers(state.message, missingItems.value, answers)
+  answered.value = { draft: state.message, keys: new Set([...earlier, ...(Object.keys(answers) as MissingKey[])]) }
   editing.value = false
   shown.value = 'rewrite'
   void rewrite()
@@ -274,7 +278,7 @@ const copyRewrite = () => copyText(rewriteText.value)
               </div>
             </section>
 
-            <DeadlineCheck v-if="needsDeadline" @add="addDeadline" />
+            <MissingCheck v-if="missingItems.length" :items="missingItems" @add="addMissing" />
           </div>
 
           <aside class="actions-panel">
@@ -380,7 +384,7 @@ const copyRewrite = () => copyText(rewriteText.value)
               </p>
             </section>
 
-            <DeadlineCheck v-if="needsDeadline" @add="addDeadline" />
+            <MissingCheck v-if="missingItems.length" :items="missingItems" @add="addMissing" />
 
             <section v-if="state.result.notes.length && shown === 'rewrite'" class="card">
               <h2 class="card__title">What changed and why</h2>
