@@ -114,9 +114,41 @@ watch(
   },
 )
 
+// Sign-out saves progress to the account before clearing this browser
+// (stores/account.ts). When the account can't confirm the save, this asks
+// before anything is lost, and signing out anyway is always one press away.
+const unsavedDialog = ref<HTMLDialogElement | null>(null)
+const retrying = ref(false)
+const retryNote = ref('')
+
 async function signOutFromMenu() {
   accountOpen.value = false
-  await accountStore.logout()
+  if ((await accountStore.logout()) === 'unsaved') {
+    retryNote.value = ''
+    unsavedDialog.value?.showModal()
+  }
+}
+
+// Focus goes back to the account button, or to the page once signed out,
+// instead of staying on a button inside the closed dialog.
+function closeUnsaved() {
+  unsavedDialog.value?.close()
+  if (accountStore.signedIn) accountToggleEl.value?.focus()
+  else document.getElementById('main-content')?.focus()
+}
+
+async function tryAgain() {
+  retrying.value = true
+  retryNote.value = ''
+  const result = await accountStore.logout()
+  retrying.value = false
+  if (result === 'unsaved') retryNote.value = 'Still no answer from your account.'
+  else closeUnsaved()
+}
+
+async function signOutAnyway() {
+  await accountStore.logout(true)
+  closeUnsaved()
 }
 
 // The menu covers the page on a phone, so the two ways people expect to get
@@ -278,6 +310,30 @@ onBeforeUnmount(() => {
         <RouterLink to="/privacy" class="site-footer__link">Privacy</RouterLink>
       </div>
     </footer>
+
+    <!-- A native <dialog>: showModal() brings focus trapping, Escape and the
+         backdrop with it. Escape or "Stay signed in" keeps everything as it was. -->
+    <dialog
+      ref="unsavedDialog"
+      class="unsaved"
+      aria-labelledby="unsaved-title"
+      aria-describedby="unsaved-body"
+      @cancel.prevent="closeUnsaved"
+    >
+      <h2 id="unsaved-title">Your latest progress isn't saved yet</h2>
+      <p id="unsaved-body">
+        We couldn't reach your account to save it. Signing out clears it from this browser, so
+        anything not saved yet would be lost.
+      </p>
+      <p class="unsaved__status" role="status">{{ retryNote }}</p>
+      <div class="unsaved__actions">
+        <button type="button" class="btn btn--primary" :disabled="retrying" @click="tryAgain">
+          {{ retrying ? 'Trying…' : 'Try again' }}
+        </button>
+        <button type="button" class="btn btn--secondary" @click="signOutAnyway">Sign out anyway</button>
+        <button type="button" class="btn btn--ghost" @click="closeUnsaved">Stay signed in</button>
+      </div>
+    </dialog>
   </div>
 </template>
 
@@ -608,5 +664,49 @@ onBeforeUnmount(() => {
     justify-content: center;
     text-align: center;
   }
+}
+.unsaved {
+  width: min(440px, calc(100% - 32px));
+  padding: 22px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.unsaved::backdrop {
+  background: rgba(20, 18, 16, 0.45);
+}
+
+.unsaved h2 {
+  margin: 0 0 8px;
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.unsaved p {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+.unsaved__status:not(:empty) {
+  margin-top: 8px;
+  color: var(--color-text);
+}
+
+.unsaved__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.unsaved .btn {
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
 }
 </style>

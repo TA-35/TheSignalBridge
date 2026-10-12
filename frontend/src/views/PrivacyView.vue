@@ -39,10 +39,14 @@
  *                           in the upload (buildUpload) and has no column.
  *   "clear it yourself"   - SettingsView calls decodesStore.clear(),
  *                           cardsStore.clear() and activityStore.clearAll().
- *   "signing out clears"  - stores/account.ts logout() calls
- *                           activityStore.clearAll() once signed out, which
- *                           also resets the focus timer (stores/focusTimer.ts,
- *                           sessionStorage only).
+ *   "signing out clears"  - stores/account.ts logout() first awaits
+ *                           activityStore.saveToAccount(); if the account
+ *                           doesn't confirm, AppShell asks (try again / sign
+ *                           out anyway) before anything is cleared. Then
+ *                           clearAll() once signed out, which also resets the
+ *                           focus timer (stores/focusTimer.ts).
+ *   "typed text stays"    - buildUpload never sends an event's intent, so
+ *                           sign-out's clear removes it for good.
  *   "no audio reaches us" - Dictate (components/VoiceInput.vue,
  *                           composables/useSpeechInput.ts) uses the browser's
  *                           Web Speech API; only the resulting text goes into
@@ -145,8 +149,11 @@ const LAST_UPDATED = '12 October 2026'
         focus sessions and what you typed for them, the phrases you viewed and
         the cards you reviewed. It stays in this browser only, unless you sign
         in (see below), and what you type for a focus session never leaves it.
-        Signing out clears your progress from this browser; the copy on your
-        account stays there for next time.
+        Signing out saves your progress to your account first, then clears it
+        from this browser. If your account can't be reached, you're asked
+        before signing out, because anything not saved yet would be lost. What
+        you typed for focus sessions is never sent to your account, so signing
+        out removes it.
       </p>
       <p>
         Because decode history includes the messages you pasted, clearing it
