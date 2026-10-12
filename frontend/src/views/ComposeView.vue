@@ -27,8 +27,20 @@ import RewriteFeedback from '@/components/RewriteFeedback.vue'
 import { clearHabits, habitSummary, MIN_DRAFTS, readHabits, recordDraft } from '@/utils/draftHabits'
 import { applyAnswers, findMissing, type Answer, type MissingKey } from '@/utils/missing'
 
-const SAMPLE =
-  "Hi,\n\nWhen you get a chance, could you take a look at the Q3 deck and tighten up the numbers section? Would be great to have it before the leadership sync.\n\nThanks!"
+// A long everyday message from a busy, friendly colleague: three asks, one of
+// them softened into "no pressure at all ... at some point", a job left for
+// "someone", a complaint played down as "not a big deal", and a lunch invite
+// that really is optional. Checked against the live model: the rewrite keeps
+// all three asks and the card asks who, what exactly and how urgent.
+const SAMPLE = [
+  'Hi Sam,',
+  "Hope your week's going okay! I know things have been pretty hectic lately, so no pressure at all, but I was just wondering if you might be able to have a look at the onboarding slides and maybe trim them down a little at some point? A few people mentioned they felt a bit long.",
+  "It would also be great if someone could update the shared tracker before Thursday's catch-up, just so we're all on the same page.",
+  "Also, not a big deal, but the last report went out a bit later than we'd hoped, so maybe we can touch base about timings sometime this week?",
+  'Oh, and a few of us are grabbing lunch on Friday if you fancy joining. No worries if not!',
+  "Thanks so much, really appreciate everything you're doing!",
+  'Priya',
+].join('\n\n')
 
 const state = reactive({
   message: '',
