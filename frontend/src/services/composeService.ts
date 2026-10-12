@@ -1,4 +1,4 @@
-import type { ComposeQuick, ComposeResult } from '@/types/compose'
+import type { ComposeFeedback, ComposeQuick, ComposeResult, FeedbackReason } from '@/types/compose'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL as string | undefined
 
@@ -176,4 +176,32 @@ export async function composeMessage(
   // the page refuses to show one that arrives flagged.
   if (result.degraded) return { ...result, rewrite: null }
   return result
+}
+
+/** What went wrong with a rewrite, as the sender picks it after a 👎.
+ *  "needed_rewrite" isn't here: it's the only answer to a 👎 on "already
+ *  clear", so it's sent without asking. */
+export const FEEDBACK_REASONS: readonly { code: FeedbackReason; label: string }[] = [
+  { code: 'changed_meaning', label: 'Changed what I meant' },
+  { code: 'left_out', label: 'Left something out' },
+  { code: 'added', label: "Added something I didn't say" },
+  { code: 'still_unclear', label: 'Still not clear' },
+  { code: 'too_blunt', label: 'Too blunt' },
+  { code: 'notes_wrong', label: "The notes don't match" },
+]
+
+/** Sends a 👍/👎. True once it's saved; a failure costs the sender nothing. */
+export async function sendComposeFeedback(feedback: ComposeFeedback): Promise<boolean> {
+  if (MOCK) return true
+  if (!API_BASE) return false
+  try {
+    const response = await fetch(`${API_BASE}/api/compose/feedback`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(feedback),
+    })
+    return response.ok
+  } catch {
+    return false
+  }
 }

@@ -56,6 +56,27 @@ export interface ComposeResult {
   model?: string
 }
 
+/** What can be wrong with a rewrite. The codes match REASONS in
+ *  backend/app/models/compose_feedback.py. */
+export type FeedbackReason =
+  | 'changed_meaning'
+  | 'left_out'
+  | 'added'
+  | 'still_unclear'
+  | 'too_blunt'
+  | 'notes_wrong'
+  | 'needed_rewrite'
+
+/** POST /api/compose/feedback - a 👍/👎 on a rewrite. Exactly these fields:
+ *  the API refuses any other, so no text travels with a rating. */
+export interface ComposeFeedback {
+  vote: 'up' | 'down'
+  reasons: FeedbackReason[]
+  model: string
+  kept_as_written: boolean
+  after_card: boolean
+}
+
 /** The exact note the model returns when the draft needed no changes. Set in
  *  the shared generation prompt, so it is a value to compare against rather
  *  than prose to render as a change. */

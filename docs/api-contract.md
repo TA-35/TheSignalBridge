@@ -204,6 +204,37 @@ let the page explain itself; the client drops any rewrite that arrives with
 
 Response `400` / `413`: same shapes as `/api/decode`.
 
+## Compose feedback: `/api/compose/feedback`
+
+A 👍/👎 on a rewrite, to see how often each model helps and what goes wrong
+when it doesn't. Signed in or not, it's the same, and nothing links a rating to
+an account.
+
+- `POST /api/compose/feedback` takes exactly these fields and refuses any
+  other with `400` (`{"error": "Unexpected field."}`, which doesn't name the
+  field), so no text can travel with a rating:
+
+  ```json
+  {
+    "vote": "up",
+    "reasons": [],
+    "model": "qwen3.5-4b-ft-run2",
+    "kept_as_written": false,
+    "after_card": false
+  }
+  ```
+
+  `vote` is `up` or `down`. `reasons` holds codes from a fixed list:
+  `changed_meaning`, `left_out`, `added`, `still_unclear`, `too_blunt`,
+  `notes_wrong`, `needed_rewrite`. `model` is the `model` the rewrite came back
+  with. `kept_as_written` means the answer was "already clear", and
+  `after_card` means the sender answered the "what's missing" questions first.
+  Answers `201` `{"ok": true}`; anything malformed is `400`. Limited to 20 a
+  minute per address.
+- `GET /api/compose/feedback/summary` gives counts per model, most rated
+  first: `ratings`, `up`, `down`, `helpful_rate`, `reasons` (count per code),
+  and `kept_as_written` / `after_card` (up and down counts for each).
+
 ## Accounts: `/api/account/*`
 
 Optional, and additive - every endpoint above behaves identically signed in
@@ -315,6 +346,8 @@ replayed, and nothing the reader typed travels. The focus timer's
 ## Data retention
 
 No message text, extracted elements, or saved cards are ever persisted server-side or logged.
+A Compose rating stores the vote, reason codes, the model's name, two yes/no
+flags and a timestamp - no text and no account.
 
 On the client, decodes and saved cards are written to `localStorage` on the
 user's own device, so a decode survives a refresh and a card can point back at
