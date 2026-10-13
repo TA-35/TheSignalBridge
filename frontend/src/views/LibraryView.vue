@@ -536,5 +536,36 @@ function explore(pattern: Pattern) {
   .grid {
     grid-template-columns: 1fr;
   }
+
+  /* Seven pills wrapping on a phone is seven rows: the first card ends up
+     below the fold, so the page opens on filters rather than on content -
+     the opposite of what the sidebar was replaced to achieve. One scrolling
+     strip keeps every category reachable and costs one row.
+
+     Not a dropdown: the counts and the category colours are the thing that
+     makes a card easy to match back to its filter, and a collapsed control
+     hides both. A partly visible pill at the right edge is the affordance. */
+  .filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    /* Room for the focus ring, which would otherwise be clipped by the
+       scroll container on the row above and below. */
+    padding: 3px 0;
+    scroll-snap-type: x proximity;
+    /* The strip is scrolled by swiping or by tabbing through the pills, so
+       the bar itself is noise on a phone. */
+    scrollbar-width: none;
+  }
+
+  .filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pill {
+    /* Without this they shrink to fit instead of overflowing, and the labels
+       wrap to two lines each. */
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
 }
 </style>

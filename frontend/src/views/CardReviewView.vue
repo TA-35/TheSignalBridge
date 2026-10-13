@@ -338,4 +338,40 @@ function saveToStudy() {
 .unsaid li {
   margin-bottom: 4px;
 }
+
+/* Narrow screens: the three controls do not fit on one line. `.flip` is a
+   fixed 200px, so Previous + flip + Next needs ~385px before gaps - more than
+   a 360px phone has. Left to wrap, "Previous" lands alone on the first row and
+   the primary action ends up beside Next, which reads as two unrelated pairs.
+   So give the primary action its own full-width row and let Previous and Next
+   share the one below.
+
+   This block sits at the end of the file on purpose: a media query does not
+   raise specificity, so any base rule written below it would win at the same
+   specificity and silently undo it. */
+@media (max-width: 560px) {
+  .controls {
+    /* .review centres its children, so .controls is content-width by default
+       and a percentage inside it would resolve against nothing useful. */
+    width: 100%;
+    gap: 8px;
+  }
+
+  .flip {
+    width: 100%;
+    /* Before the other two, not after - the thing you came to do should not be
+       the third button you read. */
+    order: -1;
+  }
+
+  .controls .btn--secondary {
+    /* Equal halves of the second row, whatever the label lengths. */
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .save-to-study {
+    width: 100%;
+  }
+}
 </style>
