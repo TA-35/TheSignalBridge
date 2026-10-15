@@ -309,12 +309,21 @@ function saveToStudy() {
   font-weight: 500;
 }
 
+/* Previous and Next share one width so the primary button sits on the card's
+   centre line - "Previous" is wider than "Next", which pushed it right. */
+.controls .btn--secondary {
+  width: 112px;
+}
+
+/* Wide enough for both labels on one line, so the button keeps one size when
+   it flips. At 200px "That's enough for now" wrapped and grew taller. */
 .flip {
-  width: 200px;
+  min-width: 224px;
   padding: 12px 24px;
   font-size: 14.5px;
   font-weight: 500;
   text-align: center;
+  white-space: nowrap;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -339,9 +348,9 @@ function saveToStudy() {
   margin-bottom: 4px;
 }
 
-/* Narrow screens: the three controls do not fit on one line. `.flip` is a
-   fixed 200px, so Previous + flip + Next needs ~385px before gaps - more than
-   a 360px phone has. Left to wrap, "Previous" lands alone on the first row and
+/* Narrow screens: the three controls do not fit on one line. `.flip` is at
+   least 224px and each side button 112px, so the row needs ~448px before
+   gaps - more than a 360px phone has. Left to wrap, "Previous" lands alone on the first row and
    the primary action ends up beside Next, which reads as two unrelated pairs.
    So give the primary action its own full-width row and let Previous and Next
    share the one below.
