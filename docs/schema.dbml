@@ -65,10 +65,56 @@ Table patterns {
   Note: 'Curated content the team writes. The same rows for everybody; nothing personal in here.'
 }
 
-// All three foreign keys above are ON DELETE CASCADE: deleting an account
-// takes its passkeys, its pairing codes and its cards with it.
+Table user_activity {
+  id serial [pk]
+  user_id varchar(36) [not null, ref: > users.id]
+  device_id varchar(36) [not null, note: 'random id the browser makes for itself']
+  date varchar(10) [not null, note: "YYYY-MM-DD, the reader's own calendar day"]
+  feature varchar(16) [not null, note: 'opened, decoder, compose, study or library']
+  minutes integer [not null]
+
+  indexes {
+    (user_id, device_id, date, feature) [unique]
+  }
+
+  Note: 'Minutes per feature per day, per device. Keyed by device so two devices on the same day add up without double counting.'
+}
+
+Table user_phrase_events {
+  id serial [pk]
+  user_id varchar(36) [not null, ref: > users.id]
+  pattern_id varchar(40) [not null, note: 'soft reference to patterns.id - deliberately not a foreign key']
+  kind varchar(10) [not null, note: 'viewed or reviewed']
+  date varchar(10) [not null]
+
+  indexes {
+    (user_id, pattern_id, kind, date) [unique]
+  }
+
+  Note: 'Which library pattern was viewed or reviewed, and on which day.'
+}
+
+Table compose_feedback {
+  id serial [pk]
+  created_at timestamptz [not null]
+  model varchar(64) [not null, note: 'name the inference service reports, e.g. qwen3.5-4b-ft-run2']
+  vote varchar(4) [not null, note: 'up or down']
+  reasons varchar(200) [not null, note: 'codes from a fixed list, comma-joined']
+  kept_as_written boolean [not null]
+  after_card boolean [not null]
+
+  indexes {
+    model
+  }
+
+  Note: 'A thumbs up or down on a Compose rewrite. No text and no account link, so it stands alone.'
+}
+
+// All five foreign keys above are ON DELETE CASCADE: deleting an account
+// takes its passkeys, pairing codes, cards and progress with it.
 //
-// user_cards.pattern_id has no constraint on purpose. The library is
+// user_cards.pattern_id and user_phrase_events.pattern_id have no constraint
+// on purpose. The library is
 // reseeded and renumbered between iterations, and a hard reference would
 // make a reseed either fail or silently delete people's saved cards. The
 // sync code skips a row whose pattern no longer exists.
