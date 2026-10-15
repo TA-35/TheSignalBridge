@@ -74,8 +74,8 @@ const FEATURES: FeatureCard[] = [
       <div class="hero-panel">
         <h1 class="hero-title">Clear communication, <br />with no hidden "surprises".</h1>
         <p class="hero-subtitle">
-          Analyse incoming messages to spot unstated expectations and subtext, and see
-          the exact words each reading came from.
+          Spot the unstated expectations in messages you receive,
+          and make the ones you send clear before they go out.
         </p>
         <div class="actions">
           <RouterLink to="/decode" class="btn btn--primary">Decode a message</RouterLink>
@@ -129,14 +129,19 @@ const FEATURES: FeatureCard[] = [
    1240px) so the photo runs edge-to-edge as full screen. 
    The negative top margin cancels out `.main`'s own
    top padding so the photo
-   sits flush under the sticky header. */
+   sits flush under the sticky header.
+
+   Viewport units are divided by --ui-scale because the text-size setting is
+   a `zoom` on <html>, and zoom multiplies vw/vh too. At A+ (1.22) a bare
+   100vw came out 22% wider than the screen: a horizontal scrollbar, and the
+   negative margin pushed the start of every line off the left edge. */
 .hero-section {
   position: relative;
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  margin-right: calc(50% - 50vw);
+  width: calc(100vw / var(--ui-scale));
+  margin-left: calc(50% - 50vw / var(--ui-scale));
+  margin-right: calc(50% - 50vw / var(--ui-scale));
   margin-top: -32px;
-  height: 72vh;
+  height: calc(72vh / var(--ui-scale));
   min-height: 420px;
   display: flex;
   align-items: center;
