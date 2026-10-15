@@ -27,8 +27,12 @@
   color: var(--color-frame);
 }
 
+/* Every hover rule restates its text colour. A RouterLink button renders as
+   <a>, and main.css's `a:hover` outranks the plain skin selectors above - it
+   turned primary link text the same colour as its hover background. */
 .btn--primary:hover:not(:disabled) {
   background: var(--color-primary-hover);
+  color: var(--color-frame);
 }
 
 /* Secondary, ghost and outline are one skin with three names across the app.
@@ -49,6 +53,7 @@
 .btn--ghost:hover:not(:disabled),
 .btn--outline:hover:not(:disabled) {
   background: var(--color-surface-soft);
+  color: var(--color-text);
 }
 
 /* Already-saved. Reads as a state, not an action - which is why it is also
@@ -73,6 +78,7 @@
 
 .btn--danger:hover:not(:disabled) {
   border-color: var(--color-danger-solid);
+  color: var(--color-danger-text);
 }
 
 .btn--danger-solid {
@@ -84,6 +90,7 @@
 .btn--danger-solid:hover:not(:disabled) {
   background: var(--color-danger-text);
   border-color: var(--color-danger-text);
+  color: var(--color-frame);
 }
 
 /* One focus ring for every control in the app.
