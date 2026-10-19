@@ -7,6 +7,8 @@ from Src.source.pipeline.analysis import analyse
 from Src.source.pipeline.validator import (
     check_entities,
     check_spans,
+    resolve_span,
+    salvage_response,
     templated_output,
     validate_response,
 )
@@ -479,3 +481,137 @@ def test_the_degraded_fallback_answers_in_the_same_shape(analysis):
     for gap in out["missing"]:
         assert set(gap) == {"field", "question"}
         assert gap["question"].strip()
+
+
+# --------------------------------------------------------------------------
+# Faithful quotes that are not character-exact (measured on GPT-OSS)
+# --------------------------------------------------------------------------
+
+def test_a_line_break_typed_as_a_space_still_resolves():
+    """Enron emails are hard-wrapped; the model quotes the sentence whole."""
+    msg = "Could you send the\nreport to Dana by Friday?"
+    span = resolve_span(msg, "send the report to Dana", hint=10)
+    assert span is not None
+    assert msg[span[0]:span[1]] == "send the\nreport to Dana"
+
+
+def test_a_curly_apostrophe_still_resolves():
+    span = resolve_span(MESSAGE, "It\N{RIGHT SINGLE QUOTATION MARK}s urgent.", hint=50)
+    assert MESSAGE[span[0]:span[1]] == "It's urgent."
+
+
+def test_a_capital_added_at_the_start_still_resolves():
+    msg = "thanks. please send the report by Friday."
+    span = resolve_span(msg, "Please send the report", hint=8)
+    assert msg[span[0]:span[1]] == "please send the report"
+
+
+def test_a_paraphrase_still_does_not_resolve():
+    assert resolve_span(MESSAGE, "send me the report", hint=0) is None
+
+
+def test_the_reader_is_shown_the_message_text_not_the_models_copy(analysis):
+    out = validate_response({
+        "summary": "A request with a deadline.",
+        "claims": [{"field": "priority", "text": "It\N{RIGHT SINGLE QUOTATION MARK}s urgent", "span_hint": 50,
+                    "reading": "they say it is urgent"}],
+        "unstated": [],
+    }, MESSAGE, analysis)
+    assert out["degraded"] is False
+    assert out["claims"][0]["text"] == "It's urgent"
+
+
+# --------------------------------------------------------------------------
+# The same fact written another way is not an invented one
+# --------------------------------------------------------------------------
+
+def test_a_non_breaking_hyphen_is_not_a_company(analysis):
+    """GPT-OSS writes U+2011 in compounds; spaCy took "follow-up", written
+    with it, for an ORG."""
+    start = MESSAGE.index("Friday")
+    out = validate_response({
+        "summary": "A request with a Friday deadline.",
+        "claims": [{"field": "deadline", "text": "Friday", "span_hint": start,
+                    "reading": "a follow\N{NON-BREAKING HYPHEN}up may be needed"}],
+        "unstated": ["Is a real\N{NON-BREAKING HYPHEN}name sign-off needed?"],
+    }, MESSAGE, analysis)
+    assert out["degraded"] is False
+    assert out["claims"][0]["reading"] == "a follow-up may be needed"
+
+
+def test_a_possessive_is_the_same_person():
+    msg = "Please ask Makayla Bean to sign the form."
+    assert check_entities({"summary": "Makayla Bean\N{RIGHT SINGLE QUOTATION MARK}s signature is needed."}, msg).ok
+
+
+@pytest.mark.parametrize("msg, summary", [
+    ("The call is at 1:00 p.m. on Friday.", "A call at 1 p.m. on Friday."),
+    # spaCy takes "around 4 pm" as the TIME in this phrasing, as it did in
+    # the real answer that was lost.
+    ("Call me at 4pm.", "Results are expected around 4 pm."),
+])
+def test_the_same_time_written_differently_is_not_invented(msg, summary):
+    assert check_entities({"summary": summary}, msg).ok
+
+
+def test_a_misspelt_deadline_word_is_still_the_same_word():
+    """An Enron email said "tommorow"; every answer that said "tomorrow" failed."""
+    msg = "Can you get me the figures tommorow?"
+    assert check_entities({"summary": "They want the figures tomorrow."}, msg).ok
+    assert not check_entities({"summary": "They want the figures today."}, msg).ok
+
+
+def test_a_different_time_is_still_invented():
+    assert not check_entities({"summary": "A call around 5 pm."}, "Call me at 4pm.").ok
+
+
+# --------------------------------------------------------------------------
+# Salvage: the last resort after repairs, keeping only what holds up alone
+# --------------------------------------------------------------------------
+
+def test_salvage_keeps_the_verified_parts():
+    start = MESSAGE.index("Friday")
+    out = salvage_response({
+        "summary": "They need it by Tuesday.",
+        "claims": [{"field": "deadline", "text": "Friday", "span_hint": start,
+                    "reading": "the day it is due"}],
+        "unstated": ["Who is the client?"],
+        "missing": [],
+    }, MESSAGE)
+    assert out["degraded"] is False and out["partial"] is True
+    assert out["summary"] == "", "the summary held the invented date"
+    assert [c["text"] for c in out["claims"]] == ["Friday"]
+    assert out["unstated"] == ["Who is the client?"]
+    assert any("Tuesday" in r for r in out["dropped_reason"])
+
+
+def test_salvage_cuts_an_invented_date_wherever_it_appears():
+    """Readings are not normally checked for dates. Once the answer has been
+    caught inventing one, every part is held to the summary's standard."""
+    start = MESSAGE.index("Friday")
+    out = salvage_response({
+        "summary": "They need it by Tuesday.",
+        "claims": [
+            {"field": "deadline", "text": "Friday", "span_hint": start,
+             "reading": "really means Tuesday"},
+            {"field": "priority", "text": "urgent", "span_hint": 56,
+             "reading": "they say it is urgent"},
+        ],
+        "unstated": ["Can it wait until Tuesday?"],
+        "missing": [{"field": "responsible_person", "question": "Is Tuesday fine?"}],
+    }, MESSAGE)
+    shown = [out["summary"], *out["unstated"],
+             *(c["reading"] for c in out["claims"]), *(g["question"] for g in out["missing"])]
+    assert not any("Tuesday" in text for text in shown)
+    assert [c["field"] for c in out["claims"]] == ["priority"]
+    assert out["dropped_claims"] == 1
+
+
+def test_salvage_gives_up_when_nothing_holds_up():
+    assert salvage_response({
+        "summary": "They need it by Tuesday.",
+        "claims": [{"field": "deadline", "text": "not in the message", "span_hint": 0,
+                    "reading": "x"}],
+        "unstated": [],
+        "missing": [],
+    }, MESSAGE) is None

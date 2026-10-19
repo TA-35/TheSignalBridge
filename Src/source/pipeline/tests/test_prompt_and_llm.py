@@ -376,7 +376,7 @@ def test_the_pipeline_limit_matches_the_deployed_api():
 def test_every_provider_has_a_transport():
     from Src.source.pipeline.config import PROVIDER_DEFAULTS
     from Src.source.pipeline.llm import TRANSPORTS
-    assert set(TRANSPORTS) == {"openai", "nvidia", "anthropic"}
+    assert set(TRANSPORTS) == {"openai", "nvidia", "groq", "anthropic"}
     assert set(PROVIDER_DEFAULTS) <= set(TRANSPORTS), \
         "a provider with no transport would fail only at call time"
 
@@ -451,3 +451,176 @@ def test_a_well_formed_response_is_untouched():
                           "unstated": ["A question?"]})
     data = complete("p", LLMConfig(), caller=lambda p, c: payload).data
     assert data["summary"] == "A summary." and data["unstated"] == ["A question?"]
+
+
+# --------------------------------------------------------------------------
+# Groq, and the retries that let every request end in an answer
+# --------------------------------------------------------------------------
+
+def test_groq_carries_its_own_model_endpoint_and_effort(monkeypatch):
+    monkeypatch.setenv("PIPELINE_LLM_PROVIDER", "groq")
+    monkeypatch.setenv("GROQ_API_KEY", "gsk_test")
+    for name in ("PIPELINE_LLM_MODEL", "PIPELINE_LLM_BASE_URL", "PIPELINE_LLM_REASONING_EFFORT"):
+        monkeypatch.delenv(name, raising=False)
+    cfg = LLMConfig()
+    assert cfg.model == "openai/gpt-oss-120b"
+    assert cfg.base_url == "https://api.groq.com/openai/v1"
+    assert cfg.reasoning_effort == "low"
+    assert cfg.api_key == "gsk_test"
+
+
+def test_groq_never_borrows_another_providers_key(monkeypatch):
+    """The inference host also holds an NVIDIA key. A missing Groq key must
+    fail as missing, not send someone else's key to Groq."""
+    monkeypatch.setenv("PIPELINE_LLM_PROVIDER", "groq")
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
+    monkeypatch.setenv("NVIDIA_API_KEY", "nvapi-not-for-groq")
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-not-for-groq")
+    assert LLMConfig().api_key == ""
+
+
+def test_kimi_providers_send_no_reasoning_effort(monkeypatch):
+    monkeypatch.setenv("PIPELINE_LLM_PROVIDER", "nvidia")
+    monkeypatch.delenv("PIPELINE_LLM_REASONING_EFFORT", raising=False)
+    assert LLMConfig().reasoning_effort is None
+
+
+def _fake_openai(monkeypatch):
+    """Stand in for the SDK client and record what each request asked for."""
+    from types import SimpleNamespace
+    from Src.source.pipeline import llm
+
+    sent = []
+
+    def create(**request):
+        sent.append(request)
+        message = SimpleNamespace(content=GOOD_JSON)
+        return SimpleNamespace(choices=[SimpleNamespace(message=message)])
+
+    client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+    monkeypatch.setattr(llm, "_openai_client", lambda config: client)
+    return sent
+
+
+@pytest.mark.parametrize("effort", [None, "low"])
+def test_reasoning_effort_is_sent_only_when_set(monkeypatch, effort):
+    from Src.source.pipeline.llm import _call_openai
+    sent = _fake_openai(monkeypatch)
+    _call_openai("p", LLMConfig(reasoning_effort=effort, stream=False))
+    assert sent[0].get("reasoning_effort") == effort
+    assert ("reasoning_effort" in sent[0]) is (effort is not None)
+
+
+def test_a_failed_request_is_sent_once_more():
+    """Groq answers 400 when the output breaks the strict schema; sent
+    again, it passed every time it was measured."""
+    calls = []
+
+    def flaky(_prompt, _config):
+        calls.append(1)
+        if len(calls) == 1:
+            raise RuntimeError("json_validate_failed")
+        return GOOD_JSON
+
+    result = complete("p", LLMConfig(), caller=flaky)
+    assert result.data["summary"] == "ok"
+    assert result.attempts == 2
+
+
+def test_a_refused_key_is_not_sent_again():
+    class Unauthorised(Exception):
+        status_code = 401
+
+    calls = []
+
+    def refused(_prompt, _config):
+        calls.append(1)
+        raise Unauthorised()
+
+    with pytest.raises(LLMError, match="Unauthorised"):
+        complete("p", LLMConfig(), caller=refused)
+    assert len(calls) == 1
+
+
+# --------------------------------------------------------------------------
+# Repair: a failed answer goes back to the model with what failed
+# --------------------------------------------------------------------------
+
+FRIDAY = MESSAGE.index("Friday")
+INVENTED = json.dumps({
+    "summary": "They need this by Tuesday.",
+    "claims": [{"field": "deadline", "text": "Friday", "span_hint": FRIDAY,
+                "reading": "the day it is due"}],
+    "unstated": [], "missing": [],
+})
+CLEAN = json.dumps({
+    "summary": "A request with a Friday deadline.",
+    "claims": [{"field": "deadline", "text": "Friday", "span_hint": FRIDAY,
+                "reading": "the day it is due"}],
+    "unstated": [], "missing": [],
+})
+
+
+def test_a_failed_answer_is_repaired_with_what_failed():
+    prompts = []
+
+    def model(prompt, _config):
+        prompts.append(prompt)
+        return INVENTED if len(prompts) == 1 else CLEAN
+
+    out = run(MESSAGE, "review", llm=model)
+    assert out["degraded"] is False and "partial" not in out
+    assert out["summary"] == "A request with a Friday deadline."
+    assert out["repairs"] == 1 and out["llm_attempts"] == 2
+    assert prompts[1].startswith(prompts[0]), "the repair extends the prompt"
+    note = prompts[1][len(prompts[0]):]
+    assert "'Tuesday' - a date the message does not contain" in note
+    assert "They need this by Tuesday." in note, "the failed answer is shown back"
+
+
+def test_repairs_stop_at_the_configured_count_then_salvage():
+    calls = []
+
+    def stubborn(_prompt, _config):
+        calls.append(1)
+        return INVENTED
+
+    out = run(MESSAGE, "review", replace(load(), repair_attempts=2), llm=stubborn)
+    assert len(calls) == 3, "one answer and two repairs, no more"
+    assert out["degraded"] is False and out["partial"] is True
+    assert out["summary"] == "" and [c["text"] for c in out["claims"]] == ["Friday"]
+
+
+def test_no_repair_starts_that_would_overrun_the_time_budget():
+    calls = []
+
+    def model(_prompt, _config):
+        calls.append(1)
+        return INVENTED
+
+    run(MESSAGE, "review", replace(load(), repair_budget_seconds=0.0), llm=model)
+    assert len(calls) == 1
+
+
+def test_a_clean_first_answer_costs_no_repair():
+    calls = []
+
+    def model(_prompt, _config):
+        calls.append(1)
+        return CLEAN
+
+    out = run(MESSAGE, "review", llm=model)
+    assert len(calls) == 1 and out["repairs"] == 0
+
+
+def test_an_unreachable_repair_keeps_the_salvage():
+    calls = []
+
+    def dies_on_repair(_prompt, _config):
+        calls.append(1)
+        if len(calls) > 1:
+            raise ConnectionError("gone")
+        return INVENTED
+
+    out = run(MESSAGE, "review", llm=dies_on_repair)
+    assert out["degraded"] is False and out["partial"] is True

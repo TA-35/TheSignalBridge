@@ -1,22 +1,25 @@
 """End to end: message in, validated JSON out.
 
-analyse -> build prompt -> call the LLM -> validate -> return.
+analyse -> build prompt -> call the LLM -> validate -> (repair) -> return.
 
-Every exit from this function is safe to show a user. If the LLM is
-unreachable, returns junk, cites a span that does not exist, or invents a
-date, the caller gets templated output built from extractor spans with
-`degraded: true` - never an exception, and never unvalidated model text.
+Every exit from this function is safe to show a user. An answer that fails
+the checks goes back to the model with what failed, and if it still fails,
+only its parts that pass on their own are kept (validator.salvage_response).
+If the LLM is unreachable or nothing survives, the caller gets templated
+output built from extractor spans with `degraded: true` - never an
+exception, and never unvalidated model text.
 """
 from __future__ import annotations
 
+import time
 from typing import Any
 
 from .analysis import analyse
 from .crosscheck import compare
 from .config import PipelineConfig, load
 from .llm import LLMError, complete
-from .prompt import build
-from .validator import templated_output, validate_response
+from .prompt import build, repair_note
+from .validator import salvage_response, templated_output, validate_response
 
 
 def _no_cross_check(reason: str) -> dict[str, Any]:
@@ -61,9 +64,11 @@ def run(
         }
 
     analysis = analyse(message)
+    prompt = build(analysis, mode, config)
+    started = time.monotonic()
 
     try:
-        result = complete(build(analysis, mode, config), config.llm, caller=llm)
+        result = complete(prompt, config.llm, caller=llm)
     except LLMError as exc:
         # The failure reason names the failure class, never the message.
         # Same shape as every other return: a caller reading `cross_check`
@@ -78,6 +83,40 @@ def run(
         }
 
     validated = validate_response(result.data, message, analysis)
+    answers, attempts = [result.data], result.attempts
+    last_call = time.monotonic() - started
+
+    # A failed check is specific - "five" is a number the message never
+    # gives - so the model is shown its answer and what failed, and asked
+    # again. On the gold set the failures left were exactly this kind of
+    # thing: counting the questions ("two"), a day the message never named
+    # ("the next day"), a product it only implied ("Android"). 10 of 120
+    # answers failed, and 7 passed in full once shown why. Bounded by count
+    # and by time, so a repair cannot be what pushes the request past the
+    # API's timeout.
+    while (validated.get("degraded")
+           and len(answers) <= config.repair_attempts
+           and time.monotonic() - started + last_call <= config.repair_budget_seconds):
+        call_started = time.monotonic()
+        try:
+            result = complete(
+                prompt + repair_note(result.data, validated["degraded_reason"]),
+                config.llm, caller=llm)
+        except LLMError:
+            break
+        last_call = time.monotonic() - call_started
+        answers.append(result.data)
+        attempts += result.attempts
+        validated = validate_response(result.data, message, analysis)
+
+    # Still failing: keep what passes on its own, newest answer first, since
+    # each repair was told what the one before got wrong.
+    if validated.get("degraded"):
+        for answer in reversed(answers):
+            salvaged = salvage_response(answer, message)
+            if salvaged is not None:
+                validated = salvaged
+                break
 
     # The extractor ran concurrently regardless of whether its spans went
     # into the prompt, so there is a second reading to compare against. A
@@ -99,7 +138,8 @@ def run(
     return {
         **validated,
         "cross_check": crosscheck,
-        "llm_attempts": result.attempts,
+        "llm_attempts": attempts,
+        "repairs": len(answers) - 1,
         "model": result.model,
         "model_comments_included": config.include_model_comments,
         "extracted_spans_in_prompt": config.include_extracted_spans,

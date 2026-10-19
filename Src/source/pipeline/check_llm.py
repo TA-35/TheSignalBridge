@@ -39,14 +39,15 @@ def main() -> int:
     if resolved:
         holder = next(
             (n for n in ("NVIDIA_API_KEY", "MOONSHOT_API_KEY", "OPENAI_API_KEY",
-                         "ANTHROPIC_API_KEY")
+                         "ANTHROPIC_API_KEY", "GROQ_API_KEY")
              if os.environ.get(n) == resolved),
             "(unknown variable)")
         print(f"  resolved from {holder} ({len(resolved)} chars, "
               f"starts {resolved[:7]}..., never logged)")
         if holder != key_env:
             print(f"  note: {provider} normally reads {key_env}; using {holder}")
-        expected = {"nvidia": "nvapi-", "openai": "sk-", "anthropic": "sk-ant-"}
+        expected = {"nvidia": "nvapi-", "openai": "sk-", "anthropic": "sk-ant-",
+                    "groq": "gsk_"}
         want = expected.get(provider)
         if want and not resolved.startswith(want):
             print(f"  WARNING: {provider} keys usually start {want!r}. A key for "

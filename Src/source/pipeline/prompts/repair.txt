@@ -1,0 +1,16 @@
+
+
+YOUR LAST ANSWER FAILED THE CHECK, SO THE READER NEVER SAW IT.
+Every answer is compared with the message before anyone reads it. This one:
+
+{previous}
+
+contains things the message itself does not:
+{problems}
+
+Return the whole answer again, in the same JSON shape, without them. Do not
+put another name, date, time or number in their place. Where the message is
+vague, say so ("no time is given") instead of filling the gap, and do not
+count things for the reader: "the questions", not "the three questions".
+Copy every `text` exactly as it appears in the message. Keep the rest of the
+answer as it was.

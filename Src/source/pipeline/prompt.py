@@ -10,6 +10,8 @@ rather than a parsing gamble.
 """
 from __future__ import annotations
 
+import json
+import re
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
@@ -222,4 +224,39 @@ def build(
         extracted=extracted,
         missing=missing,
         comments=comments,
+    )
+
+
+# What each validator failure says to the model. Plain words rather than the
+# validator's own strings, which name spaCy labels the model has never seen.
+_KINDS = {"DATE": "a date", "TIME": "a time", "CARDINAL": "a number",
+          "PERSON": "a name", "ORG": "a name"}
+_INVENTED_RE = re.compile(r"^invented (\w+)(?: in interpretation)?: (.+)$")
+_CAPITALISED_RE = re.compile(r"^unverified capitalised word(?: in interpretation)?: (.+)$")
+
+
+def _describe(failure: str) -> str:
+    match = _INVENTED_RE.match(failure)
+    if match:
+        return f"{match[2]} - {_KINDS.get(match[1], 'a fact')} the message does not contain"
+    match = _CAPITALISED_RE.match(failure)
+    if match:
+        return f"{match[1]} - a capitalised word the message does not contain"
+    if "quoted text" in failure:
+        return "a `text` that is not copied exactly from the message"
+    return failure
+
+
+def repair_note(previous: Mapping[str, Any], failures: Iterable[str]) -> str:
+    """Appended to the prompt when an answer failed the checks: the answer
+    itself, and what in it the message does not contain.
+
+    The answer is shown back so the model can take out the offending words
+    and keep the rest, rather than writing a new answer from nothing that
+    may fail somewhere else. It goes only to the model, never to a log.
+    """
+    problems = sorted({_describe(f) for f in failures})
+    return (PROMPTS_DIR / "repair.txt").read_text(encoding="utf-8").format(
+        previous=json.dumps(previous, ensure_ascii=False, indent=1),
+        problems="\n".join(f"  - {p}" for p in problems),
     )
