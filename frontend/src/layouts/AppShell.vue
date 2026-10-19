@@ -314,7 +314,16 @@ onBeforeUnmount(() => {
 
     <main id="main-content" class="main" tabindex="-1">
       <div class="main__inner">
-        <RouterView />
+        <!-- Decode and Compose keep their state across page switches: a
+             pasted message, its reading and any ticks were lost the moment
+             someone looked at Study or Settings and came back. Kept in
+             memory only, never written anywhere; "Start a new message" and
+             "Start over" still clear them. -->
+        <RouterView v-slot="{ Component }">
+          <KeepAlive :include="['DecodeView', 'ComposeView']">
+            <component :is="Component" />
+          </KeepAlive>
+        </RouterView>
       </div>
     </main>
 

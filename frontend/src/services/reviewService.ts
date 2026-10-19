@@ -1,3 +1,4 @@
+import { retryAfterSeconds } from './decodeService'
 import type { FullReview, QuickReview } from '@/types/review'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL as string | undefined
@@ -49,6 +50,12 @@ export async function reviewMessage(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message }),
     })
+    if (response.status === 429) {
+      // The model's share for this connection is used up (5 a minute, 30 an
+      // hour). Said so on the page, with the wait, rather than shown as a
+      // reading that just didn't come back.
+      return { ...offlineReview('rate limited'), retry_after: retryAfterSeconds(response) ?? 60 }
+    }
     if (!response.ok) return offlineReview(`API returned ${response.status}`)
     return (await response.json()) as FullReview
   } catch {

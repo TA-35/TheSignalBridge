@@ -1,6 +1,12 @@
 import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
-import type { Pattern, SavedCard } from '@/types/pattern'
+import type { CardReading, Pattern, SavedCard } from '@/types/pattern'
+
+/** What the model read in the message, as a card keeps it. */
+export interface CardMeaning {
+  meaning: string
+  readings: CardReading[]
+}
 import type { DecodeRecord } from '@/types/decode'
 import { fetchCards, pushCard, removeCard } from '@/services/cardSyncService'
 import { getPatterns } from '@/services/patternsService'
@@ -104,7 +110,7 @@ export const useCardsStore = defineStore('cards', () => {
   // F7: explicit, opt-in save. `pattern` is null when the wording matched
   // nothing in the library; the card is still saved, carrying the message
   // and what it left unsaid.
-  function save(record: DecodeRecord, pattern: Pattern | null): SavedCard {
+  function save(record: DecodeRecord, pattern: Pattern | null, reading?: CardMeaning): SavedCard {
     const existing = cards.value.find((c) => c.decodeId === record.id)
     if (existing) return existing
 
@@ -118,11 +124,22 @@ export const useCardsStore = defineStore('cards', () => {
       why_misread: pattern?.why_misread ?? null,
       excerpt: toExcerpt(record.message),
       unsaid: record.missing.map((m) => ({ field: m.field, prompt: m.prompt })),
+      meaning: reading?.meaning || null,
+      readings: reading?.readings ?? [],
       savedAt: new Date().toISOString(),
       lastOpened: null,
     }
     cards.value.unshift(card)
     return card
+  }
+
+  // The model's reading landed after the card was made: fill it in, so the
+  // card says what the message means and not only what it left out.
+  function setMeaning(id: string, reading: CardMeaning | undefined) {
+    const card = cards.value.find((c) => c.id === id)
+    if (!card || !reading) return
+    card.meaning = reading.meaning || null
+    card.readings = reading.readings
   }
 
   // Saving straight from the library - no message behind it, so the card
@@ -254,7 +271,7 @@ export const useCardsStore = defineStore('cards', () => {
     sortedByNeglect,
     isSaved,
     isPatternSaved,
-    save,
+    save, setMeaning,
     savePattern,
     touch,
     remove,

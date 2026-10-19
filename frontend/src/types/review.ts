@@ -87,4 +87,7 @@ export interface FullReview {
   }
   model?: string
   llm_attempts?: number
+  /** Client-side only: set when the API answered 429, as the seconds until
+   *  the model's reading is available again. */
+  retry_after?: number
 }

@@ -34,6 +34,25 @@ export class MessageTooLongError extends Error {
   }
 }
 
+// The API's per-connection limit (backend/app/limiter.py) was reached. Shown
+// rather than silently decoded offline: the reader would otherwise get a
+// thinner answer with no idea why.
+export class RateLimitedError extends Error {
+  retryAfter: number | null
+  constructor(retryAfter: number | null) {
+    super('Too many requests. Please wait a moment and try again.')
+    this.name = 'RateLimitedError'
+    this.retryAfter = retryAfter
+  }
+}
+
+/** Seconds from a Retry-After header, or null when absent or not a number. */
+export function retryAfterSeconds(response: Response): number | null {
+  const raw = response.headers.get('Retry-After')
+  const seconds = raw === null ? NaN : Number(raw)
+  return Number.isFinite(seconds) && seconds >= 0 ? Math.ceil(seconds) : null
+}
+
 // Calls POST /api/decode, falling back to localDecode when the API is
 // unreachable. A 400/413 is the server's verdict on the message, not an
 // outage, so it propagates instead of silently producing a local result.
@@ -64,6 +83,7 @@ export async function decodeMessage(message: string): Promise<DecodeResult> {
         const body = (await response.json().catch(() => ({}))) as { error?: string }
         throw new MessageTooLongError(body.error ?? tooLongMessage())
       }
+      if (response.status === 429) throw new RateLimitedError(retryAfterSeconds(response))
       if (response.ok) {
         return (await response.json()) as DecodeResult
       }

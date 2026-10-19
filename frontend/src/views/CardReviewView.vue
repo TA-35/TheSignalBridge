@@ -36,6 +36,8 @@ const card = computed(() => {
     implies: p.implies,
     why_misread: p.why_misread,
     unsaid: [] as { field: string; prompt: string }[],
+    meaning: null as string | null,
+    readings: [] as { label: string; text: string; reading: string }[],
   }
 })
 
@@ -113,7 +115,24 @@ function saveToStudy() {
 
       <div id="card-reveal" class="reveal" :class="{ 'reveal--open': flipped }">
         <div class="reveal__inner">
+          <!-- The model's reading, when the card has one: what the message
+               means, then what each piece of wording tells the reader. -->
+          <div v-if="card.meaning" class="block">
+            <span class="block__label">What it means</span>
+            <span class="block__text">{{ card.meaning }}</span>
+          </div>
+          <div v-if="card.readings?.length" class="block">
+            <div v-if="card.meaning" class="rule" />
+            <span class="block__label">What the wording tells you</span>
+            <ul class="unsaid">
+              <li v-for="r in card.readings" :key="r.label + r.text">
+                <strong>{{ r.label }}:</strong> &ldquo;{{ r.text }}&rdquo; &mdash; {{ r.reading }}
+              </li>
+            </ul>
+          </div>
+
           <template v-if="card.implies">
+            <div v-if="card.meaning || card.readings?.length" class="rule" />
             <div class="block">
               <span class="block__label">What this phrasing usually implies</span>
               <span class="block__text">{{ card.implies }}</span>
@@ -127,14 +146,14 @@ function saveToStudy() {
 
           <!-- No library match: what the message left unsaid is the lesson. -->
           <div v-if="card.unsaid.length" class="block">
-            <div v-if="card.implies" class="rule" />
+            <div v-if="card.implies || card.meaning || card.readings?.length" class="rule" />
             <span class="block__label">What this message left unsaid</span>
             <ul class="unsaid">
               <li v-for="gap in card.unsaid" :key="gap.field">{{ gap.prompt }}</li>
             </ul>
           </div>
 
-          <div v-if="!card.implies && !card.unsaid.length" class="block">
+          <div v-if="!card.implies && !card.unsaid.length && !card.meaning" class="block">
             <span class="block__text">This one stated everything it needed to.</span>
           </div>
         </div>
