@@ -13,10 +13,13 @@ Two checks, both of which can only fail closed:
    produce "by Friday", and a fabricated deadline in a workplace tool is
    worse than no tool.
 
-On any failure the response is discarded entirely and replaced with templated
-output built only from extractor spans, with `degraded: true`. Not partially
-repaired: if the model invented one date, its other claims have not earned
-trust either.
+On any failure validate_response() discards the response entirely and returns
+templated output built only from extractor spans, with `degraded: true`. Not
+partially repaired: if the model invented one date, its other claims have not
+earned trust either. pipeline.run() then shows the model what failed and asks
+again. Only if that fails too does salvage_response() keep the parts that
+pass on their own, each held to the summary's standard - see there for why
+that is still safe.
 
 Nothing here logs message text. Failure reasons name the field and the offending
 entity type, never the message body - see constraint 3.
@@ -99,10 +102,45 @@ def _all_occurrences(message: str, text: str) -> list[int]:
     return out
 
 
+# Characters a faithful quote can still get wrong. Measured on GPT-OSS over
+# the 120 gold messages: 49 quotes were not character-exact, and 36 of them
+# were the message's own words with a hard-wrapped line break typed as a
+# space, a straight apostrophe typed curly, or a capital added at the start.
+# Two answers lost every claim that way. The other 13 cut words out with
+# "..." or reworded the passage, and still fail, as they should.
+_SAME_CHARACTER = (
+    ("'\N{RIGHT SINGLE QUOTATION MARK}\N{LEFT SINGLE QUOTATION MARK}"
+     "\N{MODIFIER LETTER APOSTROPHE}"),
+    '"\N{LEFT DOUBLE QUOTATION MARK}\N{RIGHT DOUBLE QUOTATION MARK}',
+    "-\N{HYPHEN}\N{NON-BREAKING HYPHEN}\N{FIGURE DASH}\N{EN DASH}\N{EM DASH}",
+)
+_QUOTE_EQUIVALENTS = {
+    char: f"[{re.escape(group)}]" for group in _SAME_CHARACTER for char in group
+}
+
+
+def _loose_pattern(text: str, flags: int = 0) -> re.Pattern[str]:
+    """`text` with any run of whitespace matching any other, and the
+    typographic forms of quotes and dashes matching each other."""
+    parts = []
+    for chunk in re.split(r"(\s+)", text.strip()):
+        if chunk.isspace():
+            parts.append(r"\s+")
+        elif chunk:
+            parts.append("".join(_QUOTE_EQUIVALENTS.get(c, re.escape(c)) for c in chunk))
+    return re.compile("".join(parts), flags)
+
+
 def resolve_span(
     message: str, text: str, hint: int | None = None
 ) -> tuple[int, int] | None:
-    """Locate `text` in `message` exactly, or return None.
+    """Locate `text` in `message`, or return None.
+
+    Exactly first. Failing that, allowing for the differences in
+    _QUOTE_EQUIVALENTS, then for case as well. A span found that way still
+    covers the message's own characters, and resolve_claim_spans() shows
+    those rather than the model's copy, so the reader still sees exactly what
+    their message says.
 
     The LLM quotes; this finds the offsets. That split exists because
     character arithmetic over a 3,000-character email is the thing language
@@ -117,16 +155,17 @@ def resolve_span(
     """
     if not text:
         return None
-    occurrences = _all_occurrences(message, text)
-    if not occurrences:
+    spans = [(start, start + len(text)) for start in _all_occurrences(message, text)]
+    if not spans and text.strip():
+        spans = ([m.span() for m in _loose_pattern(text).finditer(message)]
+                 or [m.span() for m in _loose_pattern(text, re.IGNORECASE).finditer(message)])
+    if not spans:
         return None  # the quote is not in the message at all
-    if len(occurrences) == 1:
-        start = occurrences[0]
-    elif hint is None:
+    if len(spans) == 1:
+        return spans[0]
+    if hint is None:
         return None  # ambiguous, and nothing to disambiguate with
-    else:
-        start = min(occurrences, key=lambda i: abs(i - hint))
-    return start, start + len(text)
+    return min(spans, key=lambda span: abs(span[0] - hint))
 
 
 def resolve_claim_spans(
@@ -152,6 +191,7 @@ def resolve_claim_spans(
             )
             continue
         resolved.append({**{k: v for k, v in claim.items() if k != "span_hint"},
+                         "text": message[span[0]:span[1]],
                          "span": list(span)})
     return resolved, failures
 
@@ -202,8 +242,23 @@ def check_spans(response: Any, message: str) -> ValidationResult:
 # Check 2: entities
 # --------------------------------------------------------------------------
 
+# "1:00 p.m." and "1 p.m." are the same time. Measured: the model wrote the
+# second for a message that said the first, and the answer was thrown away.
+_ZERO_MINUTES_RE = re.compile(r"(\d):00\b")
+
+# A message that misspells the word its deadline hangs on still gives that
+# deadline, and a model that spells it right has not invented one. Measured:
+# an Enron email's "tommorow" failed every answer that said "tomorrow" in all
+# four runs - repairs included, because the model was being told to remove a
+# word the message plainly does contain.
+_MISSPELT = {"tommorow": "tomorrow", "tommorrow": "tomorrow", "tomorow": "tomorrow"}
+_MISSPELT_RE = re.compile(r"\b(" + "|".join(_MISSPELT) + r")\b")
+
+
 def _normalise(text: str) -> str:
-    text = _PUNCT_RE.sub(" ", text.lower())
+    text = _ZERO_MINUTES_RE.sub(r"\1", text.lower())
+    text = _MISSPELT_RE.sub(lambda match: _MISSPELT[match[1]], text)
+    text = _PUNCT_RE.sub(" ", text)
     return _WS_RE.sub(" ", text).strip()
 
 
@@ -223,6 +278,15 @@ def _variants(entity: str) -> set[str]:
     for article in ("the ", "a ", "an "):
         if base.startswith(article):
             out.add(base[len(article):])
+    # Nor is a leading "around": spaCy takes "around 4 pm" as the TIME when
+    # the message wrote "4pm", and that cost a real answer.
+    for lead in ("around ", "about ", "approximately ", "roughly ", "by ", "at ",
+                 "before ", "until "):
+        if base.startswith(lead):
+            out.update({base[len(lead):], base[len(lead):].replace(" ", "")})
+    # "Makayla Bean's" names the person the message calls "Makayla Bean".
+    if base.endswith(" s"):
+        out.add(base[:-2])
     return {v for v in out if v}
 
 
@@ -392,6 +456,33 @@ def check_entities(response: Any, message: str) -> ValidationResult:
     return ValidationResult(ok=not failures, failures=sorted(set(failures)))
 
 
+# GPT-OSS writes U+2011 (non-breaking hyphen) in compounds and U+202F (narrow
+# no-break space) inside times, and spaCy reads "follow-up" or "real-name"
+# written with that hyphen as an ORG. On the gold set, 5 of 19 rejected answers had
+# nothing else wrong. Prose is made plain before it is checked - and so
+# before it is shown, which costs the reader nothing. A claim's `text` is
+# left alone: it is matched against the message, not checked.
+_PLAIN = str.maketrans({
+    "\N{HYPHEN}": "-",
+    "\N{NON-BREAKING HYPHEN}": "-",
+    "\N{NO-BREAK SPACE}": " ",
+    "\N{THIN SPACE}": " ",
+    "\N{NARROW NO-BREAK SPACE}": " ",
+    "\N{LEFT SINGLE QUOTATION MARK}": "'",
+    "\N{RIGHT SINGLE QUOTATION MARK}": "'",
+})
+
+
+def _plain_prose(node: Any, key: str | None = None) -> Any:
+    if isinstance(node, str):
+        return node if key == "text" else node.translate(_PLAIN)
+    if isinstance(node, Mapping):
+        return {k: _plain_prose(v, k) for k, v in node.items()}
+    if isinstance(node, (list, tuple)):
+        return [_plain_prose(v, key) for v in node]
+    return node
+
+
 # --------------------------------------------------------------------------
 # Degraded fallback
 # --------------------------------------------------------------------------
@@ -497,6 +588,7 @@ def validate_response(
     if not isinstance(response, Mapping):
         return templated_output(analysis, ["response was not an object"])
 
+    response = _plain_prose(response)
     claims, resolve_failures = resolve_claim_spans(response, message)
 
     # An unresolvable quote and an invented entity are different failures and
@@ -550,3 +642,73 @@ def validate_response(
         return result
 
     return templated_output(analysis, spans.failures + entities.failures)
+
+
+# --------------------------------------------------------------------------
+# Last resort: the parts that pass on their own
+# --------------------------------------------------------------------------
+
+def _holds_up(text: str, message: str) -> bool:
+    """`text` held to the summary's standard: no date, time, number, name or
+    capitalised word that the message lacks."""
+    return check_entities({"summary": text}, message).ok
+
+
+def salvage_response(response: Any, message: str) -> dict[str, Any] | None:
+    """The verified parts of an answer that failed as a whole, or None.
+
+    validate_response() throws a whole answer away for one invented fact, on
+    the reasoning that the rest has not earned trust. That stays the first
+    response: pipeline.run() shows the model what failed and asks again
+    before this is reached. This is for when it still fails, and the only
+    alternative left is the extractor's canned reading.
+
+    What earns the rest back is checking each part on its own, and more
+    strictly than validate_response() does. Every reading, question and
+    unstated item is held to the summary's standard, so no date, time, number
+    or name the message lacks survives anywhere. The licence a reading
+    normally has to hedge about time ("if they mean close of business") is
+    withdrawn, because this answer has already shown that it adds facts.
+    Without that, an invented "Friday" cut from the summary would live on in
+    a reading, where dates are not otherwise checked.
+
+    Not degraded - everything kept is verified - but marked `partial`, with
+    what was cut and why, the same way dropped claims already are. None when
+    no claim survives: a summary with no verified quote under it rests on
+    nothing the reader can check.
+    """
+    if not isinstance(response, Mapping):
+        return None
+    response = _plain_prose(response)
+    claims, unresolved = resolve_claim_spans(response, message)
+    kept = [c for c in claims if _holds_up(str(c.get("reading", "")), message)]
+    if not kept:
+        return None
+    summary = str(response.get("summary") or "")
+    if not _holds_up(summary, message):
+        summary = ""
+
+    settled = {c.get("field") for c in kept}
+    gaps = [
+        gap
+        for gap in (response.get("missing") or [])
+        if isinstance(gap, Mapping) and gap.get("field") not in settled
+        and _holds_up(str(gap.get("question", "")), message)
+    ]
+    unstated = [u for u in (response.get("unstated") or [])
+                if _holds_up(str(u), message)]
+    candidate = {**response, "summary": summary, "claims": kept,
+                 "missing": gaps, "unstated": unstated}
+
+    # What is left still has to pass the ordinary checks as a whole.
+    if not (check_spans(candidate, message).ok
+            and check_entities(candidate, message).ok):
+        return None
+    cut = unresolved + check_entities({**response, "claims": claims}, message).failures
+    return {
+        **candidate,
+        "degraded": False,
+        "partial": True,
+        "dropped_claims": len(response.get("claims") or []) - len(kept),
+        "dropped_reason": sorted(set(cut)),
+    }

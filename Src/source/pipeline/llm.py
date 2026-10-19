@@ -4,8 +4,8 @@ Two transports, chosen by config:
 
     openai   - any OpenAI-compatible endpoint. This is the Kimi path:
                base_url https://api.moonshot.ai/v1, models kimi-k3,
-               kimi-k2.6, kimi-k2.7-code. Also reaches OpenAI itself or any
-               local server speaking the same protocol.
+               kimi-k2.6, kimi-k2.7-code. Also reaches NVIDIA, Groq, OpenAI
+               itself or any local server speaking the same protocol.
     anthropic - the Anthropic Messages API.
 
 Both request structured output against the same JSON schema, so the
@@ -148,7 +148,9 @@ def _openai_client(config: LLMConfig) -> Any:
         }
         if config.base_url:
             kwargs["base_url"] = config.base_url
-        if config.api_key:
+        # `is not None`: an empty key is a deliberate "no key" (see
+        # config._api_key) and must not let the SDK find one of its own.
+        if config.api_key is not None:
             kwargs["api_key"] = config.api_key
         return OpenAI(**kwargs)
 
@@ -158,9 +160,10 @@ def _openai_client(config: LLMConfig) -> Any:
 def _call_openai(prompt: str, config: LLMConfig) -> str:
     """One OpenAI-compatible completion, constrained to the schema.
 
-    No thinking or effort parameter is sent. kimi-k3 reasons unconditionally
-    and the OpenAI-compatible surface has no field for it, so anything we
-    passed would either be ignored or rejected.
+    No thinking parameter is sent, and a reasoning effort only when one is
+    configured. kimi-k3 reasons unconditionally and has no field for it, so
+    anything we passed would be ignored or rejected; GPT-OSS on Groq takes
+    `reasoning_effort`, and at "low" answers in about a second.
 
     Streaming is on by default. A reasoning model asked for thousands of
     tokens of JSON can spend minutes before the first byte, and a
@@ -187,6 +190,8 @@ def _call_openai(prompt: str, config: LLMConfig) -> str:
         # Weaker: the endpoint guarantees valid JSON but not the shape.
         # The validator still rejects anything that does not fit.
         request["response_format"] = {"type": "json_object"}
+    if config.reasoning_effort:
+        request["reasoning_effort"] = config.reasoning_effort
 
     if not config.stream:
         response = client.chat.completions.create(**request)
@@ -257,8 +262,29 @@ def _call_anthropic(prompt: str, config: LLMConfig) -> str:
 TRANSPORTS: dict[str, Callable[[str, LLMConfig], str]] = {
     "openai": _call_openai,
     "nvidia": _call_openai,  # same protocol, different endpoint and key
+    "groq": _call_openai,
     "anthropic": _call_anthropic,
 }
+
+# A wrong key, a refused key or a wrong model id fails the same way every
+# time; sending it again only adds a round trip before the same answer.
+_NOT_WORTH_RETRYING = frozenset({401, 403, 404})
+
+
+def _send(
+    send: Callable[[str, LLMConfig], str], prompt: str, config: LLMConfig
+) -> tuple[str, int]:
+    """One request, sent again on a failure that may not recur. Returns the
+    raw text and how many retries it took."""
+    retries = 0
+    while True:
+        try:
+            return send(prompt, config), retries
+        except Exception as exc:  # noqa: BLE001 - re-raised once out of retries
+            if (retries >= config.transport_retries
+                    or getattr(exc, "status_code", None) in _NOT_WORTH_RETRYING):
+                raise
+            retries += 1
 
 
 # --------------------------------------------------------------------------
@@ -270,7 +296,8 @@ def complete(
     config: LLMConfig | None = None,
     caller: Callable[[str, LLMConfig], str] | None = None,
 ) -> LLMResult:
-    """Send `prompt`, return parsed JSON. Retries once on malformed JSON.
+    """Send `prompt`, return parsed JSON. Retries once on malformed JSON, and
+    once on a failed request (config.transport_retries).
 
     `caller` substitutes the transport, so tests never touch a live endpoint.
     """
@@ -292,12 +319,13 @@ def complete(
     for _ in range(config.json_retries + 1):
         attempts += 1
         try:
-            raw = send(prompt, config)
+            raw, retries = _send(send, prompt, config)
         except LLMError:
             raise
         except Exception as exc:  # noqa: BLE001 - transport failure
             # Never include the prompt or the response in the message.
             raise LLMError(f"request failed: {type(exc).__name__}") from exc
+        attempts += retries
 
         try:
             data = json.loads(_strip_fences(raw))

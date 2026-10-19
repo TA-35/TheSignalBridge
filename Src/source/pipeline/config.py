@@ -91,6 +91,18 @@ PROVIDER_DEFAULTS: dict[str, dict[str, str | None]] = {
         "base_url": None,
         "key_env": "ANTHROPIC_API_KEY",
     },
+    # GPT-OSS-120B on Groq, OpenAI-compatible. Keys look like "gsk_...".
+    # Measured on the 120 gold messages: 1.8s a call at low reasoning effort,
+    # against 15.1s for llama-3.2-11b on NVIDIA. Groq's default effort passed
+    # the checks a little more often on the first try (86% to 81%) for 2.4x
+    # the time and twice the cost. Low effort with the repair pass in
+    # pipeline.run() gave all 120 a model answer: 2.0s median, 7.3s worst.
+    "groq": {
+        "model": "openai/gpt-oss-120b",
+        "base_url": "https://api.groq.com/openai/v1",
+        "key_env": "GROQ_API_KEY",
+        "reasoning_effort": "low",
+    },
 }
 
 def _provider() -> str:
@@ -108,7 +120,7 @@ def _provider_default(key: str) -> str | None:
 
 
 # Providers that speak the OpenAI protocol, whatever their branding.
-OPENAI_COMPATIBLE = frozenset({"openai", "nvidia"})
+OPENAI_COMPATIBLE = frozenset({"openai", "nvidia", "groq"})
 
 
 def _api_key() -> str | None:
@@ -118,6 +130,12 @@ def _api_key() -> str | None:
     env = _provider_default("key_env")
     if env and os.environ.get(env):
         return os.environ[env]
+    # Never for Groq: the inference host also holds an NVIDIA key, and a
+    # missing GROQ_API_KEY must fail as a missing key rather than send another
+    # company's key to Groq. Empty, not None - None lets the OpenAI SDK pick
+    # up OPENAI_API_KEY by itself, which is the same leak by another route.
+    if _provider() == "groq":
+        return ""
     # A key under another provider's variable name is a common mix-up worth
     # tolerating: what matters is that the key reaches the right endpoint.
     for fallback in ("NVIDIA_API_KEY", "MOONSHOT_API_KEY", "OPENAI_API_KEY"):
@@ -156,6 +174,12 @@ class LLMConfig:
     # below the API's own default of high.
     effort: str = field(
         default_factory=lambda: os.environ.get("PIPELINE_LLM_EFFORT", "medium"))
+    # low | medium | high, on the OpenAI-compatible path. Sent only when set:
+    # GPT-OSS on Groq takes it, kimi-k3 has no such field. None by default
+    # except where the provider names one.
+    reasoning_effort: str | None = field(default_factory=lambda: (
+        os.environ.get("PIPELINE_LLM_REASONING_EFFORT")
+        or _provider_default("reasoning_effort")))
     timeout_seconds: float = field(
         default_factory=lambda: _number("PIPELINE_LLM_TIMEOUT", "600", float))
 
@@ -169,6 +193,12 @@ class LLMConfig:
     # One retry on malformed JSON, per the brief.
     json_retries: int = field(
         default_factory=lambda: _number("PIPELINE_LLM_JSON_RETRIES", "1", int))
+    # Retries for a failed request that the SDK does not retry itself. Groq
+    # answers HTTP 400 when the model's output breaks the strict schema:
+    # measured on 3 of 120 first attempts, and each one passed when simply
+    # sent again. The SDK retries 5xx, 429 and timeouts, never a 400.
+    transport_retries: int = field(
+        default_factory=lambda: _number("PIPELINE_LLM_TRANSPORT_RETRIES", "1", int))
 
     # Stream the response. On by default: a reasoning model can take minutes
     # to first byte, and a non-streaming request just holds an open socket
@@ -219,6 +249,20 @@ class PipelineConfig:
     # guarantee this whole pipeline exists to provide.
     max_message_chars: int = field(default_factory=lambda: int(
         os.environ.get("PIPELINE_MAX_MESSAGE_CHARS", "5000")))
+
+    # How many times the model is shown why its answer failed the checks and
+    # asked again, before the pipeline falls back to keeping only the parts
+    # that pass on their own. 0 turns repairs off.
+    repair_attempts: int = field(
+        default_factory=lambda: _number("PIPELINE_REPAIR_ATTEMPTS", "2", int))
+
+    # A repair starts only if the time spent so far plus the last call's
+    # duration still fits in this many seconds. The API's gunicorn worker is
+    # killed at 30s (infra/systemd/backend.service), so a repair that would
+    # land after that turns a usable answer into an error. With Groq's ~2s
+    # calls this never binds; with a 15s NVIDIA call it skips the repair.
+    repair_budget_seconds: float = field(
+        default_factory=lambda: _number("PIPELINE_REPAIR_BUDGET", "20", float))
 
 
 def load() -> PipelineConfig:

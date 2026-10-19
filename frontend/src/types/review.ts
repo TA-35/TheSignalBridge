@@ -80,6 +80,11 @@ export interface FullReview {
   /** Present when some claims were dropped for failing verification. The
    *  response is still trustworthy - these are the ones that were not. */
   dropped_claims?: number
+  /** True when the model's answer still failed the checks after being asked
+   *  to correct it, and only its parts that pass on their own are shown
+   *  (validator.salvage_response). The summary is empty when it was one of
+   *  the parts cut. */
+  partial?: boolean
   cross_check?: {
     agreement_rate: number | null
     disagreements: string[]

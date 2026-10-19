@@ -860,6 +860,10 @@ async function copyDraftToClipboard() {
               </template>
               <template v-else-if="state.llm">
                 <p v-if="state.llm.summary" class="meaning">{{ state.llm.summary }}</p>
+                <p v-else-if="state.llm.partial" class="muted-line">
+                  The summary was left out because it said something your message does not.
+                  Everything below is checked against your message.
+                </p>
                 <p v-else-if="limitedFor" class="muted-line">
                   The close reading is limited to 5 messages a minute and 30 an hour for everyone on
                   this connection, and that share is used up. It is back in {{ limitedFor }}. The rest
