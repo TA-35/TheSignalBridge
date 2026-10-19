@@ -124,7 +124,10 @@ _NOT_A_PERSON = frozenset({
 # actual "Monday 12th Jan" was discarded.
 _TIME_SHAPED_RE = re.compile(
     r"\d"
-    r"|\b(?:mon|tue|wed|thu|fri|sat|sun)(?:day|s|nes|rs)?\b"
+    # Every day, whole or short. The old (?:day|s|nes|rs)? took one suffix, so
+    # "Tuesday" (tue+s+day), "Wednesday", "Thursday" and "Saturday" never
+    # matched and a deadline like "next Tuesday" was thrown away.
+    r"|\b(?:mon|tues?|wed(?:nes|s)?|thu(?:rs?)?|fri|sat(?:ur)?|sun)(?:day)?s?\b"
     r"|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\b"
     r"|\b(?:today|tomorrow|tonight|yesterday|noon|midnight|morning|"
     r"afternoon|evening|week|weeks|month|months|day|days|hour|hours|"
