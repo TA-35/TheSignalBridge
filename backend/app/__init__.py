@@ -29,7 +29,15 @@ def create_app(config_class=Config):
     # Access-Control-Allow-Credentials. Without this the account endpoints
     # would set a cookie the next request never sends back, which looks
     # exactly like "signing in silently does nothing".
-    CORS(app, origins=app.config.get("CORS_ORIGINS", []), supports_credentials=True)
+    # expose_headers: a browser can only read a cross-origin response header
+    # that is listed here. Retry-After is what the 429 handler (limiter.py)
+    # sets, and the page uses it to say how long the wait is.
+    CORS(
+        app,
+        origins=app.config.get("CORS_ORIGINS", []),
+        supports_credentials=True,
+        expose_headers=["Retry-After"],
+    )
     register_rate_limiting(app)
 
     if app.config.get("SQLALCHEMY_DATABASE_URI") is not None:

@@ -28,6 +28,10 @@ TIME_TRIGGERS = ["at", "on", "during"]
 REQUEST_MARKERS = [
     "please", "can you", "could you", "would you", "need you to",
     "kindly", "make sure you", "don't forget to",
+    # Asks to a group or to nobody in particular: "could everyone pack their
+    # desks by Tuesday?" found no task at all.
+    "could everyone", "can everyone", "would everyone",
+    "could someone", "can someone", "could anyone", "can anyone",
 ]
 FOR_WHOM_ROLE_WORDS = {
     "client", "team", "manager", "customer", "boss", "committee",
@@ -87,12 +91,40 @@ def _preceding_window(text: str, start: int, chars: int = 20) -> str:
     return text[max(0, start - chars):start].lower()
 
 
+# A time has to contain something time-shaped. spaCy tags "the minutes" (of a
+# meeting) as TIME, and the task was then cut before it: "send me the minutes
+# from Tuesday by 5pm" came out as the task "send me". Same rule as
+# Src/source/pipeline/analysis.py's _TIME_SHAPED_RE.
+_TIME_SHAPED_RE = re.compile(
+    r"\d"
+    # Every day, whole or short: "Tuesday" is tue + s + day, "Saturday" sat + ur + day.
+    r"|\b(?:mon|tues?|wed(?:nes|s)?|thu(?:rs?)?|fri|sat(?:ur)?|sun)(?:day)?s?\b"
+    r"|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\b"
+    r"|\b(?:today|tomorrow|tonight|yesterday|noon|midnight|morning|"
+    r"afternoon|evening|week|weeks|month|months|day|days|hour|hours|"
+    r"eod|cob|asap|quarter|semester|term|deadline|now)\b",
+    re.IGNORECASE,
+)
+
+# "the report from last week", "the invoice from March": the date says which
+# thing is meant, not when to act, so it is neither the time nor the deadline,
+# and the task must not be cut short in front of it.
+_DESCRIBES_A_THING = {"from", "of", "since"}
+
+
+def _describes_a_thing(text: str, start: int) -> bool:
+    before = re.search(r"([A-Za-z]+)\s*$", text[:start])
+    return bool(before) and before.group(1).lower() in _DESCRIBES_A_THING
+
+
 def _extract_time_and_deadline(doc, text: str) -> Tuple[FieldResult, FieldResult]:
     time_result = FieldResult()
     deadline_result = FieldResult()
 
     for ent in doc.ents:
         if ent.label_ not in {"TIME", "DATE"}:
+            continue
+        if not _TIME_SHAPED_RE.search(ent.text) or _describes_a_thing(text, ent.start_char):
             continue
         window = _preceding_window(text, ent.start_char)
 
@@ -115,13 +147,22 @@ def _extract_time_and_deadline(doc, text: str) -> Tuple[FieldResult, FieldResult
 # -> "...report"). Trimmed from the right so the span stays verbatim.
 _TASK_TRAILING_NOISE = {
     "for", "by", "at", "on", "before", "until", "due", "to",
-    "the", "a", "an", "sometime", "and", "then",
+    "the", "a", "an", "sometime", "and", "then", "or", "but", "so",
     # Trailing politeness is not part of the task ("Tighten it, please").
     "please", "thanks", "kindly",
 }
 
 # Sentence-final punctuation is not part of the task text.
 _TASK_TRAILING_PUNCT = " \t\n.,;:!?-"
+
+
+# Asks that spaCy's small model tags as something other than a verb when they
+# follow a request marker. Only trusted in that position.
+_MISTAGGED_VERBS = {
+    "forward", "email", "text", "ping", "message", "flag", "loop", "book", "file",
+    "print", "chase", "action", "schedule", "sign", "copy", "cc", "update", "proof",
+    "circulate", "share", "draft", "order",
+}
 
 
 def _first_action_verb(sent, min_idx: Optional[int] = None):
@@ -138,6 +179,16 @@ def _first_action_verb(sent, min_idx: Optional[int] = None):
         if min_idx is not None and token.idx < min_idx:
             continue
         if token.pos_ == "VERB" and token.lemma_.lower() not in _AUX_LEMMAS:
+            return token
+        # Right after "please" / "could you", a word spaCy gets wrong:
+        # "Please forward the invoice" tags "forward" as an adverb, and the
+        # whole ask was lost.
+        if (
+            min_idx is not None
+            and token.is_alpha
+            and token.lower_ in _MISTAGGED_VERBS
+            and not any(t.is_alpha for t in sent if min_idx <= t.idx < token.idx)
+        ):
             return token
     # Nothing after the marker (e.g. "Tighten the numbers, please.") -
     # fall back to scanning the whole sentence.
@@ -220,8 +271,11 @@ def _task_verbs(doc) -> List:
         anchor = _request_anchor(sent)
         if anchor is not None:
             head = _first_action_verb(sent, anchor if anchor > sent.start_char else None)
-        else:
+        elif sum(tok.is_alpha for tok in sent) >= 2:
+            # One word on a line ("Link -->" above a URL) is a label, not an ask.
             head = _imperative_noun_root(sent)
+        else:
+            head = None
         if head is None:
             continue
 
@@ -286,11 +340,25 @@ def _extract_task_to_do(doc, text: str, boundaries: List[int]) -> FieldResult:
 _FOR_PROPER_NOUN_RE = re.compile(r"\bfor\s+((?:[A-Z][\w'-]*\s*){1,3})")
 _FOR_ROLE_RE = re.compile(r"\bfor\s+(?:the\s+)?([a-z]+)", re.IGNORECASE)
 
+# "the slides for Friday" says when, not who: a capitalised day, month or
+# time word after "for" is not a person. Seen on a real message, where the
+# page then showed "For whom: Friday".
+_FOR_NOT_A_PERSON = frozenset({
+    "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+    "mon", "tue", "tues", "wed", "thu", "thur", "thurs", "fri", "sat", "sun",
+    "january", "february", "march", "april", "may", "june", "july", "august",
+    "september", "october", "november", "december",
+    "jan", "feb", "mar", "apr", "jun", "jul", "aug", "sep", "sept", "oct", "nov", "dec",
+    "today", "tomorrow", "tonight", "tmrw", "eod", "cob", "noon", "christmas", "easter",
+    "q1", "q2", "q3", "q4",
+})
+
 
 def _extract_for_whom(doc, text: str) -> FieldResult:
-    m = _FOR_PROPER_NOUN_RE.search(text)
-    if m:
+    for m in _FOR_PROPER_NOUN_RE.finditer(text):
         value = m.group(1).strip()
+        if value.split()[0].lower().rstrip(".,") in _FOR_NOT_A_PERSON:
+            continue
         start = m.start(1)
         end = start + len(value)
         return FieldResult(value=value, span=[start, end], specified=True)
