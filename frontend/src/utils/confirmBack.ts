@@ -57,6 +57,10 @@ const POINTER = /^(?:find|see)\s+(?:the\s+)?(?:attached|enclosed|below|above)\b/
 // A quote cut off mid-phrase ("figure out how to have", "mail me at the address or").
 // Not "in" or "on": "log in" and "carry on" are whole.
 const CUT = /\b(?:to|or|and|but|the|a|an|of|with|for|at|by|from|that|if|how|where|what|when|which|who|have|be|your|my|their|our)$/i
+// A giving verb with its thing cut off: the extractor once stopped "send me
+// the minutes from Tuesday" at "send me", and the reply read "I'll send you
+// by 5pm tomorrow".
+const NO_OBJECT = /^(?:send|give|forward|bring|pass|hand|show|lend|get|buy|find|grab|pick up)\s+(?:me|us|him|her|them)$/i
 
 // The sender's side to the reader's.
 const FLIP: Record<string, string> = {
@@ -141,7 +145,7 @@ export function confirmLine(ask: string, detail = ''): string | null {
     if (cut < 0) return null
     core = core.slice(cut).replace(TRAIL, '')
   }
-  if (SENDERS.test(core) || POINTER.test(core) || CUT.test(core) || !balanced(core)) return null
+  if (SENDERS.test(core) || POINTER.test(core) || CUT.test(core) || NO_OBJECT.test(core) || !balanced(core)) return null
 
   const [first = '', ...rest] = core.split(/\s+/)
   // "CALL A&K" -> "call A&K", "Send" -> "send"
@@ -167,8 +171,11 @@ export function detailWords(detail: string): string {
     .join(', ')
 }
 
-const DAYS = String.raw`(?:mon|tue|tues|wed|weds|thu|thur|thurs|fri|sat|sun)(?:day)?(?:['’]s)?`
+// Whole names and short forms: "Wednesday" is wed + nes + day, "Saturday" sat + ur + day.
+const DAYS = String.raw`(?:mon|tues?|wed(?:nes|s)?|thu(?:rs?)?|fri|sat(?:ur)?|sun)(?:day)?(?:['’]s)?`
 const MONTHS = String.raw`(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?`
+// A month on its own ("until July"); not "may", which is usually the verb.
+const BARE_MONTH = String.raw`(?:jan|feb|mar|apr|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*`
 // Reads as a time: "Friday", "3pm", "the 13th", "end of day", "next week", "in 2 hours".
 const TIME = new RegExp(
   String.raw`^(?:(?:about|around|roughly)\s+)?(?:the\s+)?(?:` +
@@ -176,10 +183,10 @@ const TIME = new RegExp(
     String.raw`\d+\s+(?:min(?:ute)?s?|hours?|hrs?|days?|weeks?)|today|tonight|tomorrow|tmrw|eod|eow|cob|noon|midday|` +
     String.raw`lunch(?:time)?|morning|afternoon|evening|(?:end|close)\s+of|first\s+thing|` +
     String.raw`(?:this|next)\s+(?:week(?:end)?|month|quarter|year|morning|afternoon|evening|${DAYS})|` +
-    String.raw`${DAYS}|${MONTHS}\s+\d|\d{1,2}\s+${MONTHS}|hour|day|week)(?![a-z\d])`,
+    String.raw`${DAYS}|${MONTHS}\s+\d|\d{1,2}\s+${MONTHS}|${BARE_MONTH}|hour|day|week)(?![a-z\d])`,
   'i',
 )
-const RELATION = /^(?:by|before|on|until|till|at|in|within|no\s+later\s+than)\s+/i
+const RELATION = /^(?:by|before|on|until|till|at|in|within|for|no\s+later\s+than)\s+/i
 const AS_IS = /^(?:today|tonight|tomorrow|tmrw|this|next|first\s+thing)\b/i
 // A time then a thing ("3pm review tomorrow") is an event to be ready before.
 const EVENT = /^(?:\S+\s+){1,2}(?:meeting|mtg|review|call|sync|standup|stand-up|demo|presentation|session|catch-?up|check-?in|interview|briefing|workshop|launch)\b/i

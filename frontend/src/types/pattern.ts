@@ -29,7 +29,19 @@ export interface SavedCard {
 
   excerpt: string
   unsaid: { field: string; prompt: string }[]
+  // The model's reading of the message, when it had answered by the time the
+  // card was made (or arrived while the page was still open). Local only, like
+  // the excerpt: a card from a decode never syncs.
+  meaning?: string | null
+  readings?: CardReading[]
 
   savedAt: string
   lastOpened: string | null
+}
+
+/** One claim as the card keeps it: "By when: “Friday” - stated, but not a time…" */
+export interface CardReading {
+  label: string
+  text: string
+  reading: string
 }

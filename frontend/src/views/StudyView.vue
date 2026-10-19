@@ -99,7 +99,7 @@ const filtered = computed(() => {
     if (progress.value === 'opened' && !card.lastOpened) return false
     if (!q) return true
 
-    return [card.name, card.category, card.excerpt, card.implies]
+    return [card.name, card.category, card.excerpt, card.implies, card.meaning]
       .some((field) => field?.toLowerCase().includes(q))
   })
 })
@@ -758,17 +758,20 @@ function confirmDelete(id: string) {
   gap: 6px;
   padding: 4px 10px;
   border-radius: 999px;
-  border: 1px solid #2d3c4a;
-  background: #a9cbe8;
-  color: #202b36;
+  /* Tokens, not literals: the old ocean-blue and sage hexes ignored both the
+     accent setting and dark mode, so a Lavender dark theme still showed
+     sage and blue badges. */
+  border: 1px solid var(--color-primary-soft-border);
+  background: var(--color-primary-soft-bg);
+  color: var(--color-primary-strong-text);
   font-size: 12px;
   font-weight: 500;
 }
 
 .badge--message {
-  border-color: #35473e;
-  background: #a8d3c1;
-  color: #26332d;
+  border-color: var(--color-warn-border);
+  background: var(--color-warn-bg);
+  color: var(--color-warn-text);
 }
 
 .icon-btn {

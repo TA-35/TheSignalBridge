@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { Check, Copy, Sparkles } from '@lucide/vue'
-import { decodeMessage, EmptyMessageError, MAX_MESSAGE_LENGTH, MessageTooLongError } from '@/services/decodeService'
+import {
+  decodeMessage,
+  EmptyMessageError,
+  MAX_MESSAGE_LENGTH,
+  MessageTooLongError,
+  RateLimitedError,
+} from '@/services/decodeService'
 import { findLocalPatternMatch } from '@/services/localPatterns'
 import { getPatterns } from '@/services/patternsService'
 import { reviewMessage } from '@/services/reviewService'
@@ -12,6 +18,7 @@ import type { Pattern, SavedCard } from '@/types/pattern'
 import type { DecodeRecord } from '@/types/decode'
 import VoiceInput from '@/components/VoiceInput.vue'
 import { confirmLine, deadlineWords, detailWords } from '@/utils/confirmBack'
+import { ASK_INSTEAD, filterClaims } from '@/utils/claimFilters'
 import {
   REVIEW_FIELD_LABELS,
   type FullReview,
@@ -140,6 +147,10 @@ async function review() {
         // Ignore a late reply for a message the user has moved on from.
         if (state.message.trim() !== text) return
         state.llm = result
+        // A card made before the reading came in gets the reading now.
+        if (state.savedCard && state.savedCard.decodeId === state.record?.id) {
+          cardsStore.setMeaning(state.savedCard.id, cardReading())
+        }
 
         // The gap list is re-keyed when the model answers: the extractor
         // names fields "task" and "for_whom", the model names them
@@ -169,6 +180,13 @@ async function review() {
     } else if (err instanceof MessageTooLongError) {
       state.errorTitle = 'That message is too long'
       state.error = err.message
+    } else if (err instanceof RateLimitedError) {
+      // Said plainly, with the limit and the wait, instead of a thinner
+      // offline answer that looks like the real thing.
+      state.errorTitle = "You've reached the limit for now"
+      state.error = `Decoding is limited to 30 messages a minute for everyone on this connection. Try again in ${
+        err.retryAfter ? `${err.retryAfter} seconds` : 'a minute'
+      }.`
     } else {
       throw err
     }
@@ -224,12 +242,19 @@ const registerChips = computed(() => {
     .filter((c) => c.word)
 })
 
+// The model's claims, less the ones it gets wrong in a known way: the sign-off
+// name as "Who", a non-time as "By when", a courtesy offer as something to do
+// (utils/claimFilters.ts). What was dropped is asked about in the gaps instead.
+const claimFilter = computed(() =>
+  filterClaims(state.message, state.llm?.claims ?? [], (state.result?.tasks?.length ?? 0) > 0),
+)
+
 /** Claims worth showing: those with a reading, in a stable field order. */
 const llmClaims = computed(() => {
   const order: ReviewField[] = [
     'purpose', 'required_action', 'responsible_person', 'deadline', 'priority', 'context',
   ]
-  return [...(state.llm?.claims ?? [])]
+  return [...claimFilter.value.claims]
     .filter((c) => c.text?.trim())
     .sort((a, b) => order.indexOf(a.field) - order.indexOf(b.field))
     .map((c) => ({
@@ -269,9 +294,21 @@ function reset() {
 
 // F7: explicit, opt-in save. A card is saved even with no library match —
 // what the message left unsaid is the lesson either way.
+// What the card keeps of the model's reading: the summary and each claim's
+// meaning. Nothing while the model hasn't answered or was discarded.
+function cardReading() {
+  if (!state.llm || state.llm.degraded) return undefined
+  return {
+    meaning: state.llm.summary,
+    readings: llmClaims.value
+      .filter((c) => c.reading?.trim())
+      .map((c) => ({ label: c.label, text: c.text, reading: c.reading ?? '' })),
+  }
+}
+
 function makeFlashcard() {
   if (!state.record) return
-  state.savedCard = cardsStore.save(state.record, state.matchedPattern)
+  state.savedCard = cardsStore.save(state.record, state.matchedPattern, cardReading())
   state.showSaved = true
 }
 
@@ -423,12 +460,24 @@ const gaps = computed(() => {
       !!g && typeof g === 'object' && !!(g as ReviewGap).field
       && !!(g as ReviewGap).question,
   )
-  if (fromModel.length) {
-    return fromModel.map((g) => ({
+  if (state.llm) {
+    const rows = fromModel.map((g) => ({
       field: g.field as string,
       label: REVIEW_FIELD_LABELS[g.field] ?? g.field,
       question: g.question,
     }))
+    // A "Who" or "By when" the model got wrong is open again, so it is asked.
+    for (const field of claimFilter.value.dropped) {
+      const question = ASK_INSTEAD[field]
+      if (question && !rows.some((row) => row.field === field)) {
+        rows.push({ field, label: REVIEW_FIELD_LABELS[field], question })
+      }
+    }
+    // A model that answered and listed nothing is saying nothing is missing.
+    // This used to fall through to the extractor's four generic questions
+    // ("Task-To-Do: What exactly needs to be done?") on messages like "where
+    // should I put it". Only an answer that never arrived falls back.
+    if (rows.length || !state.llm.degraded) return rows
   }
   if (!state.result) return []
   return state.result.missing.map((m) => ({
@@ -560,7 +609,12 @@ const confirmLines = computed(() => {
     .filter((line): line is string => line !== null)
 })
 
-const replyShown = computed(() => checkedPrompts.value.length > 0 || confirmLines.value.length > 0)
+// On screen as soon as there is anything to tick, so the reader can see what
+// ticking is for before they tick anything. It was hidden until the first
+// tick, which left no sign that a reply could be built at all.
+const replyShown = computed(
+  () => checkedPrompts.value.length > 0 || confirmLines.value.length > 0 || gaps.value.length > 0 || todo.value.length > 0,
+)
 
 const replyDraft = computed(() => {
   const questions = checkedPrompts.value.map((q) => q.question.trim()).filter(Boolean)
@@ -604,8 +658,17 @@ const replyDraft = computed(() => {
 // live region above. Kept in step with the card__status labels by hand -
 // there are only three states, and phrasing them for listening is not the
 // same job as phrasing them to sit in a header.
+// How long until the model's reading is available again, once the API has
+// said this connection has used its share (backend/app/limiter.py).
+const limitedFor = computed(() => {
+  const seconds = state.llm?.retry_after
+  if (!seconds) return ''
+  return seconds >= 90 ? `${Math.ceil(seconds / 60)} minutes` : `${seconds} seconds`
+})
+
 const readingStatus = computed(() => {
   if (state.llmLoading && !state.llm) return 'Reading the message closely. This usually takes 5 to 15 seconds.'
+  if (limitedFor.value) return `The closer reading is paused: the limit was reached. It is back in ${limitedFor.value}.`
   if (state.llm?.degraded) return 'Showing only what was quoted directly.'
   if (state.llm) return 'The closer reading is ready.'
   return ''
@@ -780,6 +843,9 @@ async function copyDraftToClipboard() {
               <span v-if="state.llmLoading && !state.llm" class="card__status">
                 reading closely, usually 5 to 15 seconds
               </span>
+              <span v-else-if="limitedFor" class="card__status card__status--warn">
+                limit reached, back in {{ limitedFor }}
+              </span>
               <span v-else-if="state.llm?.degraded" class="card__status card__status--warn">
                 showing only what was quoted directly
               </span>
@@ -794,6 +860,11 @@ async function copyDraftToClipboard() {
               </template>
               <template v-else-if="state.llm">
                 <p v-if="state.llm.summary" class="meaning">{{ state.llm.summary }}</p>
+                <p v-else-if="limitedFor" class="muted-line">
+                  The close reading is limited to 5 messages a minute and 30 an hour for everyone on
+                  this connection, and that share is used up. It is back in {{ limitedFor }}. The rest
+                  of the page still works.
+                </p>
                 <p v-else class="muted-line">No closer reading came back for this one.</p>
               </template>
               <p v-else class="muted-line">Reading the message…</p>
@@ -887,7 +958,8 @@ async function copyDraftToClipboard() {
                    as pressure to anyone who bristles at being told. This says
                    what the control does and leaves the choice alone. -->
               <p class="card__hint card__hint--top">
-                Only what you tick goes into the reply below.
+                Each question you tick is written into your reply below, so you don't have to work
+                out how to ask it. Only what you tick goes in.
               </p>
               <button
                 v-for="gap in gaps"
@@ -953,7 +1025,8 @@ async function copyDraftToClipboard() {
                    the body font so it looks like a message, not code. -->
               <pre v-if="replyDraft" class="draft">{{ replyDraft }}</pre>
               <p v-else class="card__hint">
-                Tick a question above, or start with what you understood, and your reply appears here.
+                Nothing ticked yet. Tick a question in “What it doesn't say” and it is written into a
+                reply here, ready to copy. Or start with what you understood, above.
               </p>
               <p v-if="replyDraft" class="card__hint">Copy it when you are ready. Nothing is sent from here.</p>
             </div>
@@ -1364,18 +1437,29 @@ async function copyDraftToClipboard() {
 
 .results-grid {
   display: grid;
-  grid-template-columns: minmax(280px, 0.85fr) 1.15fr;
+  /* minmax(0, …) on the wide column: a plain 1.15fr can't shrink below its
+     content, so one line that couldn't wrap widened the whole page. */
+  grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.15fr);
   gap: 20px;
   align-items: start;
 }
 
 @media (max-width: 720px) {
   .results-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* The status in a card's header ("showing only what was quoted directly")
+     may wrap here. Kept on one line, it pushed every panel past the edge of
+     a phone screen, and further at the large text size. */
+  .card__status {
+    white-space: normal;
+    text-align: right;
   }
 }
 
 .original-panel {
+  min-width: 0;
   border: 1px solid var(--color-border-soft);
   border-radius: var(--radius-md);
   background: var(--color-surface-soft);
@@ -1398,6 +1482,7 @@ async function copyDraftToClipboard() {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-width: 0;
 }
 
 /* Serif, because it is a letter the reader is about to send, and seeing it
@@ -1905,8 +1990,10 @@ button.card__head:hover .card__fold { color: var(--color-primary); }
   box-shadow: inset 0 1px 0 rgba(58, 55, 51, 0.07);
 }
 
+/* Mixed from the accent, not a sage literal: the tint has to follow the
+   accent setting and dark mode like everything else on the page. */
 .ask:hover,
-.gap:hover { background: rgba(79, 122, 105, 0.055); }
+.gap:hover { background: color-mix(in srgb, var(--color-primary) 7%, transparent); }
 
 .ask:focus-visible,
 .gap:focus-visible,
@@ -1993,7 +2080,7 @@ button.card__head:hover .card__fold { color: var(--color-primary); }
   max-width: 58ch;
 }
 
-.gap--on { background: rgba(79, 122, 105, 0.075); }
+.gap--on { background: color-mix(in srgb, var(--color-primary) 10%, transparent); }
 .gap--empty { cursor: default; font-size: 14.5px; color: var(--color-text-muted); }
 .gap--empty:hover { background: none; }
 

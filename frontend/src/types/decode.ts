@@ -2,10 +2,12 @@
 
 export type ElementKey = 'time' | 'task' | 'deadline' | 'for_whom'
 
+// The same words the model's rows use (REVIEW_FIELD_LABELS), so the page
+// doesn't change vocabulary when the closer reading lands.
 export const ELEMENT_LABELS: Record<ElementKey, string> = {
-  time: 'Time',
-  task: 'Task-To-Do',
-  deadline: 'Deadline',
+  time: 'When',
+  task: 'What needs doing',
+  deadline: 'By when',
   for_whom: 'For whom',
 }
 
