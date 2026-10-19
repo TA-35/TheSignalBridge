@@ -44,6 +44,15 @@ words start - an estimate is fine), and `reading`.
 
   purpose  required_action  responsible_person  deadline  priority  context
 
+Three of those are misread often enough to spell out. `responsible_person`
+is who has to act: the reader, or someone the message names as doing it. It
+is never the sender, and the name in the sign-off is the sender's.
+`deadline` quotes a day, date, time or period from the message - "Friday",
+"by 3pm", "end of the month" - never a phone number or a passing phrase.
+`required_action` is something the reader is asked to do; "let me know if
+you have any questions", "feel free to call me" and other courtesy offers
+are not actions, and not gaps either.
+
 `reading` is the whole point of a claim. It says what those words mean for
 the person who received them - the assumption behind the phrasing, the thing
 a literal reader would miss. "The deadline is Friday" is not a reading; it is

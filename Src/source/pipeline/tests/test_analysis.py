@@ -198,6 +198,17 @@ def test_a_bare_trigger_phrase_is_not_accepted_as_a_deadline():
     assert "Jan" in found["deadline"].value
 
 
+def test_every_weekday_counts_as_a_time():
+    """The time check took one suffix, so Tuesday, Wednesday, Thursday and
+    Saturday never matched and "by next Tuesday" lost its deadline."""
+    from Src.source.pipeline.analysis import _is_time_shaped
+
+    for day in ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday", "Tues", "Thurs"):
+        assert _is_time_shaped(day), day
+    for word in ("wedding", "satellite", "thumb", "the minutes"):
+        assert not _is_time_shaped(word), word
+
+
 def test_a_demonstrative_is_not_a_responsible_person():
     """"This will be a constant requirement" must not yield "This"."""
     found = extract(REAL_FRAGMENT).found
