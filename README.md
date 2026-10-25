@@ -24,7 +24,7 @@ See [docs/api-contract.md](docs/api-contract.md) for the frontend/backend/AI API
 
 ### Shared website password
 
-The website sits behind one shared password, enforced by the CloudFront function in [infra/cloudfront/basic-auth.js](infra/cloudfront/basic-auth.js).
+The website can sit behind one shared password, enforced by the CloudFront function in [infra/cloudfront/basic-auth.js](infra/cloudfront/basic-auth.js). **It is off since October 2026, so anyone can visit.** The function still exists in CloudFront, detached from the distribution.
 
 It has to be enforced at CloudFront, not in Nginx. The frontend is a private S3 bucket served through CloudFront distribution `E1YGUMFRDSPNVG`, and both `thesignalbridge.com` and `www.thesignalbridge.com` resolve there. The EC2 box under [infra/nginx/](infra/nginx/) only serves `api.thesignalbridge.com`, so an `auth_basic` block there never sees website traffic.
 
@@ -44,6 +44,14 @@ That uploads the function, verifies it returns a 401 challenge before going live
 ```sh
 curl -sI https://www.thesignalbridge.com/ | head -3    # expect HTTP/2 401
 ```
+
+To take the password off again, run from the repo root:
+
+```sh
+./infra/cloudfront/remove.sh
+```
+
+That detaches the function from the distribution and leaves it in CloudFront, so `publish.sh` puts the password back. Confirm with the same `curl`, expecting HTTP/2 200.
 
 ## Local development
 
