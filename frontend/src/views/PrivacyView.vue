@@ -10,12 +10,19 @@
  *   "no database"         - neither the decode nor the review route writes to
  *                           the database; the only persistence is the
  *                           browser's own localStorage.
- *   "sent to NVIDIA"      - Src/source/pipeline/config.py posts the message to
- *                           https://integrate.api.nvidia.com/v1 (live
- *                           /api/review/health on 2026-10-13: provider nvidia).
- *                           This is the disclosure the page exists for. It is
- *                           stated plainly and early rather than buried,
+ *   "sent to Groq"        - with PIPELINE_LLM_PROVIDER=groq on the inference
+ *                           host, Src/source/pipeline/config.py posts the
+ *                           message to https://api.groq.com/openai/v1 (merge
+ *                           this only once /api/review/health says provider
+ *                           groq). This is the disclosure the page exists for.
+ *                           It is stated plainly and early rather than buried,
  *                           because it is the part a reader would not guess.
+ *   "not kept by default" - console.groq.com/docs/your-data, read 2026-10-19:
+ *                           inference requests are not retained by default;
+ *                           inputs and outputs may be logged for up to 30
+ *                           days only to troubleshoot errors or investigate
+ *                           suspected abuse, unless Zero Data Retention is on.
+ *                           Customer data is held in the United States.
  *   "reply made here"     - DecodeView's replyDraft is computed in the
  *                           browser; copying it is all that ever happens to it.
  *   "Compose on a team    - with COMPOSE_REMOTE_URL set (live health:
@@ -80,7 +87,7 @@ import { RouterLink } from 'vue-router'
 // one thing on this page that would be actively misleading.
 const CONTACT = ''
 
-const LAST_UPDATED = '13 October 2026'
+const LAST_UPDATED = '19 October 2026'
 </script>
 
 <template>
@@ -90,7 +97,7 @@ const LAST_UPDATED = '13 October 2026'
       <p class="policy__lede">
         This page explains what happens to a message when you paste it into
         BetweenWords. The short version: it is analysed, it is never stored
-        on our servers, part of decoding happens at NVIDIA, and Compose’s
+        on our servers, part of decoding happens at Groq, and Compose’s
         rewrite is made by our own model on a computer the project team runs.
       </p>
       <p class="policy__date">Last updated {{ LAST_UPDATED }}</p>
@@ -110,10 +117,12 @@ const LAST_UPDATED = '13 October 2026'
       <p>
         Second, for the interpretation (the part headed “What this message
         means”), the message is sent to
-        <strong>NVIDIA’s AI service</strong> (<code>integrate.api.nvidia.com</code>),
-        which is operated by NVIDIA in the United States. We do this because the
-        model that produces the reading runs there and not on our servers. Your
-        message is subject to NVIDIA’s own terms and privacy practices while it
+        <strong>Groq’s AI service</strong> (<code>api.groq.com</code>),
+        which is operated by Groq in the United States. We do this because the
+        model that produces the reading runs there and not on our servers. Groq
+        does not keep messages by default. It may keep one for up to 30 days,
+        but only to look into a fault in its service or suspected abuse. Your
+        message is subject to Groq’s own terms and privacy practices while it
         is with them.
       </p>
       <p>
